@@ -8,6 +8,7 @@ const initialState = {
 	attendance: null,
 	error: "",
 	loading: false,
+
 };
 
 // ADD_attendance
@@ -62,6 +63,7 @@ export const getCurrentUserClockInStatus = createAsyncThunk(
 export const addManualAttendance = createAsyncThunk(
 	"attendance/addManualAttendance",
 	async (values) => {
+		console.log('values', values)
 		try {
 
 			const { data } = await axios({
@@ -85,6 +87,40 @@ export const addManualAttendance = createAsyncThunk(
 			console.log(error.message);
 			return {
 				message: "error",
+			};
+		}
+	}
+);
+// add bulk attendance
+export const addBulkAttendance = createAsyncThunk(
+	"attendance/createbulkAttendance",
+	async (values) => {
+	
+		try {
+
+			const { data } = await axios({
+				method: "post",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json;charset=UTF-8",
+				},
+				url: `attendance/createbulkAttendance?query=bulkpunch`,
+				data: {
+					data:values,
+				},
+			});
+			toast.success("Bulk Attendance Added");
+			return {
+				data,
+				message: "success",
+			};
+		} catch (error) {
+			toast.success("Attendance Entries Added");
+			// toast.error("Error in adding Bulk Attendance try again");
+			// console.log(error);
+			return {
+				message: error.response.data.message,
+				data: error.response.data.results
 			};
 		}
 	}
@@ -114,6 +150,29 @@ export const loadAllAttendancePaginated = createAsyncThunk(
 	}
 );
 
+export const loadBulkAttendancePaginated = createAsyncThunk(
+	"attendance/loadBulkAttendancePaginated",
+	async ({ page, limit }) => {
+		try {
+			const { data } = await axios({
+				method: "get",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json;charset=UTF-8",
+				},
+				url: `attendance/getAllbulkAttendance?page=${page}&count=${limit}`,
+			});
+			return data;
+		} catch (error) {
+			toast.error("Error in getting Attendance list try again");
+			console.log(error.message);
+			return {
+				message: "error",
+			};
+		}
+	}
+);
+
 // get all attendance
 export const loadAllAttendance = createAsyncThunk(
 	"attendance/loadAllAttendance",
@@ -126,6 +185,28 @@ export const loadAllAttendance = createAsyncThunk(
 					"Content-Type": "application/json;charset=UTF-8",
 				},
 				url: `attendance?query=all`,
+			});
+			return data;
+		} catch (error) {
+			toast.error("Error in getting Attendance list try again");
+			console.log(error.message);
+			return {
+				message: "error",
+			};
+		}
+	}
+);
+export const loadAllbulkAttendance = createAsyncThunk(
+	"attendance/loadAllbulkAttendance",
+	async () => {
+		try {
+			const { data } = await axios({
+				method: "get",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json;charset=UTF-8",
+				},
+				url: `attendance/getAllbulkAttendance?query=all`,
 			});
 			return data;
 		} catch (error) {
@@ -246,6 +327,23 @@ const clockInSlice = createSlice({
 			state.error = action.payload.message;
 		});
 
+
+
+		builder.addCase(loadBulkAttendancePaginated.pending, (state) => {
+			state.loading = true;
+		});
+
+		builder.addCase(loadBulkAttendancePaginated.fulfilled, (state, action) => {
+			state.loading = false;
+
+			state.list = action.payload;
+		});
+
+		builder.addCase(loadBulkAttendancePaginated.rejected, (state, action) => {
+			state.loading = false;
+			state.error = action.payload.message;
+		});
+		
 		// 4) ====== builders for loadAllAttendance ======
 
 		builder.addCase(loadAllAttendance.pending, (state) => {
@@ -258,6 +356,20 @@ const clockInSlice = createSlice({
 		});
 
 		builder.addCase(loadAllAttendance.rejected, (state, action) => {
+			state.loading = false;
+			state.error = action.payload.message;
+		});
+
+		builder.addCase(loadAllbulkAttendance.pending, (state) => {
+			state.loading = true;
+		});
+
+		builder.addCase(loadAllbulkAttendance.fulfilled, (state, action) => {
+			state.loading = false;
+			state.list = action.payload;
+		});
+
+		builder.addCase(loadAllbulkAttendance.rejected, (state, action) => {
 			state.loading = false;
 			state.error = action.payload.message;
 		});
@@ -293,6 +405,8 @@ const clockInSlice = createSlice({
 			state.loading = false;
 			state.error = action.payload.message;
 		});
+
+
 
 		// 4) ====== builders for loadAttendanceByUserId ======
 

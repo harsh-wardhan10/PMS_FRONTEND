@@ -1,31 +1,49 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { Link, Navigate } from "react-router-dom";
-
-import { Card, DatePicker, Segmented, Table, Tag } from "antd";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Card, DatePicker, Segmented, Table, Tag ,Button, Modal} from "antd";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CSVLink } from "react-csv";
 import { useDispatch, useSelector } from "react-redux";
 import ColVisibilityDropdown from "../Shared/ColVisibilityDropdown";
-
 import { CsvLinkBtn, TableHeraderh2 } from "../UI/CsvLinkBtn";
-import {
-	loadAllAttendancePaginated,
-	clearAttendanceList,
-} from "../../redux/rtk/features/attendance/attendanceSlice";
+import { loadAllAttendancePaginated,clearAttendanceList, addManualAttendance, addBulkAttendance, loadBulkAttendancePaginated } from "../../redux/rtk/features/attendance/attendanceSlice";
 import BtnSearchSvg from "../UI/Button/btnSearchSvg";
 import { VioletLinkBtn } from "../UI/AllLinkBtn";
-import moment from "moment";
-
+import Papa from 'papaparse';
+import * as XLSX  from 'xlsx';
+import AttendanceSummary from "./AttendanceSummary";
 //Date fucntinalities
 let startdate = dayjs().startOf("month");
 let enddate = dayjs().endOf("month");
 
-function CustomTable({ list, total, status, setStatus, loading }) {
+function CustomTable({ list, total, status, setStatus, loading , refresh , setrefresh, setSummaryData , summaryData}) {
 	const [columnsToShow, setColumnsToShow] = useState([]);
 	const [CSVlist, setCSVlist]=useState([])
 	const dispatch = useDispatch();
+    const [arrayData, setarrayData] = useState([])
+	const navigate =useNavigate()
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [dropZoneContent, setDropZoneContent] = useState('');
+	const [dropZone, setDropZone] = useState(false);
+	const [isUpload, setisUpload]=  useState(false)
+	const showModal = () => {
+	  setIsModalOpen(true);
+	};
+  
+	const handleOk = () => {
+	  setIsModalOpen(false);
+	  setDropZone(false)
+	};
+   
 
+	const handleCancel = () => {
+	  setIsModalOpen(false);
+	  setDropZone(false)
+	  setDropZoneContent('')
+	  setIsSecondModalVisible(false);
+	};
+	const [file, setFile] = useState(null);
 	const onChange = (value) => {
 		setStatus(value);
 		dispatch(
@@ -37,105 +55,68 @@ function CustomTable({ list, total, status, setStatus, loading }) {
 			})
 		);
 	};
-
+	
+    
 	const columns = [
 		{
-			id: 1,
-			title: "ID",
-			dataIndex: "id",
-			key: "id",
+			id: 10,
+			title: "User Name",
+			dataIndex: "data",
+			key: "data",
+			render: (data) =>{
+				return data[0]?.userData?.map(user => `${user.firstName} ${user.lastName}`).join(', ') 
+			}
 		},
 		{
-			id: 10,
-			title: "Name",
-			dataIndex: "user",
-			key: "user",
-			render: (user) => `${user?.firstName} ${user?.lastName}`,
+			id:1,
+			title:"Email Id",
+			dataIndex:'emailId',
+			key:"emailId",
+			render:(emailId)=>`${emailId}`
 		},
+
 		{
 			id: 2,
-			title: "In Time",
-			dataIndex: "inTime",
-			key: "inTime",
-			render: (inTime) => dayjs(inTime).format("DD-MM-YYYY, h:mm A") || "NONE",
+			title: "Total Absentees",
+			dataIndex: "email",
+			key: "email",
+			render: (email) => `${email}`,
 		},
 		{
 			id: 3,
-			title: "Out Time ",
-			dataIndex: `outTime`,
-			key: "outTime",
-			render: (outTime) =>
-				dayjs(outTime).format("DD-MM-YYYY, h:mm A") || "NONE",
+			title: "Total Half Days",
+			dataIndex: `street`,
+			key: "street",
+			render: (street) => `${street}`
+				// dayjs(street).format("DD-MM-YYYY, h:mm A") || "NONE",
 		},
 		{
 			id: 4,
-			title: "In Status",
-			dataIndex: "inTimeStatus",
-			key: "inTimeStatus",
-			render: (inTimeStatus) => {
-				// use Tag component from antd to show status in different colors like green, red, yellow etc based on the status value
-				if (inTimeStatus === "Late") {
-					return <Tag color='red'>{inTimeStatus.toUpperCase()}</Tag>;
-				} else if (inTimeStatus === "Early") {
-					return <Tag color='blue'>{inTimeStatus.toUpperCase()}</Tag>;
-				} else if (inTimeStatus === "On Time") {
-					return <Tag color='green'>{inTimeStatus.toUpperCase()}</Tag>;
-				} else {
-					return <Tag style={{ color: "orange" }}>NONE</Tag>;
-				}
-			},
+			title: "Long Breaks",
+			dataIndex: `street`,
+			key: "street",
+			render: (street) => `${street}`
+				// dayjs(street).format("DD-MM-YYYY, h:mm A") || "NONE",
 		},
 		{
 			id: 5,
-			title: "Out Status",
-			dataIndex: "outTimeStatus",
-			key: "outTimeStatus",
-			render: (outTimeStatus) => {
-				// use Tag component from antd to show status in different colors like green, red, yellow etc based on the status value
-				if (outTimeStatus === "Late") {
-					return <Tag color='red'>{outTimeStatus.toUpperCase()}</Tag>;
-				} else if (outTimeStatus === "Early") {
-					return <Tag color='blue'>{outTimeStatus.toUpperCase()}</Tag>;
-				} else if (outTimeStatus === "On Time") {
-					return <Tag color='green'>{outTimeStatus.toUpperCase()}</Tag>;
-				} else {
-					return <Tag style={{ color: "orange" }}>NONE</Tag>;
-				}
-			},
+			title: "Late Coming",
+			dataIndex: `street`,
+			key: "street",
+			render: (street) => `${street}`
+				// dayjs(street).format("DD-MM-YYYY, h:mm A") || "NONE",
 		},
 		{
 			id: 6,
-			title: "Total Hour",
-			dataIndex: "totalHour",
-			key: "totalHour",
-			render: (totalHour) => totalHour || "Not Checked",
-		},
-
-		{
-			id: 7,
-			title: "Punch By",
-			dataIndex: "punchBy",
-			key: "punchBy",
-			render: (punchBy) => (
-				<span>
-					{punchBy[0]?.firstName + " " + punchBy[0]?.lastName || "Not Checked"}
-				</span>
+			title: "Action",
+			dataIndex: "data",
+			key: "data",
+			render: (data) => (
+				<button onClick={()=>{navigate(`/admin/attendance/${data[0].emailId}`,{state:data})}}>
+				 View
+				</button>
 			),
 		},
-
-		// {
-		// 	id: 8,
-		// 	title: "Action",
-		// 	dataIndex: "id",
-		// 	key: "id",
-		// 	render: (id) => (
-		// 		<AttendBtn
-		// 			path={`/admin/attendance/${id}`}
-		// 			text='View'
-		// 			icon={<BtnViewSvg />}
-		// 		/>
-		// 	),
-		// },
 	];
 
 	useEffect(() => {
@@ -143,10 +124,166 @@ function CustomTable({ list, total, status, setStatus, loading }) {
 		//  CSVlist = list.length?list:[].map((i) => ({
 		// 	...i,
 		// 	supplier: i?.supplier?.name,
-		// }));
 
 	}, [list]);
-     const handlecsvclick=()=>{
+  
+	const columnsToShowHandler = (val) => {
+		setColumnsToShow(val);
+	};
+
+	const addKeys = (arr) => arr.map((i) => ({ ...i, key: i.id }));
+	
+	
+	
+	// Upload CSV File code 
+	
+	const fileReader = new FileReader();
+	const fileInputRef = useRef(null);
+	const handleOnSubmit = (text) => {
+		// Check if it's a CSV file (you might want to improve this check)
+		  Papa.parse(text, {
+			header: true,
+			complete: (result) => {
+			  const updatedList = result.data.map((item, index) => ({
+				id: item.id,
+				userName: `${item.firstName} ${item.lastName}`,
+				email: item.email,
+				street: item.street,
+			  }));
+			  setarrayData(updatedList);
+			},
+		  });
+	  };
+  
+	const handleAutoUpload = () => {
+	  fileInputRef.current.click();
+	};
+  
+	const handleFileRead = () => {
+	  const text = fileReader.result;
+	  handleOnSubmit(text);
+	};
+  
+	const handleFileReadError = (error) => {
+	  console.error('Error reading file:', error);
+	};
+  
+	 function handleDragOver(e) {
+		e.preventDefault();
+	  }
+
+	
+	  
+	  function handleDrop(e) {
+		setisUpload(true)
+		e.preventDefault();
+		const droppedFile = e.dataTransfer.files[0];
+		setFile(droppedFile);
+		if (droppedFile) {
+
+			 if(droppedFile.name.endsWith('.xlsx')){
+				setDropZoneContent(droppedFile.name)
+				readFile(droppedFile);
+				setDropZone(true)
+			 }
+			 else{
+				setDropZone(true)
+				setDropZoneContent(droppedFile.name)
+				fileReader.onload = handleFileRead;
+				fileReader.onerror = handleFileReadError;
+				fileReader.readAsText(droppedFile);
+			 }
+		
+		}
+	  }
+	  function handleFileInputChange() {
+		setisUpload(true)
+		const selectedFile = fileInputRef.current.files[0];
+		setFile(selectedFile);
+		if (selectedFile) {
+			 if (selectedFile.name.endsWith('.xlsx')) {
+				setDropZoneContent(selectedFile.name)
+				readFile(selectedFile);
+				setDropZone(true)
+			 }
+			 else if(selectedFile.name.endsWith('.csv')){
+				    handleAutoUpload()
+					setDropZone(true)
+					setDropZoneContent(selectedFile.name)
+					fileReader.onload = handleFileRead;
+					fileReader.onerror = handleFileReadError;
+					fileReader.readAsText(selectedFile);
+			 }
+		  }
+	  }
+	
+	  const readFile = (file) => {
+		const reader = new FileReader();
+	
+		reader.onload = (e) => {
+		  const data = e.target.result;
+		  const workbook = XLSX.read(data, { type: 'binary' });
+	
+		  // Assuming the first sheet is the one you want to convert
+		  const sheetName = workbook.SheetNames[0];
+		  const worksheet = workbook.Sheets[sheetName];
+		 
+		  // Convert the worksheet to JSON
+		  const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+			raw: false,
+			dateNF: 'YYYY-MM-DD',
+			cellDates: true,
+		  });
+
+		  setarrayData(jsonData)
+		};
+	
+		reader.readAsBinaryString(file);
+	  };
+
+  useEffect(()=>{
+
+    //  console.log('arrayData', arrayData)
+  
+	},[arrayData])
+  const handleBulkupload= ()=>{
+
+	const createNewObject = (item, key, email) => {
+		
+		const newObj = {
+			date: item.Date,
+			status: item.Status,
+			log: item[key],
+			emailId: email,
+		};
+		return newObj;
+	};
+	
+	const processData = (data) => {
+		const newData = [];
+	
+		data.forEach(item => {
+			// Iterate over the keys of the item
+			Object.keys(item).forEach(key => {
+				// Check if the key is neither 'Date' nor 'Status'
+				if (key.toLowerCase() !== 'date' && key.toLowerCase() !== 'status') {
+					const newObj = createNewObject(item, key, key); // Assuming key is the email in this case
+					newData.push(newObj);
+				}
+			});
+		});
+	
+		return newData;
+	};
+	const processedData = processData(arrayData);
+      const bulkUploadResult=  dispatch(addBulkAttendance(processedData))
+	  setSummaryData(bulkUploadResult)
+      
+	  handleCancel()
+	  handleOpenSecondModal()
+	}
+
+	  const handlecsvclick=()=>{
 		setCSVlist(list.map((item)=>{
 			return {
 				 "ID": item.id,
@@ -160,24 +297,83 @@ function CustomTable({ list, total, status, setStatus, loading }) {
 			}
 	   }))
 	 }
-	const columnsToShowHandler = (val) => {
-		setColumnsToShow(val);
-	};
-
-	const addKeys = (arr) => arr.map((i) => ({ ...i, key: i.id }));
-	
-	
-
+	 const [isSecondModalVisible, setIsSecondModalVisible] = useState(false);
+			const handleOpenSecondModal = () => {
+				setIsSecondModalVisible(true);
+			};
+			const customFooter = (
+				<div>
+			     	<Button key="customButton" type="default" onClick={handleCancel}>
+				  	 Cancel
+				  </Button>	
+				   <Button key="customButton" type={isUpload? "primary":"default"} disabled={!isUpload} onClick={handleBulkupload}>
+					 Upload Button
+				  </Button>
+				</div>
+			  );
 	return (
 		<div className='mt-5'>
 			{list && (
-				<div className='text-center my-2 flex justify-end'>
+			 	<div className='text-center my-2 flex justify-end'>
+			      <div className="relative"> 
+				  <CsvLinkBtn className="cursor-pointer" onClick={() => {
+							// handleAutoUpload();
+							//  handleFileInputChange();
+							
+							showModal()
+       					 }} >
+			    	Upload CSV
+		    	 </CsvLinkBtn>
+				   <div className="absolute w-[145px]"> {dropZoneContent}</div>
+					</div>
+			   
+				
+					{/* File Upload Modal */}
+		         <Modal title="Choose Or Drag drop file to upload" open={isModalOpen} 
+			     	onCancel={handleCancel}
+					 footer={customFooter}
+					>
+				    {dropZone ? <>
+						{dropZoneContent}
+					 
+					</>  : 
+					<div className="modal-content">
+					{/* File Input with Drag and Drop */}
+					<input
+						ref={fileInputRef}
+						style={{ display: 'none' }}
+						type="file"
+						accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+						onChange={handleFileInputChange}
+					/>
+					<div
+						className="drop-zone"
+						onDragOver={(e) => handleDragOver(e)}
+						onDrop={(e) => handleDrop(e)}
+					>
+						Drag & Drop 
+					</div>
+					<button className="mt-[15px] ant-btn ant-btn-primary ant-btn-md ant-btn-block" onClick={() => fileInputRef.current.click()}> Or  Choose File</button>
+					<a href="/" download="Sample_file.xlsx">Download Sample File</a>
+				 </div>
+					} 
+					
+				  
+	     		</Modal>
+			     	 <AttendanceSummary
+				    	summaryData={summaryData}
+				        visible={isSecondModalVisible}
+				    	onClose={() => {
+							setrefresh(!refresh)
+							setIsSecondModalVisible(false)}}
+					       
+					/> 
 					<CsvLinkBtn onClick={handlecsvclick}>
 						<CSVLink data={CSVlist} filename='purchase'>
 							Download CSV
 						</CSVLink>
 					</CsvLinkBtn>
-
+                    
 					{/*<div>
 						<Segmented
 							className='text-center rounded text-red-500 mt-0.5'
@@ -206,7 +402,7 @@ function CustomTable({ list, total, status, setStatus, loading }) {
             </div> */}
 				</div>
 			)}
-
+           
 			{list && (
 				<div style={{ marginBottom: "30px" }}>
 					<ColVisibilityDropdown
@@ -216,6 +412,7 @@ function CustomTable({ list, total, status, setStatus, loading }) {
 					/>
 				</div>
 			)}
+
 			<Table
 				scroll={{ x: true }}
 				loading={loading}
@@ -223,16 +420,48 @@ function CustomTable({ list, total, status, setStatus, loading }) {
 					defaultPageSize: 30,
 					pageSizeOptions: [30, 40, 50, 100, 200],
 					showSizeChanger: true,
-					total: list ? list.length : 10,
+					total:  [...new Set(list.map(item => item.emailId))].map(email => {
+						// Filter data for the current email
+						const emailData = list.filter(item => item.emailId === email);
+						
+						// Map the filtered data to the required format
+						const formattedData = emailData.map(({ id, date, status, log, emailId ,userData}) => ({ id, date, status, log ,emailId ,userData}));
+			
+						return { emailId:email, data: formattedData };
+					}) ?  [...new Set(list.map(item => item.emailId))].map(email => {
+						// Filter data for the current email
+						const emailData = list.filter(item => item.emailId === email);
+						
+						// Map the filtered data to the required format
+						const formattedData = emailData.map(({ id, date, status, log,emailId ,userData }) => ({ id, date, status, log,emailId ,userData }));
+			
+						return { emailId:email, data: formattedData };
+					}).length : 10,
 
 					onChange: (page, limit) => {
 						dispatch(
-							loadAllAttendancePaginated({ page, limit, startdate, enddate })
+							loadBulkAttendancePaginated({ page, limit })
 						);
 					},
 				}}
 				columns={columnsToShow}
-				dataSource={list ? addKeys(list) : []}
+				dataSource={ [...new Set(list.map(item => item.emailId))].map(email => {
+					// Filter data for the current email
+					const emailData = list.filter(item => item.emailId === email);
+					
+					// Map the filtered data to the required format
+					const formattedData = emailData.map(({ id, date, status, log ,emailId , userData}) => ({ id, date, status, log ,emailId , userData}));
+		
+					return { emailId:email, data: formattedData };
+				})?  [...new Set(list.map(item => item.emailId))].map(email => {
+						// Filter data for the current email
+						const emailData = list.filter(item => item.emailId === email);
+						
+						// Map the filtered data to the required format
+						const formattedData = emailData.map(({ id, date, status, log,emailId,userData }) => ({ id, date, status, log,emailId ,userData}));
+			
+						return { emailId:email, data: formattedData };
+					}) : []}
 			/>
 		</div>
 	);
@@ -240,25 +469,31 @@ function CustomTable({ list, total, status, setStatus, loading }) {
 
 const GetAllAttendance = (props) => {
 	const dispatch = useDispatch();
-
+    
 	const { list, loading } = useSelector((state) => state.attendance);
 	const [status, setStatus] = useState("true");
-
-	// const [total, setTotal] = useState(0);
-
+    const [refresh , setrefresh] =useState(false)
+	const [summaryData, setSummaryData] =useState()
 	const { RangePicker } = DatePicker;
-
 	useEffect(() => {
+		// dispatch(
+		// 	loadAllAttendancePaginated({
+		// 		page: 1,
+		// 		limit: 30,
+		// 		startdate,
+		// 		enddate,
+		// 	})
+		// );
 		dispatch(
-			loadAllAttendancePaginated({
+			loadBulkAttendancePaginated({
 				page: 1,
 				limit: 30,
-				startdate,
-				enddate,
 			})
 		);
-	}, []);
+	}, [refresh , props.load]);
+  useEffect(()=>{
 
+  },[refresh])
 	const onCalendarChange = (dates) => {
 		console.log(dates?.[0])
 		if(dates)
@@ -276,11 +511,9 @@ const GetAllAttendance = (props) => {
 		// dispatch(clearAttendanceList());
 
 		dispatch(
-			loadAllAttendancePaginated({
+			loadBulkAttendancePaginated({
 				page: 1,
 				limit: 30,
-				startdate,
-				enddate,
 			})
 		);
 	};
@@ -314,9 +547,14 @@ const GetAllAttendance = (props) => {
 						</div>
 					</div>
 					{/*TODO : ADD TOTAL AMOUNT HERE */}
+		             {/* {console.log('list', list)} */}
 					<CustomTable
 						list={list}
 						loading={loading}
+						setrefresh={setrefresh}
+						setSummaryData={setSummaryData}
+						summaryData={summaryData}
+						refresh={refresh}
 						total={100}
 						startdate={startdate}
 						enddate={enddate}

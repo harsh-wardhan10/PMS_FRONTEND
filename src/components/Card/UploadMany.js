@@ -26,22 +26,22 @@ const UploadMany = ({ urlPath }) => {
 			return obj;
 		});
 		// array -> array of objects
-
+        console.log('array',array)
 		// post request to backend using axios
 
-		const resp = axios.post(`${urlPath}?query=createmany`, array);
-		resp
-			.then((d) => {
-				if (d.statusText === "OK") {
-					setLoader(false);
-					toast.success("Uploaded Success");
-				}
-			})
-			.catch((err) => {
-				console.log(err, "err");
-				toast.error("error in uploading ");
-				setLoader(false);
-			});
+		// const resp = axios.post(`${urlPath}?query=createmany`, array);
+		// resp
+		// 	.then((d) => {
+		// 		if (d.statusText === "OK") {
+		// 			setLoader(false);
+		// 			toast.success("Uploaded Success");
+		// 		}
+		// 	})
+		// 	.catch((err) => {
+		// 		console.log(err, "err");
+		// 		toast.error("error in uploading ");
+		// 		setLoader(false);
+		// 	});
 	};
 
 	const handleOnSubmit = (e) => {
@@ -60,11 +60,11 @@ const UploadMany = ({ urlPath }) => {
 
 	return (
 		<div className='text-center mt-2'>
-			{!file && (
+			{/* {!file && (
 				<p className='text-center mb-2' style={{ color: "red" }}>
 					Please select a CSV file for uploading
 				</p>
-			)}
+			)} */}
 			<form className='form-group'>
 				<input
 					required={true}
@@ -88,7 +88,7 @@ const UploadMany = ({ urlPath }) => {
 					disabled={!file}
 					type='submit'
 					onClick={handleOnSubmit}>
-					Import From CSV
+					Upload CSV
 				</button>
 			</form>
 		</div>

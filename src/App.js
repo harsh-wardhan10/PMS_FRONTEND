@@ -269,10 +269,10 @@ function App() {
 								element={<UserAttendance />}
 							/>
 						</Route>
-						{/*<Route
+						<Route
 							path='/admin/attendance/:id'
 							element={<DetailAttendance />}
-						/> */}
+						/>
 
 						{/* === === === Accounting Routes === === === */}
 

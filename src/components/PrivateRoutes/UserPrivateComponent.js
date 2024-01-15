@@ -7,7 +7,9 @@ const UserPrivateComponent = ({ permission, children }) => {
 	// console.log(permission, "permissions", permissions.includes(permission));
 
 	if (permissions?.includes(permission)) {
-		return <>{children}</>;
+		return <>
+		{children}
+		</>	;
 	} else {
 		return "";
 	}
