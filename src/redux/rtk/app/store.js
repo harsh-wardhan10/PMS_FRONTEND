@@ -25,7 +25,10 @@ import taskStatusSlice from "../features/projectManagement/project/taskStatus/ta
 import taskTimeSlice from "../features/projectManagement/project/taskTime/taskTime";
 import taskPrioritySlice from "../features/projectManagement/project/taskPriority/taskPriority";
 import projectSlice from "../features/projectManagement/project/project/project";
-
+import attendancelistSlice from "../features/attendance/attendancelistSlice";
+import appSettingsSlice from "../features/appSettings/appSettingsSlice";
+import uploadAttachmentSlice from '../features/uploadFiles/uploadFiles'
+import reimbursementSlice from '../features/reimbursement/reimbursement'
 const reduxLogger = require("redux-logger");
 const logger = reduxLogger.createLogger();
 
@@ -39,6 +42,7 @@ const store = configureStore({
 		shift: shiftSlice,
 		employmentStatus: employmentStatusSlice,
 		attendance: attendanceReducer,
+		attendanceList:attendancelistSlice,
 		leave: leaveSlice,
 		accounts: accountSlice,
 		transactions: transactionSlice,
@@ -46,6 +50,7 @@ const store = configureStore({
 		award: awardSlice,
 		awardHistory: awardHistorySlice,
 		leavePolicy: leavePolicySlice,
+		reimbursement:reimbursementSlice,
 		weeklyHoliday: weeklyHolidaySlice,
 		publicHoliday: publicHolidaySlice,
 		milestone: milestoneSlice,
@@ -56,6 +61,8 @@ const store = configureStore({
 		taskStatus: taskStatusSlice,
 		taskTime: taskTimeSlice,
 		taskPriority: taskPrioritySlice,
+		appsetting:appSettingsSlice,
+		attachment:uploadAttachmentSlice
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({

@@ -1,12 +1,15 @@
 import {
 	Button,
 	Card,
+	Checkbox,
 	Col,
 	Form,
 	Input,
 	InputNumber,
+	Popover,
 	Row,
 	Table,
+	Tag,
 	Typography,
 } from "antd";
 
@@ -43,16 +46,16 @@ function CustomTable({ list, loading }) {
 
 		{
 			id: 3,
-			title: "Total Paid Leave",
-			dataIndex: "paidLeaveCount",
-			key: "paidLeaveCount",
+			title: "Total Causal Leave",
+			dataIndex: "causalLeaves",
+			key: "causalLeaves",
 		},
 
 		{
 			id: 3,
-			title: "Total Unpaid Leave",
-			dataIndex: "unpaidLeaveCount",
-			key: "unpaidLeaveCount",
+			title: "Total Sick Leave",
+			dataIndex: "sickLeaves",
+			key: "sickLeaves",
 		},
 		{
 			id: 4,
@@ -128,14 +131,31 @@ const AddLeavePolicy = ({ drawer }) => {
 	}, []);
 
 	const { Title } = Typography;
-
+     const initialValues={
+		sandwichPolicy:false,
+		leaveclubPolicy:false
+	 }
+	 const content = (
+		<div>
+		Leaves taken on both Friday and Monday, creating a weekend sandwich,<br/> will result in all four days being marked as absentees
+		</div>
+	  );
+	  const contenttwo = (
+		<div>
+		Any leave combined with a weekend or holiday will result in marking<br/> all days as absentee."
+		</div>
+	  );
 	const onFinish = async (values) => {
 		const FormData = {
 			...values,
-			paidLeaveCount: parseInt(values.paidLeaveCount),
-			unpaidLeaveCount: parseInt(values.unpaidLeaveCount),
+			sickLeaves: parseInt(values.sickLeaves),
+			causalLeaves: parseInt(values.causalLeaves),
+			monthlyHalfdays:parseInt(values.monthlyHalfdays),
+			monthlyLatecomings:parseInt(values.monthlyLatecomings)
 		};
-		setLoader(true);
+	
+		// setLoader(true);
+		// console.log('FormData',FormData)
 		const resp = await dispatch(addSingleLeavePolicy(FormData));
 
 		if (resp.payload.message === "success") {
@@ -169,6 +189,7 @@ const AddLeavePolicy = ({ drawer }) => {
 							style={{ marginBottom: "40px" }}
 							form={form}
 							eventKey='department-form'
+							initialValues={initialValues}
 							name='basic'
 							labelCol={{
 								span: 6,
@@ -184,6 +205,8 @@ const AddLeavePolicy = ({ drawer }) => {
 									style={{ marginBottom: "10px" }}
 									label='Name'
 									name='name'
+									labelCol={{ span: 10 }}  // Set the width of the label column
+									wrapperCol={{ span: 8 }} 
 									rules={[
 										{
 											required: true,
@@ -192,33 +215,159 @@ const AddLeavePolicy = ({ drawer }) => {
 									]}>
 									<Input placeholder='Policy 10-12' />
 								</Form.Item>
-
+								<div className="relative"> 
 								<Form.Item
 									style={{ marginBottom: "10px" }}
-									label='Paid Leave '
-									name='paidLeaveCount'
+									label='Sick Leaves '
+									name='sickLeaves'
+									labelCol={{ span: 10 }}  // Set the width of the label column
+									wrapperCol={{ span: 8 }} 
 									rules={[
 										{
 											required: true,
 											message: "Please input your paid leave!",
 										},
 									]}>
-									<Input placeholder='20' />
+										<Input type="text" placeholder="days"  onChange={(e) => {
+											// Remove non-numeric characters
+											const numericValue = e.target.value.replace(/\D/, '');
+											form.setFieldsValue({ sickLeaves: numericValue });
+										}}
+										/>
 								</Form.Item>
-
+								<p className="absolute top-[10px] right-[117px]"> Days</p>
+                                 </div>
+								 <div className="relative"> 
 								<Form.Item
 									style={{ marginBottom: "10px" }}
-									label='Unpaid Leave '
-									name='unpaidLeaveCount'
+									label='Causal Leaves '
+									name='causalLeaves'
+									labelCol={{ span: 10 }}  // Set the width of the label column
+									wrapperCol={{ span: 8 }} 
 									rules={[
 										{
 											required: true,
 											message: "Please input your unpaid Leave !",
 										},
 									]}>
-									<Input placeholder='10' />
+							      	<Input type="text" placeholder="days"  onChange={(e) => {
+											// Remove non-numeric characters
+											const numericValue = e.target.value.replace(/\D/, '');
+											form.setFieldsValue({ causalLeaves: numericValue });
+										}}
+										/>
 								</Form.Item>
-
+								<p className="absolute top-[10px] right-[117px]"> Days</p>
+								</div>
+								<div className="relative"> 
+								<Form.Item
+									style={{ marginBottom: "20px" }}
+									label='Allowed Monthly Halfdays'
+									name='monthlyHalfdays'
+									labelCol={{ span: 10 }}  // Set the width of the label column
+									wrapperCol={{ span: 8 }} 
+									rules={[
+										{
+											required: true,
+											message: "Please input Monthly Halfdays!",
+										},
+									]} 
+									>
+										<Input type="text" placeholder="days"  onChange={(e) => {
+											// Remove non-numeric characters
+											const numericValue = e.target.value.replace(/\D/, '');
+											form.setFieldsValue({ monthlyHalfdays: numericValue });
+										}}
+										/>
+								</Form.Item>
+								<p className="absolute top-[10px] right-[117px]"> Days</p>
+								</div>
+								<div className="relative"> 
+								<Form.Item
+									style={{ marginBottom: "20px" }}
+									label='Allowed Monthly Late Comings:'
+									name='monthlyLatecomings'
+									labelCol={{ span: 10 }}  // Set the width of the label column
+									wrapperCol={{ span: 8 }} 
+									rules={[
+										{
+											required: true,
+											message: "Please input Monthly LateComings!",
+										},
+									]} 
+									>
+										<Input type="text" placeholder="days"  onChange={(e) => {
+											// Remove non-numeric characters
+											const numericValue = e.target.value.replace(/\D/, '');
+											form.setFieldsValue({ monthlyLatecomings: numericValue });
+										}}
+										/>
+								</Form.Item>
+								<p className="absolute top-[10px] right-[117px]"> Days</p>
+								</div>
+								<div className="checkbox_form_item relative"> 
+										<div className="absolute left-[70px] z-[999]"> 
+												    <Popover content={content}>
+														<div ><i class="bi bi-info-circle text-black-500 text-[20px]" ></i></div>
+													</Popover>
+										</div>
+									<Form.Item
+										style={{ marginBottom: "20px" ,marginLeft:'45px'}}
+										label=''
+										name='sandwichPolicy'
+										labelCol={{ span: 0 }}  // Set the width of the label column
+										wrapperCol={{ span: 12 }} 
+										rules={[
+											{
+												required: false,
+												message: "Please check Sandwich Policy",
+											},
+										]} 
+										>
+											Sandwich Leave Policy
+										 <Checkbox className="margin-auto ml-[15px]" onChange={(e)=>{
+											form.setFieldsValue({ sandwichPolicy: e.target.checked });
+										}}>
+											
+										</Checkbox>
+									</Form.Item>
+								</div>
+								<div className="checkbox_form_item relative"> 
+								   <div className="absolute left-[70px] z-[999]"> 
+												<Popover content={contenttwo}>
+														<div ><i class="bi bi-info-circle text-black-500 text-[20px]" ></i></div>
+													</Popover>
+										</div>
+									<Form.Item
+										style={{ marginBottom: "20px", marginLeft:'45px' }}
+										label=''
+										name='leaveclubPolicy'
+										labelCol={{ span: 0 }}  // Set the width of the label column
+										wrapperCol={{ span: 12 }} 
+										rules={[
+											{
+												required: false,
+												message: "Please check Club Policy",
+											},
+										]} 
+										>
+											Leave Clubbing Policy
+										<Checkbox className="margin-auto ml-[15px]" onChange={(e)=>{
+											form.setFieldsValue({ leaveclubPolicy: e.target.checked });
+										}}>
+									    	
+										</Checkbox>
+									</Form.Item>
+								</div>
+								<div> 
+								<Form.Item
+										style={{ marginBottom: "20px", marginLeft:'45px' }}
+										labelCol={{ span: 0 }}  // Set the width of the label column
+										wrapperCol={{ span: 12 }} 
+										>
+								  <Tag color="rgba(0,0,0,0.1)"><p className="text-[13px] text-black"> Note: The User leave Policy is from 1 January to 31 December for each year. </p></Tag>
+								  </Form.Item>
+								</div>
 								<Form.Item
 									style={{ marginBottom: "10px" }}
 									wrapperCol={{

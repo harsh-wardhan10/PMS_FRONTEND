@@ -42,6 +42,7 @@
 
 body {
 	background-color: var(--body-bg) !important;
+	overflow-x: hidden;
 }
 
 .ant-shadow {
@@ -516,3 +517,30 @@ body {
 	height: 250px;
 	
   }
+
+  .hide-resize-observer {
+	display: none !important;
+  }
+  .checkbox_form_item {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.checkbox_form_item>label {
+    justify-content: center;
+    width: 60%;
+    margin: 0 auto !important;
+    text-align: start;
+}
+.span-text{
+	font-size: 13px;
+	color:grey;
+}
+
+.form_item_leave_page>div>div{
+ margin-top: 20px;
+}
+
+.form_item_leave_page > div{
+	align-items: baseline;
+}

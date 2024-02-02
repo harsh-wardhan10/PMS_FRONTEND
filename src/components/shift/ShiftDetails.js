@@ -20,6 +20,7 @@ import {
 import ShifDelete from "./shiftDelete";
 import ShiftEditPopup from "../UI/PopUp/ShiftEditPopup";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
+import moment from "moment";
 
 //PopUp
 
@@ -36,30 +37,30 @@ const CustomTable = ({ list }) => {
 
 		{
 			id: 2,
-			title: " Name",
+			title: "Name",
 			key: "firstName",
 			render: ({ firstName, lastName }) => firstName + " " + lastName,
 		},
 
 		{
 			id: 6,
-			title: "User Name",
-			dataIndex: "userName",
-			key: "userName",
+			title: "Email Id",
+			dataIndex: "email",
+			key: "email",
 		},
 		{
 			id: 7,
-			title: "Start Time",
-			dataIndex: "startTime",
-			key: "startTime",
-			render: (startTime) => dayjs(startTime).format("hh:mm A"),
+			title: "Address",
+			dataIndex: "country",
+			key: "country",
+			render: (country,record) => `${country} ,${record.state}, ${record.city}, ${record.street}`,
 		},
 		{
 			id: 8,
-			title: "End Time",
-			dataIndex: "endTime",
-			key: "endTime",
-			render: (endTime) => dayjs(endTime).format("hh:mm A"),
+			title: "Shift",
+			dataIndex: "shift",
+			key: "shift",
+			render: (shift) => `${shift.name}`,
 		},
 		{
 			id: 4,
@@ -101,7 +102,7 @@ const CustomTable = ({ list }) => {
 					</div>
 				)}
 			</div>
-			{list && (
+			{/* {list && (
 				<div style={{ marginBottom: "30px" }}>
 					<ColVisibilityDropdown
 						options={columns}
@@ -109,7 +110,7 @@ const CustomTable = ({ list }) => {
 						columnsToShowHandler={columnsToShowHandler}
 					/>
 				</div>
-			)}
+			)} */}
 			<Table
 				loading={!list}
 				columns={columnsToShow}
@@ -146,20 +147,25 @@ const DetailShift = () => {
 	if (!isLogged) {
 		return <Navigate to={"/admin/auth/login"} replace={true} />;
 	}
+   const convertoHours=(shiftworkHour)=>{
+		const workHourInMinutes = shiftworkHour;
+		const hours = Math.floor(workHourInMinutes / 60);
+		const minutes = workHourInMinutes % 60;
 
+		const formattedWorkHour = `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
+		return formattedWorkHour
+   }
 	return (
 		<div>
 			<PageTitle title=' Back  ' />
-
+               {/* {console.log('shift',shift)} */}
 			<UserPrivateComponent permission={"readSingle-shift"}>
 				<Card className='mr-top mt-5'>
 					{shift ? (
 						<Fragment key={shift.id}>
 							<div>
 								<div className='flex justify-between '>
-									<h3 className={"text-xl"}>
-										ID : {shift.id} | {shift.name}
-									</h3>
+									    <h3 className={"text-xl"}>ID : {shift.id} | {shift.name} </h3>
 									<div className='flex justify-end'>
 										<UserPrivateComponent permission={"update-shift"}>
 											<ShiftEditPopup data={shift} />
@@ -169,6 +175,15 @@ const DetailShift = () => {
 											<ShifDelete id={id} />
 										</UserPrivateComponent>
 									</div>
+								</div>
+								<div className="grid grid-cols-3"> 
+								        <div> <p> <b> Shift Start Time :</b>{moment(shift.startTime).format('h:mm:ss A')}</p></div>
+										<div> <p> <b> Shift End Time : </b>{moment(shift.endTime).format('h:mm:ss A')} </p></div>
+										<div> <p> <b> Shift Break Time : </b> {shift.breakTime} mins</p></div> 
+										<div> <p> <b> Shift In Grace Time :</b>{shift.ingraceTime} mins</p></div>
+										<div> <p> <b> Shift Out Grace Time :</b>{shift.outgraceTime} mins</p></div>
+										<div> <p> <b> Shift Work Hours : </b>{convertoHours(shift.workHour)} mins</p></div>
+										
 								</div>
 								<CustomTable list={shift.user} />
 							</div>

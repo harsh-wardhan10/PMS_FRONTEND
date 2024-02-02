@@ -17,8 +17,9 @@ import dayjs from "dayjs";
 import BtnViewSvg from "../UI/Button/btnViewSvg";
 import ViewBtn from "../Buttons/ViewBtn";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
+import { loadAllReimbursementApplication, loadReimbursementByStatus } from "../../redux/rtk/features/reimbursement/reimbursement";
 
-function CustomTable({ list, total }) {
+function CustomTable({ list }) {
 	const dispatch = useDispatch();
 	const [status, setStatus] = useState("true");
 	const [columnsToShow, setColumnsToShow] = useState([]);
@@ -33,46 +34,33 @@ function CustomTable({ list, total }) {
 
 		{
 			id: 2,
-			title: " Name",
-			key: "name",
+			title: "Name",
+			key: "user",
 			dataIndex: "user",
 			render: ({ firstName, lastName }) => firstName + " " + lastName,
 		},
 		{
-			id: 3,
-			title: "Leave Type",
-			dataIndex: "leaveType",
-			key: "leaveType",
-			render: (leaveType, record) => `${leaveType}  ${record.paidOrUnpaid ? `(${record.paidOrUnpaid})` :''  }   `,
-
-		},
-		{
 			id: 4,
-			title: "Leave From",
-			dataIndex: "leaveFrom",
-			key: "leaveFrom",
-			render: (leaveFrom) => dayjs(leaveFrom).format("DD-MM-YYYY"),
+			title: "Reimbursement Reason",
+			dataIndex: "reason",
+			key: "reason",
+			render: (reason) => `${reason}`
+		},
+        {
+			id: 4,
+			title: "Reimbursement Amount",
+			dataIndex: "amount",
+			key: "amount",
+			render: (amount) => `${amount}`
 		},
 		{
 			id: 5,
-			title: "Leave To",
-			dataIndex: "leaveTo",
-			key: "leaveTo",
-			render: (leaveTo) => dayjs(leaveTo).format("DD-MM-YYYY"),
+			title: "Reimbursement Date",
+			dataIndex: "date",
+			key: "date",
+			render: (date) => dayjs(date).format("DD-MM-YYYY"),
 		},
-		{
-			id: 6,
-			title: "Leave Duration",
-			dataIndex: "leaveDuration",
-			key: "leaveDuration",
-			render: (leaveDuration) => {
-				if (leaveDuration > 1) {
-					return <span>{leaveDuration} days</span>;
-				} else {
-					return <span>{leaveDuration} day</span>;
-				}
-			},
-		},
+
 		{
 			id: 7,
 			title: "Status",
@@ -95,7 +83,7 @@ function CustomTable({ list, total }) {
 			key: "action",
 			render: ({ id }) => (
 				<ViewBtn
-					path={`/admin/leave/${id}`}
+					path={`/admin/reimbursement/${id}`}
 					text='View'
 					icon={<BtnViewSvg />}
 				/>
@@ -106,7 +94,7 @@ function CustomTable({ list, total }) {
 	const onChange = (value) => {
 		setStatus(value);
 		dispatch(
-			loadLeaveApplicationByStatus({ page: 1, limit: 20, status: value })
+			loadReimbursementByStatus({ page: 1, limit: 20, status: value })
 		);
 	};
 
@@ -119,7 +107,7 @@ function CustomTable({ list, total }) {
 	};
 
 	const onAllClick = () => {
-		dispatch(loadAllLeaveApplication());
+		dispatch(loadAllReimbursementApplication());
 		setStatus("all");
 	};
 
@@ -200,7 +188,7 @@ function CustomTable({ list, total }) {
 					defaultPageSize: 20,
 					pageSizeOptions: [10, 20, 50, 100, 200],
 					showSizeChanger: true,
-					total: total ? total : 100,
+					total: list ? list?.length : 100,
 					onChange: (page, limit) => {
 						dispatch(loadLeaveApplicationByStatus({ page, limit, status }));
 					},
@@ -212,14 +200,14 @@ function CustomTable({ list, total }) {
 	);
 }
 
-const GetAllLeaves = (props) => {
+const GetAllReimbursement = (props) => {
 	const dispatch = useDispatch();
-	const list = useSelector((state) => state.leave.list);
-	const total = useSelector((state) => state.leave.total);
+	const list = useSelector((state) => state.reimbursement.list);
 
 	useEffect(() => {
-		dispatch(loadAllLeaveApplication());
-		dispatch(countLeaveApplication());
+        
+		dispatch(loadAllReimbursementApplication());
+
 	}, []);
 
 	// useEffect(() => {
@@ -231,11 +219,11 @@ const GetAllLeaves = (props) => {
 			  {/* {console.log('list',list)} */}
 			<div className='card card-custom'>
 				<div className='card-body'>
-					<CustomTable list={list} total={total} />
+					<CustomTable list={list} />
 				</div>
 			</div>
 		</UserPrivateComponent>
 	);
 };
 
-export default GetAllLeaves;
+export default GetAllReimbursement;

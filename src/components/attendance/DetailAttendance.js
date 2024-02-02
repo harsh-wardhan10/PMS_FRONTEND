@@ -13,11 +13,25 @@ import ColVisibilityDropdown from "../Shared/ColVisibilityDropdown";
 import { loadBulkAttendancePaginated } from "../../redux/rtk/features/attendance/attendanceSlice";
 import dayjs from "dayjs";
 import moment from 'moment';
+import { loadAllAccount } from "../../redux/rtk/features/account/accountSlice";
+import { loadAllAppSettings } from "../../redux/rtk/features/appSettings/appSettingsSlice";
+import _debounce from 'lodash/debounce';
+
 const DetailAttendance = () => {
 	
 	
-	let startdate = dayjs().startOf("month");
-    let enddate = dayjs().endOf("month");
+	// let startdate = dayjs().startOf("month");
+    // let enddate = dayjs().endOf("month");
+	const last30days = () => {
+		const currentDate = new Date();
+		const yesterday = new Date(currentDate);
+		yesterday.setDate(currentDate.getDate() - 30);
+		return yesterday
+	  };
+	const [enddate, setenddate] = useState(new Date());
+    const [startdate, setstartdate] = useState(last30days());
+	const appSettings = useSelector((state) => state.appsetting);
+    const [isfilter, setisfilter] =useState(false)
 	const { id } = useParams("id");
 	// const attendance = useSelector((state) => state.attendance.attendance);
 	const dispatch = useDispatch();
@@ -29,8 +43,11 @@ const DetailAttendance = () => {
 		// return () => {
 		// 	dispatch(clearAttendance());
 		// };
-		setAttendanceData(singleData.state)
-	}, []);
+		dispatch(loadAllAppSettings())
+             if(!isfilter){
+				setAttendanceData(singleData.state)
+			 }
+	}, [attendanceData]);
 	function CustomTable({ list, total, status, setStatus, loading }) {
 		const [columnsToShow, setColumnsToShow] = useState([]);
 		const [CSVlist, setCSVlist]=useState([])
@@ -57,17 +74,17 @@ const DetailAttendance = () => {
 				title: "Log",
 				dataIndex: `log`,
 				key: "log",
-				render: (log) => `${log}`
+				render: (log) => `${log ? log : "-"}`
 					// dayjs(street).format("DD-MM-YYYY, h:mm A") || "NONE",
 			},
 			{
 				id: 4,
-				title: "Email Id",
-				dataIndex: `emailId`,
-				key: "emailId",
-				render: (emailId) => `${emailId}`
+				title: "Shift",
+				dataIndex: `shift`,
+				key: "shift",
+				render: (shift) => `${shift.name}`
 					// dayjs(street).format("DD-MM-YYYY, h:mm A") || "NONE",
-			},
+			}
 		];
 	
 		useEffect(() => {
@@ -85,35 +102,41 @@ const DetailAttendance = () => {
 			setCSVlist(list.map((item)=>{
 				return {
 					  "ID": item.id,
-					  "Email Id":`${item?.emailId}` ,
+					  "User Name":`${item.userData[0].firstName} ${item.userData[0].lastName}`,
+					  "Email Id":item?.emailId,
+					  "Employee Id":item.employeeId,
+					  "Company Name":appSettings.list.company_name,
 					  "Date": item.date?item.date:"None",
 					  "Log":item.log? item.log:'None',
 					  "Status":item.status?item.status:'None',
+					  "Shift":item.shift.name,
+					  "Date":`${new Date(item.date).toDateString()}`	
 				}
 		   }))
 		 }
 		return (
 			<div className='mt-5'>
 				{list && (
-					 <div className='text-center my-2 flex justify-end'>
-						<CsvLinkBtn onClick={handlecsvclick}>
-							<CSVLink data={CSVlist} filename='purchase'>
-								Download CSV
-							</CSVLink>
-						</CsvLinkBtn>
-					</div>
+					< div className="flex justify-between items-center">
+					
+					<div style={{ marginBottom: "30px" }}>
+					<ColVisibilityDropdown
+						options={columns}
+						columns={columns}
+						columnsToShowHandler={columnsToShowHandler}
+					  />
+					  </div>
+					  <div className='text-center my-2 flex justify-end'>
+							
+							<CsvLinkBtn onClick={handlecsvclick}>
+								<CSVLink data={CSVlist} filename='Attendance_list'>
+									Download CSV
+								</CSVLink>
+							</CsvLinkBtn>
+						</div>
+				 </div>
 				)}
 			   
-				{list && (
-					<div style={{ marginBottom: "30px" }}>
-						<ColVisibilityDropdown
-							options={columns}
-							columns={columns}
-							columnsToShowHandler={columnsToShowHandler}
-						/>
-					</div>
-				)}
-	
 				<Table
 					scroll={{ x: true }}
 					loading={loading}
@@ -135,24 +158,44 @@ const DetailAttendance = () => {
 		);
 	}
 	const { RangePicker } = DatePicker;
-	const onCalendarChange = (dates) => {
+	const onCalendarChange = _debounce((dates) => {
 		if (dates) {
-
-			const startDateObj = moment(dates[0]);
-			const endDateObj = moment(dates[1]);
-			startdate = startDateObj.format('MM/DD/YYYY');
-			enddate = endDateObj.format('MM/DD/YYYY');
-			const filteredData = singleData.state.filter(item => {
-				const itemDate = moment(item.date, 'MM/DD/YY');
-				const startDateObj = moment(startdate, 'MM/DD/YYYY');
-				const endDateObj = moment(enddate, 'MM/DD/YYYY');
-
-				return itemDate.isSameOrAfter(startDateObj) && itemDate.isSameOrBefore(endDateObj);
-			});
-			setAttendanceData(filteredData)
+		  const startDateObj = moment(dates[0], 'DD-MM-YYYY');
+		  const endDateObj = moment(dates[1],'DD-MM-YYYY');
+		  const newStartDate = startDateObj.format('DD/MM/YYYY');
+		  const newEndDate = endDateObj.format('DD/MM/YYYY');
+	
+		    const filteredData = singleData.state?.filter((item) => {
+				
+			const itemDate = moment(item.date, 'MM/DD/YY');
+			const startDateObj = moment(newStartDate, 'DD/MM/YYYY');
+			const endDateObj = moment(newEndDate, 'DD/MM/YYYY');
+			return (
+			  itemDate.isSameOrAfter(startDateObj) && itemDate.isSameOrBefore(endDateObj)
+			);
+		  });
+		  setisfilter(true)
+		
+		   setAttendanceData(filteredData);
 		}
-	};
+	  },300);
+	  useEffect(() => {
+		const filteredData = singleData.state.filter((item) => {
+		  const itemDate = moment(item.date, 'MM/DD/YY');
+		  const startDateObj = moment(startdate, 'DD/MM/YYYY');
+		  const endDateObj = moment(enddate, 'DD/MM/YYYY');
+		  return itemDate.isSameOrAfter(startDateObj) && itemDate.isSameOrBefore(endDateObj);
+		});
+		setAttendanceData(filteredData);
+	  }, [startdate, enddate]);
+	  const convertoHours=(shiftworkHour)=>{
+		const workHourInMinutes = shiftworkHour;
+		const hours = Math.floor(workHourInMinutes / 60);
+		const minutes = workHourInMinutes % 60;
 
+		const formattedWorkHour = `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
+		return formattedWorkHour
+   }
 	return (
 		<div>
 			<PageTitle title='Back' />
@@ -161,20 +204,37 @@ const DetailAttendance = () => {
 					{" "}
 					<h2 className='text-2xl font-semibold text-gray-600'>
 						Attendance Status #{singleData.state[0]?.userData[0]?.firstName} {" "} {singleData.state[0]?.userData[0]?.lastName}{" "}
+					    
 					</h2>
+					{console.log('singleData.state',singleData.state)}
 				</div>
-				{/* {console.log('singleData',singleData.state)} */}
+				   <div className="grid grid-cols-3 mb-[15px]"> 
+				   <p className="text-gray-600 font-semibold"> EmailId - {singleData.state[0]?.emailId}</p>
+					<p className="text-gray-600 font-semibold"> Shift - {singleData.state[0]?.shift.name}</p>
+					<p className="text-gray-600 font-semibold"> Employee Id - {singleData.state[0]?.employeeId}</p>
+					<p className="text-gray-600 font-semibold"> Shift Start Time  - {moment(singleData.state[0]?.shift?.startTime).format('h:mm:ss A')}</p>
+					<p className="text-gray-600 font-semibold"> Shift End Time  - {moment(singleData.state[0]?.shift?.endTime).format('h:mm:ss A') }</p>
+					<p className="text-gray-600 font-semibold"> Shift Work Hour  - {convertoHours(singleData.state[0]?.shift?.workHour)} hrs</p>
+				   </div>
+					
+				
+				{/* {console.log('attendanceData',attendanceData,singleData.state)} */}
 				<div className='flex justify-end'>
-							<RangePicker
-								onChange={onCalendarChange}
-								// defaultValue={[startdate, enddate]}
-								format={"DD-MM-YYYY"}
-								className='range-picker mr-3'
-								style={{ maxWidth: "400px" }}
-							/>
+					{/* {console.log('startdate',moment(startdate, 'DD/MM/YYYY') , 'enddate',moment(enddate, 'DD/MM/YYYY'))} */}
+					<RangePicker
+						onChange={onCalendarChange}
+						defaultValue={[
+							moment(startdate, 'DD/MM/YYYY'),
+							moment(enddate, 'DD/MM/YYYY'),
+						]}
+						format="DD-MM-YYYY"
+						className="range-picker mr-3"
+						style={{ maxWidth: '400px', marginBottom:"10px" }}
+						/>
 						
 						</div>
-				{singleData.state?(
+
+				 {singleData.state?(
 					<div className="">
 						<ul className='list-inside list-none border-2 border-inherit rounded px-5 py-5 '>
 						<CustomTable

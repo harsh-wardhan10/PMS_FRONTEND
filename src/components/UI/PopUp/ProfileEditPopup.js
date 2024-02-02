@@ -8,6 +8,7 @@ import {
 	Space,
 	Modal,
 	Typography,
+	InputNumber,
 } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,6 +27,7 @@ import { loadAllShift } from "../../../redux/rtk/features/shift/shiftSlice";
 import { loadAllLeavePolicy } from "../../../redux/rtk/features/leavePolicy/leavePolicySlice";
 import { loadAllWeeklyHoliday } from "../../../redux/rtk/features/weeklyHoliday/weeklyHolidaySlice";
 import { useParams } from "react-router-dom";
+import moment from "moment";
 
 const ProfileEditPopup = ({ data }) => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,7 +36,7 @@ const ProfileEditPopup = ({ data }) => {
 	const weeklyHoliday = useSelector((state) => state.weeklyHoliday?.list);
 	const shift = useSelector((state) => state.shift?.list);
 	const user = useSelector((state) => state.users?.user);
-
+    const [taxes, settaxes] = useState([])
 	const { id } = useParams("id");
 
 	const dispatch = useDispatch();
@@ -77,8 +79,8 @@ const ProfileEditPopup = ({ data }) => {
 			state: user.state ? user.state : "",
 			zipCode: user.zipCode ? user.zipCode : "",
 			country: user.country ? user.country : "",
-			joinDate: dayjs(user.joinDate),
-			leaveDate: user.leaveDate ? dayjs(user.leaveDate) : null,
+			joinDate:  user.joinDate ? moment(user.joinDate) : null,
+			leaveDate: user.leaveDate ? moment(user.leaveDate) : null,
 			employeeId: user.employeeId ? user.employeeId : "",
 			bloodGroup: user.bloodGroup ? user.bloodGroup : "",
 			image: user.image ? user.image : "",
@@ -87,7 +89,15 @@ const ProfileEditPopup = ({ data }) => {
 			shiftId: user.shiftId ? user.shiftId : "",
 			leavePolicyId: user.leavePolicyId ? user.leavePolicyId : "",
 			weeklyHolidayId: user.weeklyHolidayId ? user.weeklyHolidayId : "",
+            salary:user?.salaryHistory[0]?.salary ? user?.salaryHistory[0]?.salary :'',
+			TDS:user?.salaryHistory[0]?.TDS ?user?.salaryHistory[0]?.TDS:'',
+			ESIC:user?.salaryHistory[0]?.ESIC?user?.salaryHistory[0]?.ESIC:'',
+			PF:user?.salaryHistory[0]?.PF?user?.salaryHistory[0]?.PF:'',
+			startDate:moment(user?.salaryHistory[0]?.startDate)?moment(user?.salaryHistory[0]?.startDate):'',
+			endDate:moment(user?.salaryHistory[0]?.endDate)?moment(user?.salaryHistory[0]?.endDate):''
 		});
+		settaxes(user?.salaryHistory[0]?.taxes)
+		
 	}, [id]);
 
 	useEffect(() => {
@@ -100,6 +110,7 @@ const ProfileEditPopup = ({ data }) => {
 
 	const onFinish = async (values) => {
 		try {
+			// console.log('values', values , taxes)
 			const resp = await dispatch(
 				updateUser({
 					id: id,
@@ -112,7 +123,10 @@ const ProfileEditPopup = ({ data }) => {
 						weeklyHolidayId: weeklyHolidayId
 							? weeklyHolidayId
 							: data.weeklyHolidayId,
+					    taxes:taxes,
+						salaryHistoryId:user?.salaryHistory[0].id
 					},
+					
 				})
 			);
 
@@ -156,12 +170,14 @@ const ProfileEditPopup = ({ data }) => {
 			<button onClick={showModal}>
 				<BtnEditSvg size={30} />
 			</button>
+
 			<Modal
 				width={"50%"}
 				title='Update Employee Information'
 				open={isModalOpen}
 				onOk={handleOk}
-				onCancel={handleCancel}>
+				onCancel={handleCancel}
+				footer={false}>
 				<Form
 					size='small'
 					form={form}
@@ -211,6 +227,14 @@ const ProfileEditPopup = ({ data }) => {
 							{
 								required: true,
 								message: "Please input User Name!",
+							},
+							{
+								validator: (_, value) => {
+									if (value && /\s/.test(value)) {
+										return Promise.reject(new Error('User Name should not contain spaces'));
+									}
+									return Promise.resolve();
+								},
 							},
 						]}>
 						<Input placeholder='john_doe' />
@@ -505,6 +529,132 @@ const ProfileEditPopup = ({ data }) => {
 								))}
 						</Select>
 					</Form.Item>
+					<h2 className='text-center text-xl mt-3 mb-3 txt-color'>
+						{" "}
+						Designation & Salary Information
+					</h2>
+
+					         <Form.Item
+									label='Salary Start Date'
+									name='startDate'
+									style={{ marginBottom: "10px" }}
+									rules={[
+										{
+											required: true,
+											message: "Please input date!",
+										},
+									]}>
+									<DatePicker defaultValue={initialValues.startDate} className='date-picker hr-staffs-date-picker' />
+								</Form.Item>
+
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='Salary End Date'
+									name='endDate'>
+									<DatePicker defaultValue={initialValues.endDate} className='date-picker hr-staffs-date-picker' />
+								</Form.Item>
+								
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='Salary (Monthly)'
+									name='salary'
+									
+									rules={[
+										{
+											required: true,
+											message: "Please input salary",
+										},
+									]}>
+									<InputNumber  placeholder="salary" style={{ width: "100%" }} />
+								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='PF (Monthly)'
+									name='PF'
+									rules={[
+										{
+											required: false,
+											message: "Please input PF",
+										},
+									]}>
+									<InputNumber placeholder="PF" style={{ width: "100%" }} />
+								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='ESIC (Monthly)'
+									name='ESIC'
+									rules={[
+										{
+											required: false,
+											message: "Please input ESIC",
+										},
+									]}>
+									<InputNumber placeholder="ESIC" style={{ width: "100%" }} />
+								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='TDS (Monthly)'
+									name='TDS'
+									rules={[
+										{
+											required: false,
+											message: "Please input TDS",
+										},
+									]}>
+									<InputNumber placeholder="TDS" style={{ width: "100%" }} />
+								</Form.Item>
+								<div className="flex mb-[10px] items-baseline">
+									<div className=" w-[30%] text-right pr-[13px] mt-[15px]">  Taxes (Monthly):		</div> 
+                                    <div> 
+									{taxes?.map((item , key)=>{
+										
+                                   return (
+								 	<div className="flex items-center w-[94%]">
+									<Select
+										loading={!shift}
+										size='middle'
+										// mode='single'
+										allowClear
+										style={{
+											width: "100%",
+											margin:'10px',
+											marginLeft:'0px'
+										}}
+										placeholder='Please select type'
+                                        defaultValue={item.taxType}
+										onChange={(value)=> {
+											// settaxes([...taxes , ])
+											settaxes((prevTaxes) => {
+												const updatedTaxes = [...prevTaxes];
+												updatedTaxes[key] = { ...item, taxType: value };
+												return updatedTaxes;
+											});
+											// item.taxType=value 
+										}}>
+												<Option value='TaxA'>
+													Tax A
+												</Option>
+												<Option value='TaxB'>
+													Tax B
+												</Option>
+									</Select>
+									  <InputNumber defaultValue={item.amount} style={{ width: "100%", margin:'10px',marginLeft:'0px' }}  onChange={(value)=>{
+										 settaxes((prevTaxes) => {
+											const updatedTaxes = [...prevTaxes];
+											updatedTaxes[key] = { ...item, amount: value };
+											return updatedTaxes;
+										});
+									  }}/>
+                                       {key ===taxes.length-1 &&
+									  <Button onClick={()=>{
+										settaxes([...taxes, {id:item.id+1, taxType:"" , amount:""}])
+									   }} className="ant-btn-primary"> + </Button>  
+									  }                                                    
+									</div>
+								)                  
+								})}
+									</div>
+								</div>
 
 					<Form.Item
 						style={{ marginBottom: "10px", marginTop: "10px" }}

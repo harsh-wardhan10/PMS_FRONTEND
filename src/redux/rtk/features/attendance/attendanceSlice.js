@@ -63,7 +63,7 @@ export const getCurrentUserClockInStatus = createAsyncThunk(
 export const addManualAttendance = createAsyncThunk(
 	"attendance/addManualAttendance",
 	async (values) => {
-		console.log('values', values)
+		// console.log('values', values)
 		try {
 
 			const { data } = await axios({
@@ -335,7 +335,6 @@ const clockInSlice = createSlice({
 
 		builder.addCase(loadBulkAttendancePaginated.fulfilled, (state, action) => {
 			state.loading = false;
-
 			state.list = action.payload;
 		});
 

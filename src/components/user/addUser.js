@@ -37,7 +37,11 @@ const AddUser = () => {
 	const { Option } = Select;
 	const [list, setList] = useState(null);
 	const [department, setDepartment] = useState(null);
-
+    const [taxes, settaxes] =useState([{
+		id:1,
+        taxType:'',
+		amount:''
+	}])
 	const [education, setEducation] = useState([
 		// {
 		// 	degree: "",
@@ -82,12 +86,22 @@ const AddUser = () => {
 	const [form] = Form.useForm();
 
 	const onFinish = async (values) => {
+
+		const taxesArr = taxes.map(obj => {
+			// Create a new object without the 'id' key
+			const { id, ...newObj } = obj;
+			return newObj;
+		  });
+		  
 		const FormData = {
 			...values,
-
 			educations: values.educations || education,
+			shiftId: values.shiftId ? values.shiftId :shift.filter(item=> item.name === "Morning")[0].id,
+			taxes:taxesArr
+
 		};
 		try {
+			// console.log('FormData',FormData)
 			const resp = await dispatch(addStaff(FormData));
 			setLoader(true);
 
@@ -175,6 +189,14 @@ const AddUser = () => {
 										{
 											required: true,
 											message: "Please input User Name!",
+										},
+										{
+											validator: (_, value) => {
+												if (value && /\s/.test(value)) {
+													return Promise.reject(new Error('User Name should not contain spaces'));
+												}
+												return Promise.resolve();
+											},
 										},
 									]}>
 									<Input placeholder='john_doe' />
@@ -402,7 +424,7 @@ const AddUser = () => {
 
 								<Form.Item
 									rules={[
-										{ required: true, message: "Please input Department!" },
+										{ required: false, message: "Please input Department!" },
 									]}
 									label='Shift'
 									name={"shiftId"}
@@ -415,6 +437,7 @@ const AddUser = () => {
 										style={{
 											width: "100%",
 										}}
+										defaultValue={"Morning"}
 										placeholder='Please select'>
 										{shift &&
 											shift.map((shift) => (
@@ -532,7 +555,7 @@ const AddUser = () => {
 
 								<Form.Item
 									style={{ marginBottom: "10px" }}
-									label='Salary'
+									label='Salary (Monthly)'
 									name='salary'
 									rules={[
 										{
@@ -542,6 +565,83 @@ const AddUser = () => {
 									]}>
 									<InputNumber style={{ width: "100%" }} />
 								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='PF (Monthly)'
+									name='PF'
+									rules={[
+										{
+											required: false,
+											message: "Please input PF",
+										},
+									]}>
+									<InputNumber style={{ width: "100%" }} />
+								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='ESIC (Monthly)'
+									name='ESIC'
+									rules={[
+										{
+											required: false,
+											message: "Please input ESIC",
+										},
+									]}>
+									<InputNumber style={{ width: "100%" }} />
+								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='TDS (Monthly)'
+									name='TDS'
+									rules={[
+										{
+											required: false,
+											message: "Please input TDS",
+										},
+									]}>
+									<InputNumber style={{ width: "100%" }} />
+								</Form.Item>
+								
+								<div className="flex mb-[10px] items-baseline">
+									<div className=" w-[30%] text-right pr-[13px] mt-[15px]">  Taxes (Monthly):		</div> 
+                                    <div> 
+									{taxes.map((item , key)=>{
+                                   return (
+								 	<div className="flex items-center w-[94%]">
+									<Select
+										loading={!shift}
+										size='middle'
+										// mode='single'
+										allowClear
+										style={{
+											width: "100%",
+											margin:'10px',
+											marginLeft:'0px'
+										}}
+										placeholder='Please select type'
+
+										onChange={(value)=> item.taxType=value }>
+												<Option value='TaxA'>
+													Tax A
+												</Option>
+												<Option value='TaxB'>
+													Tax B
+												</Option>
+									</Select>
+									  <InputNumber style={{ width: "100%", margin:'10px',marginLeft:'0px' }}  onChange={(value)=>{
+										 return item.amount = value
+									  }}/>
+                                       {key === taxes.length-1 &&
+									  <Button onClick={()=>{
+										settaxes([...taxes, {id:item.id + 1 , taxType:"" , amount:""}])
+									   }} className="ant-btn-primary"> + </Button>  
+									  }                                                    
+									</div>
+								)                  
+								})}
+									</div>
+								</div>
+								
 
 								<Form.Item
 									label='Salary Start Date'

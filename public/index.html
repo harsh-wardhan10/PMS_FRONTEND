@@ -49,5 +49,31 @@
           });
       }
     </script> -->
+
+	<!-- <script>
+		   window.addEventListener("error", (e) => {
+      if (e) {
+        const resizeObserverErrDiv = document.getElementById(
+          "webpack-dev-server-client-overlay-div",
+        );
+        const resizeObserverErr = document.getElementById(
+          "webpack-dev-server-client-overlay",
+        );
+        if (resizeObserverErr)
+          resizeObserverErr.className = "hide-resize-observer";
+        if (resizeObserverErrDiv)
+          resizeObserverErrDiv.className = "hide-resize-observer";
+      }
+    });
+	</script>
+	<script>
+   window.addEventListener('error', function (e) {
+    console.error(e.message);
+       // prevent React's listener from firing
+    e.stopImmediatePropagation();
+      // prevent the browser's console error message
+    e.preventDefault();
+ });
+  </script>  -->
 	</body>
 </html>

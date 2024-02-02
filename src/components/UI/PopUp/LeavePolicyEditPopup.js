@@ -1,5 +1,5 @@
-import { Button, Form, Input, Modal } from "antd";
-import { useState } from "react";
+import { Button, Checkbox, Form, Input, Modal, Popover } from "antd";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import BtnEditSvg from "../Button/btnEditSvg";
@@ -15,14 +15,25 @@ const LeavePolicyEdit = ({ data }) => {
 	const { id } = useParams("id");
 
 	const [loader, setLoader] = useState(false);
-
+	const [form] = Form.useForm();
 	const dispatch = useDispatch();
+    const [sandwichPolicy, setsandwichPolicy] =useState()
+	const [leaveclubPolicy, setleaveclubPolicy] =useState()
+
+	useEffect(()=>{
+		setsandwichPolicy(data.sandwichPolicy)
+		setleaveclubPolicy(data.leaveclubPolicy)
+	},[data])
 
 	const onFinish = async (values) => {
 		const FormData = {
 			...values,
-			paidLeaveCount: parseInt(values.paidLeaveCount),
-			unpaidLeaveCount: parseInt(values.unpaidLeaveCount),
+			sickLeaves: parseInt(values.sickLeaves),
+			causalLeaves: parseInt(values.causalLeaves),
+			monthlyLatecomings:parseInt(values.monthlyLatecomings),
+			monthlyHalfdays:parseInt(values.monthlyHalfdays),
+			leaveclubPolicy:leaveclubPolicy,
+			sandwichPolicy:sandwichPolicy
 		};
 		setLoader(true);
 		const resp = await dispatch(updateLeavePolicy({ id, values: FormData }));
@@ -30,6 +41,7 @@ const LeavePolicyEdit = ({ data }) => {
 		if (resp.payload.message === "success") {
 			setLoader(false);
 			dispatch(loadSingleLeavePolicy(id));
+			setIsModalOpen(false);
 		} else {
 			setLoader(false);
 		}
@@ -37,8 +49,10 @@ const LeavePolicyEdit = ({ data }) => {
 
 	const initialValues = {
 		name: data?.name,
-		paidLeaveCount: data?.paidLeaveCount,
-		unpaidLeaveCount: data?.unpaidLeaveCount,
+		sickLeaves: data?.sickLeaves,
+		causalLeaves: data?.causalLeaves,
+		monthlyLatecomings:data.monthlyLatecomings,
+		monthlyHalfdays:data.monthlyHalfdays,
 	};
 
 	const onFinishFailed = (errorInfo) => {
@@ -65,7 +79,9 @@ const LeavePolicyEdit = ({ data }) => {
 				title='Leave Policy Edit'
 				open={isModalOpen}
 				onOk={handleOk}
-				onCancel={handleCancel}>
+				onCancel={handleCancel}
+				footer={false}
+				className='w-[650px]'>
 				<Form
 					style={{ marginBottom: "50px" }}
 					eventKey='department-form'
@@ -85,6 +101,8 @@ const LeavePolicyEdit = ({ data }) => {
 							style={{ marginBottom: "10px" }}
 							label='Name'
 							name='name'
+							labelCol={{ span: 10 }}  // Set the width of the label column
+						wrapperCol={{ span: 8 }}
 							rules={[
 								{
 									required: true,
@@ -95,31 +113,131 @@ const LeavePolicyEdit = ({ data }) => {
 						</Form.Item>
 
 						<Form.Item
-							style={{ marginBottom: "10px" }}
-							label='Paid Leave'
-							name='paidLeaveCount'
-							rules={[
-								{
-									required: true,
-									message: "Please input your Paid Leave!",
-								},
-							]}>
-							<Input />
-						</Form.Item>
+									style={{ marginBottom: "10px" }}
+									label='Sick Leaves '
+									name='sickLeaves'
+									labelCol={{ span: 10 }}  // Set the width of the label column
+									wrapperCol={{ span: 8 }} 
+									rules={[
+										{
+											required: true,
+											message: "Please input your paid leave!",
+										},
+									]}>
+										<Input type="text" placeholder="days"  onChange={(e) => {
+											// Remove non-numeric characters
+											const numericValue = e.target.value.replace(/\D/, '');
+											form.setFieldsValue({ sickLeaves: numericValue });
+										}}
+										/>
+								</Form.Item>
 
-						<Form.Item
-							style={{ marginBottom: "10px" }}
-							label='Unpaid Leave'
-							name='unpaidLeaveCount'
-							rules={[
-								{
-									required: true,
-									message: "Please input your Unpaid Leave!",
-								},
-							]}>
-							<Input />
-						</Form.Item>
-
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='Causal Leaves '
+									name='causalLeaves'
+									labelCol={{ span: 10 }}  // Set the width of the label column
+									wrapperCol={{ span: 8 }} 
+									rules={[
+										{
+											required: true,
+											message: "Please input your unpaid Leave !",
+										},
+									]}>
+							      	<Input type="text" placeholder="days"  onChange={(e) => {
+											// Remove non-numeric characters
+											const numericValue = e.target.value.replace(/\D/, '');
+											form.setFieldsValue({ causalLeaves: numericValue });
+										}}
+										/>
+								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "20px" }}
+									label='Allowed Monthly Halfdays'
+									name='monthlyHalfdays'
+									labelCol={{ span: 10 }}  // Set the width of the label column
+									wrapperCol={{ span: 8 }} 
+									rules={[
+										{
+											required: true,
+											message: "Please input Monthly Halfdays!",
+										},
+									]} 
+									>
+										<Input type="text" placeholder="days"  onChange={(e) => {
+											// Remove non-numeric characters
+											const numericValue = e.target.value.replace(/\D/, '');
+											form.setFieldsValue({ monthlyHalfdays: numericValue });
+										}}
+										/>
+								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "20px" }}
+									label='Allowed Monthly Late Comings:'
+									name='monthlyLatecomings'
+									labelCol={{ span: 10 }}  // Set the width of the label column
+									wrapperCol={{ span: 8 }} 
+									rules={[
+										{
+											required: true,
+											message: "Please input Monthly LateComings!",
+										},
+									]} 
+									>
+										<Input type="text" placeholder="days"  onChange={(e) => {
+											// Remove non-numeric characters
+											const numericValue = e.target.value.replace(/\D/, '');
+											form.setFieldsValue({ monthlyLatecomings: numericValue });
+										}}
+										/>
+								</Form.Item>
+								<div className="checkbox_form_item relative"> 
+									<Form.Item
+										style={{ marginBottom: "20px" }}
+										label=''
+										name='sandwichPolicy'
+										labelCol={{ span: 0 }}  // Set the width of the label column
+										wrapperCol={{ span: 12 }} 
+										rules={[
+											{
+												required: false,
+												message: "Please check Sandwich Policy",
+											},
+										]} 
+										>
+											Sandwich Leave Policy
+										<Checkbox className="margin-auto ml-[15px]" checked={sandwichPolicy} onChange={(e)=>{
+											form.setFieldsValue({ sandwichPolicy: e.target.checked });
+											setsandwichPolicy(e.target.checked)
+										}}>
+											
+										</Checkbox>
+									</Form.Item>
+								</div>
+								<div className="checkbox_form_item relative"> 
+							
+									<Form.Item
+										style={{ marginBottom: "20px" }}
+										label=''
+										name='leaveclubPolicy'
+										labelCol={{ span: 0 }}  // Set the width of the label column
+										wrapperCol={{ span: 12 }} 
+										rules={[
+											{
+												required: false,
+												message: "Please check Club Policy",
+											},
+										]} 
+										>
+											Leave Clubbing Policy
+										<Checkbox className="margin-auto ml-[15px]" checked={leaveclubPolicy} onChange={(e)=>{
+											form.setFieldsValue({ leaveclubPolicy: e.target.checked });
+											setleaveclubPolicy(e.target.checked)
+										}}>
+									    	
+										</Checkbox>
+									</Form.Item>
+								</div>
 						<Form.Item
 							style={{ marginBottom: "10px" }}
 							wrapperCol={{

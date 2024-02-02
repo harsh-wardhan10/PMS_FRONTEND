@@ -192,7 +192,7 @@ const shiftSlice = createSlice({
 
 		builder.addCase(loadSingleShift.fulfilled, (state, action) => {
 			state.loading = false;
-			state.shift = action.payload.data;
+			state.shift = action?.payload?.data;
 		});
 
 		builder.addCase(loadSingleShift.rejected, (state, action) => {

@@ -24,7 +24,7 @@ import {
 import GetAllAttendance from "./GetAllAttendance";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import moment from "moment";
-
+import axios from 'axios';
 const Attendance = ({ drawer }) => {
 	const [loader, setLoader] = useState(false);
 	const users = useSelector((state) => state.users?.list);
@@ -45,9 +45,12 @@ const Attendance = ({ drawer }) => {
    const [outinArray, setoutinArray] =useState([])
    const [selectedUser , setselectedUser] =useState()
    const [ addButton , setAddButton ] =useState(false)
+   const [loading, setloading] =useState(false)
    const [userLocation , setuserLocation] = useState()
+   const [endTimeValidation, setendTimeValidation] =useState(false)
+
+
 	// const outTimeDateNew = new Date(outTimeDate.date + " " + outTimeDate.time);
- 
 	useEffect(() => {
 		dispatch(loadAllStaff({ status: true }));
 	}, []);
@@ -59,7 +62,7 @@ const Attendance = ({ drawer }) => {
   },[startTimeDate, inoutButton])
 	const onFinish = async (values) => {
 			// make a new date variable from inTimeDate state which will contain date and time
-			console.log('values',values)
+			// console.log('values',values)
 	     const inTimeDateNew = startTimeDate.date + " " + startTimeDate.time
 		 const outTimeDateNew = endTimeDate.date + " " + endTimeDate.time;
 		 const newArray = outinArray.map(({ id, ...rest }) => rest);
@@ -71,7 +74,7 @@ const Attendance = ({ drawer }) => {
 		};
 		setLoader(true);
 		manualAttendanceData?.push(
-		  { status: 'Start' ,date:startTimeDate.date , log:startTimeDate.time , emailId:selectedUser , comment:values.comment , ipAddress:values.ip, location: userLocation} ,
+		  { status: 'In' ,date:startTimeDate.date , log:startTimeDate.time , emailId:selectedUser , comment:values.comment , ipAddress:values.ip, location: userLocation} ,
 		)
 		
 	    const subArray = newArray.map((item)=>{
@@ -81,9 +84,9 @@ const Attendance = ({ drawer }) => {
 				manualAttendanceData?.push(item)
 			 })
 			 manualAttendanceData?.push(
-				{ status: 'End' ,date:endTimeDate.date , log:endTimeDate.time , emailId:selectedUser,  comment:values.comment , ipAddress:values.ip, location: userLocation},
+				{ status: 'Out' , date:endTimeDate.date , log:endTimeDate.time , emailId:selectedUser,  comment:values.comment , ipAddress:values.ip, location: userLocation},
 		   )
-		
+		// console.log('manualAttendanceData',manualAttendanceData)
 		const resp =  await dispatch(addBulkAttendance(manualAttendanceData))
 		// const resp = await dispatch(addManualAttendance(FormData));
 		   form.resetFields();
@@ -95,6 +98,16 @@ const Attendance = ({ drawer }) => {
 			setLoader(false);
 		}
 	};
+
+	const validateEndTime = () => {
+		// Compare the end time with the start time
+		if (moment(endTimeDate.time).isBefore(startTimeDate.time)) {
+			
+		  return Promise.reject('End time must be after the start time');
+		}
+	
+		return Promise.resolve();
+	  };
 	const onFinishFailed = (errorInfo) => {
 		toast.warning("Failed at adding shift");
 		setLoader(false);
@@ -126,6 +139,33 @@ const Attendance = ({ drawer }) => {
 		   }
 		})
 	  }, [selectedUser])
+	  const [location, setLocation] = useState(null);
+
+	  const handleGetLocation = async () => {
+		if (navigator.geolocation) {
+		  navigator.geolocation.getCurrentPosition(
+			async (position) => {
+			  const { latitude, longitude } = position.coords;
+	
+			  try {
+				const response = await axios.get(
+				  `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=YOUR_GOOGLE_MAPS_API_KEY`
+				);
+	
+				const address = response.data.results[0].formatted_address;
+				setLocation({ address });
+			  } catch (error) {
+				console.error('Error fetching location details:', error.message);
+			  }
+			},
+			(error) => {
+			  console.error(error.message);
+			}
+		  );
+		} else {
+		  console.error('Geolocation is not supported by your browser');
+		}
+	  };
 	return (
 		<Fragment>
 			<UserPrivateComponent permission={"create-attendance"}>
@@ -152,6 +192,7 @@ const Attendance = ({ drawer }) => {
 						) : (
 							""
 						)}
+						
 						<Form
 							form={form}
 							style={{ marginBottom: "40px" }}
@@ -198,7 +239,6 @@ const Attendance = ({ drawer }) => {
 											message: "Please input your start time!",
 										},
 									]}>
-										
 												<div className='flex justify-between relative'>
 												<DatePicker
 													format={"YYYY-MM-DD"}
@@ -208,7 +248,7 @@ const Attendance = ({ drawer }) => {
 														// HH:mm:ss [GMT]
 													    setinoutButton(true)
 														setStartTimeDate({ ...startTimeDate, date:moment(date).format("ddd, DD MMM YYYY ") 
-															})
+	                                                    })
 													 }
 													}
 												/>
@@ -227,11 +267,9 @@ const Attendance = ({ drawer }) => {
 											     <Button disabled={addButton} onClick={handleinOutButton} className="absolute w-[50px] right-[-60px] ant-btn ant-btn-primary ant-btn-md ant-btn-block"> + </Button>
 											   </div>
 											   }
-											
 											</div>
-											
 								</Form.Item>
-
+                           {/* {console.log('location',location)} */}
 								{outinArray?.map((item, key)=>{
 									return (
 									<div key={item.id}>
@@ -251,6 +289,13 @@ const Attendance = ({ drawer }) => {
 															defaultValue={moment()}
 															onChange={(date, dateString) =>{
 															    item.outDate=moment(date).format("ddd, DD MMM YYYY ")
+																if(moment(dateString, "YYYY-MM-DD").isAfter(moment(startTimeDate.date, "ddd, DD MMM YYYY"))){
+																	item.outvalidation = false
+															}
+															else{
+																item.outvalidation = true
+															}
+															setloading(!loading)
 															}}
 											             	/>  										
 														   <TimePicker
@@ -258,12 +303,22 @@ const Attendance = ({ drawer }) => {
 															format={"HH:mm:s"}
 															onChange={(time, timeString) =>
 															{	
-																item.outTime = moment(time).format("HH:mm:s")}		
+																if(moment(time,'h:mm:ss A').isBefore(moment(outinArray[key-1]?.inTime,'h:mm:ss A')) || (moment(time,'h:mm:ss A').isBefore(moment(startTimeDate.time,'h:mm:ss A')) && (startTimeDate.date === item.outDate))){
+																	// console.log('inside time',time,outinArray[key-1]?.inTime)
+																	  item.outvalidation = true
+																	}
+																	else{
+																		item.outvalidation = false
+																	}	
+																item.outTime = moment(time).format("HH:mm:s")
+																setloading(!loading)	
+															}	
+																
 															}
 														  /> 
 											
 											</div>
-											
+											{item.outvalidation && <p className="text-[0.875rem] text-rose-500"> Time must be greater then previous time</p>}
 								</Form.Item>
 								<Form.Item
 									style={{ marginBottom: "10px" }}
@@ -281,20 +336,34 @@ const Attendance = ({ drawer }) => {
 															defaultValue={moment()}
 															onChange={(date, dateString) =>{
 															    item.inDate=moment(date).format("ddd, DD MMM YYYY ")
+																if(moment(dateString,"YYYY-MM-DD").isAfter(moment(item.outDate,"ddd, DD MMM YYYY"))){
+																	item.invalidation=false
+																	}
+																	else{
+																		item.invalidation=true
+																	}
+																	setloading(!loading)
 															}}
 											             	/>  
 														   <TimePicker
 															className='ml-4'
 															format={"HH:mm:s"}
 															onChange={(time, timeString) =>
-															{	
-																item.inTime = moment(time).format("HH:mm:s")
+															{	//|| (moment(time,'h:mm:ss A').isBefore(moment(startTimeDate.time,'h:mm:ss A')) && (startTimeDate.date === item.inDate) )
+																if((moment(time,'h:mm:ss A').isBefore(moment(item.outTime,'h:mm:ss A')) && (item.outDate === item.inDate))  ){
+																	// console.log('inside time',startTimeDate.date,endTimeDate.date)
+																	 item.invalidation=true
+																	}
+																	else{
+																		item.invalidation=false
+																	}																
+																	item.inTime = moment(time).format("HH:mm:s")
 																setAddButton(false)
 															}}
 														  /> 
 											<a className="absolute right-[-23px] top-[-10px] pointer mt-[25px] ml-[5px]" onClick={()=>handledeleteInout(item.id , key)}> <i class="bi bi-trash"></i></a>
 											</div>
-											
+											{item.invalidation && <p className="text-[0.875rem] text-rose-500"> Time must be greater then previous time</p>}	
 								</Form.Item>
 									</div>)
 								})}
@@ -303,29 +372,49 @@ const Attendance = ({ drawer }) => {
 									label='End Time'
 									rules={[
 										{
-											required: true,
-											message: "Please input your start time!",
+										  required: true,
+										  message: 'Please input your end time!',
 										},
-									]}>
+										{
+										  validator: validateEndTime,
+										},
+									  ]}>
 									<div className='flex justify-between'>
 										<DatePicker
 											format={"YYYY-MM-DD"}
 											defaultValue={moment()}
 											onChange={(date, dateString) =>
-												
+												{
+											   if(moment(dateString,"YYYY-MM-DD").isAfter(moment(outinArray[outinArray.length-1]?.inDate,"ddd, DD MMM YYYY")) || moment(dateString, "YYYY-MM-DD").isAfter(moment(startTimeDate.date, "ddd, DD MMM YYYY"))){
+														setendTimeValidation(false)	
+									            }
+												else{
+													setendTimeValidation(true)
+												}
+										setEndTimeDate({ ...endTimeDate, date: moment(date).format("ddd, DD MMM YYYY ")})
+												}
 												// format("ddd, DD MMM YYYY HH:mm:ss [GMT]")
-												setEndTimeDate({ ...endTimeDate, date: moment(date).format("ddd, DD MMM YYYY ")})
+												
 											}
 										/>
 										<TimePicker
 											className='ml-4'
 											format={"HH:mm:s"}
 											onChange={(time, timeString) =>
-												// timeString
+												{
+													if((moment(time,'h:mm:ss A').isBefore(moment(startTimeDate.time,'h:mm:ss A')) && startTimeDate.date===endTimeDate.date) || (moment(time,'h:mm:ss A').isBefore(moment(outinArray[outinArray.length-1]?.inTime,'h:mm:ss A')) && (outinArray[outinArray.length-1]?.inDate === endTimeDate.date) )){
+																	// console.log('inside time',outinArray[outinArray.length-1]?.inTime,endTimeDate.date)
+																	setendTimeValidation(true)
+													}
+													else{
+														setendTimeValidation(false)
+													}	
 												setEndTimeDate({ ...endTimeDate, time: moment(time).format("HH:mm:s") })
-											}
+											}}
 										/>
+										
 									</div>
+									{endTimeValidation&&<p  className="text-[0.875rem] text-rose-500">  Time must be greater then previous time</p>}
 								</Form.Item>
 
 								<Form.Item
@@ -357,6 +446,7 @@ const Attendance = ({ drawer }) => {
 										  }  
 									})
 								  :<label>No Location</label>} 
+								   {/* <p onClick={handleGetLocation}>Get Current Location</p> */}
 								</Form.Item>
 								<Form.Item
 									style={{ marginBottom: "10px" }}

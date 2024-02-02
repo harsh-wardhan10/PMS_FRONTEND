@@ -4,7 +4,9 @@ import {
 	Col,
 	Form,
 	Input,
+	Popover,
 	Row,
+	Select,
 	Table,
 	TimePicker,
 	Typography,
@@ -24,7 +26,8 @@ import {
 	loadAllShift,
 } from "../../redux/rtk/features/shift/shiftSlice";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
-
+import { Checkbox } from 'antd';
+import moment from "moment";
 function CustomTable({ list }) {
 	const [columnsToShow, setColumnsToShow] = useState([]);
 
@@ -75,7 +78,7 @@ function CustomTable({ list }) {
 	};
 
 	const addKeys = (arr) => arr.map((i) => ({ ...i, key: i.id }));
-
+	
 	return (
 		<Card>
 			<div className='text-center my-2 flex justify-between'>
@@ -120,24 +123,60 @@ const AddShift = ({ drawer }) => {
 	const [loader, setLoader] = useState(false);
 	const shift = useSelector((state) => state.shift.list);
 	const dispatch = useDispatch();
-
+	const { Option } = Select;
+	const [graceTimeCheckbox , setgraceTimeCheckbox] =useState(false)
+	const [breakTimeCheckbox , setbreakTimeCheckbox] =useState(false)
+	const [breakType, setbreakType] =useState('')
+	const [breakStartTime, setbreakStartTime ] =useState()
+	const [breakEndTime, setbreakEndTime ] =useState()
+	const [breakDurationTime , setbreakDurationTime] =useState()
 	useEffect(() => {
 		dispatch(loadAllShift());
 	}, []);
 
 	const { Title } = Typography;
 	const [form] = Form.useForm();
-
+	const { getFieldDecorator } = form;
+	const contenttwo = (
+		<div>
+		 Break time is the designated period for employee breaks,<br/> which can be defined as a specific duration or flexible minutes.
+		</div>
+	  );
+	  const content = (
+		<div>
+		 Grace period refers to the additional time beyond the official <br/>start time that is provided to employees,<br/> allowing them to arrive at the office without being marked as late.
+		</div>
+	  );
 	const onFinish = async (values) => {
-		const shiftData = {
-			name: values.name,
-			startTime: dayjs(values.startTime).format(),
-			endTime: dayjs(values.endTime).format(),
-		};
-
+		// const shiftData = {
+		// 	name: values.name,
+		// 	startTime: values.startTime.format("HH:mm:s"),
+		// 	endTime: values.endTime.format("HH:mm:s"),
+		// };
+		
+		if(values.breakTime ==='duration'){
+            values.breakTime = breakDurationTime
+		}
+		else if(values.breakTime==='time'){
+			let startTime = moment(values.breakstartTime, 'HH:mm');
+			let endTime = moment(values.breakendTime, 'HH:mm');
+			let workMinutes = endTime.diff(startTime, 'minutes');
+			//   workMinutes = Math.ceil(workMinutes);
+			  values.breakTime = `${Math.ceil(workMinutes)}`
+			//  console.log('breakStartTime',values.breakstartTime,'breakEndTime',values.breakendTime,'workMinutes', Math.ceil(workMinutes))
+		}  
 		setLoader(true);
-		const resp = await dispatch(addShift(values));
+		if(values.ingraceTime===undefined || values.ingraceTime===''){
+			values.ingraceTime=`${0}`
+		}
+		if(values.outgraceTime===undefined || values.outgraceTime===''){
+			values.outgraceTime=`${0}`
+		}
+		const shiftData={ ...values,  graceTimeCheckbox, breakTimeCheckbox}
+		
+		console.log('shiftData',shiftData)
 
+		const resp = await dispatch(addShift(shiftData));
 		if (resp.payload.message === "success") {
 			setLoader(false);
 			form.resetFields();
@@ -146,7 +185,15 @@ const AddShift = ({ drawer }) => {
 			setLoader(false);
 		}
 	};
-
+   const handlegraceCheckboxChange = (e) => {
+    setgraceTimeCheckbox(e.target.checked)
+  };
+  const handlebreakCheckboxChange = (e) => {
+    setbreakTimeCheckbox(e.target.checked)
+  };
+  const handleSelectbreakTime=(value)=>{
+	setbreakType(value)
+  }
 	const onFinishFailed = (errorInfo) => {
 		toast.warning("Failed at adding shift");
 		setLoader(false);
@@ -192,7 +239,6 @@ const AddShift = ({ drawer }) => {
 									]}>
 									<Input />
 								</Form.Item>
-
 								<Form.Item
 									style={{ marginBottom: "10px" }}
 									label='Start Time'
@@ -205,7 +251,41 @@ const AddShift = ({ drawer }) => {
 									]}>
 									<TimePicker />
 								</Form.Item>
-
+	                     	<div className="relative"> 
+								<div className="absolute left-[30px] top-[4px] z-[999]"> 
+										   <Popover content={content}>
+												<div ><i class="bi bi-info-circle text-black-500 text-[15px]" ></i></div>
+											</Popover>
+                                </div>
+								<Form.Item
+									style={{ marginBottom: "20px" }}
+									label='In Grace Time'
+									name='ingraceTime'
+									rules={[
+										{
+											required: false,
+											message: "Please input grace time!",
+										},
+									]} 
+									>
+										<Input type="text" placeholder="minutes"  onChange={(e) => {
+											// Remove non-numeric characters
+											const numericValue = e.target.value.replace(/\D/, '');
+											form.setFieldsValue({ ingraceTime: numericValue });
+										}}
+									/>
+										{/* <TimePicker
+										format="mm"
+										showSecond={false}
+										/> */}
+								</Form.Item>
+								<p className="ml-[10px] absolute top-[12px] right-[100px]"> Minutes</p>
+								</div>
+								<div className="checkbox_form_item"> 
+									<Checkbox className="margin-auto" onChange={handlegraceCheckboxChange}>
+										If the user exceeds the Grace Period for Start Time, do you wish to mark that day as a half day?
+									</Checkbox>
+								</div>
 								<Form.Item
 									style={{ marginBottom: "20px" }}
 									label='End Time'
@@ -218,7 +298,125 @@ const AddShift = ({ drawer }) => {
 									]}>
 									<TimePicker />
 								</Form.Item>
-
+								<div className="relative"> 
+								<div className="absolute left-[17px] top-[4px] z-[999]"> 
+										   <Popover content={content}>
+												<div ><i class="bi bi-info-circle text-black-500 text-[15px]" ></i></div>
+											</Popover>
+                                </div>
+								<Form.Item
+									style={{ marginBottom: "20px" }}
+									label='Out Grace Time'
+									name='outgraceTime'
+									rules={[
+										{
+											required: false,
+											message: "Please input grace time!",
+										},
+									]} 
+									>
+										<Input type="text" placeholder="minutes"  onChange={(e) => {
+											// Remove non-numeric characters
+											const numericValue = e.target.value.replace(/\D/, '');
+											form.setFieldsValue({ outgraceTime: numericValue });
+										}}
+										/>
+								</Form.Item>
+							  	<p className="ml-[10px] absolute top-[12px] right-[100px]"> Minutes</p>
+								</div>
+								<div className="relative"> 
+								<div className="absolute left-[40px] top-[4px] z-[999]"> 
+										   <Popover content={contenttwo}>
+												<div ><i class="bi bi-info-circle text-black-500 text-[15px]" ></i></div>
+											</Popover>
+                                </div>
+								<Form.Item
+									style={{ marginBottom: "20px" }}
+									label='Break Time'
+									name='breakTime'
+									rules={[
+										{
+											required: true,
+											message: "Please input break time!",
+										},
+									]}>
+										<Select
+										loading=''
+										placeholder='Select Break Type'
+										allowClear
+										size={"middle"}
+										onChange={handleSelectbreakTime}
+										>
+												<Option value={'time'}> Time  </Option>											
+												<Option value={'duration'}> Duration </Option>
+									 </Select>
+								
+								
+								</Form.Item>
+								  {/* <p className="ml-[10px] absolute top-[12px] right-[100px]"> Minutes</p> */}
+								  {breakType==='time' && 
+								           <><Form.Item
+										   style={{ marginBottom: "20px" }}
+										   label=' Start Time'
+										   name='breakstartTime'
+										   rules={[
+											   {
+												   required: true,
+												   message: "Please input break start time!",
+											   },
+										   ]}>
+											   <TimePicker 
+												   // onChange={(time, timeString) =>{
+												   // 	setbreakStartTime(moment(time).format("HH:mm:s"))
+												   // 	setbreakDurationTime(null)
+												   // }} 
+												   />
+										   </Form.Item>
+										   <Form.Item
+										   style={{ marginBottom: "20px" }}
+										   label=' End Time'
+										   name='breakendTime'
+										   rules={[
+											   {
+												   required: true,
+												   message: "Please input break end time!",
+											   },
+										   ]}>
+											   <TimePicker 
+										       onChange={(time) => {
+												form.setFieldsValue({ breakendTime: time }); // Update the form value
+											 }}
+										   /> </Form.Item>
+										   </>
+											
+									 } 
+									{breakType==='duration'&& 
+									<div className="w-[50%] m-auto mb-[20px]"> 
+									    Duration :
+										<Input type="text" placeholder="minutes" onChange={(e,)=>{
+										   const numericValue = e.target.value.replace(/\D/, '');
+										   setbreakDurationTime(numericValue)
+										   setbreakStartTime(null)
+										   setbreakEndTime(null)
+										}}/> 
+										{/* <TimePicker
+										format="HH:mm"
+										showSecond={false}
+										onChange={(time, timeString) =>{
+											setbreakDurationTime(moment(time).format("HH:mm:s"))
+											setbreakStartTime(null)
+											setbreakEndTime(null)
+										}}
+										/> */}
+										</div>}
+								</div>
+								   <div className="checkbox_form_item"> 
+								   <Checkbox className="margin-auto" onChange={handlebreakCheckboxChange}>
+										      If the user exceed alloted break duration do you wish to mark that day as half day ?
+										</Checkbox>
+								   </div>
+										
+								
 								<Form.Item
 									style={{ marginBottom: "10px" }}
 									wrapperCol={{
@@ -227,6 +425,20 @@ const AddShift = ({ drawer }) => {
 									}}>
 									<Button
 										onClick={() => setLoader(true)}
+										// disabled={
+										// 	()=>{
+										// 		if(breakStartTime===undefined && breakEndTime === undefined){
+										// 			return false 
+										// 		}
+										// 		else if(breakDurationTime === undefined){
+                                        //              return false                                                 
+										// 		}
+										// 		else if(breakStartTime && breakEndTime){
+										// 			return true
+										// 		}
+										// 		else {}
+										// 	}
+										// }
 										type='primary'
 										size='large'
 										htmlType='submit'

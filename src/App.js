@@ -80,6 +80,13 @@ import UpdateTaskPriority from "./components/project/taskPriority/UpdateTaskPrio
 import Task from "./components/project/tasks/tasks";
 import UpdateStatus from "./components/project/UpdateStatus";
 import KanbanBoard2 from "./components/kanbanBoard/KanbanBoard2";
+import NewReimbursement from "./components/reimbursement/NewReimbursement.js";
+import GetAllReimbursement from "./components/reimbursement/GetAllReimbursement.js";
+import DetailReimbursement from "./components/reimbursement/DetailReimbursement.js";
+import NewDeductions from "./components/deductions/NewDeductions.js";
+import SalaryList from "./components/salary/SalaryList.js";
+import NewSalary from "./components/salary/NewSalary.js";
+import UserReimbursement from "./components/reimbursement/UserReimbursement.js";
 
 function App() {
 	return (
@@ -254,6 +261,60 @@ function App() {
 							}>
 							<Route path='/admin/leave/user/:id' element={<UserLeave />} />
 						</Route>
+
+
+						{/* === === === Reimbursement Routes === === === */}
+							<Route
+								element={
+									<UserPrivateRoute permission={"create-reimbursement"} />
+								}>
+								<Route path='/admin/reimbursement/new' element={<NewReimbursement />} />
+							</Route>
+							
+						<Route
+							element={
+								<UserPrivateRoute permission={"readAll-reimbursement"} />
+							}>
+							<Route path='/admin/reimbursement/:id' element={<DetailReimbursement />} />
+							<Route path='/admin/reimbursement' element={<GetAllReimbursement />} />
+						</Route>
+						<Route
+							element={
+								<UserPrivateRoute permission={"update-reimbursement"} />
+							}>
+							<Route path='/admin/reimbursement/update/:id' element={<DetailReimbursement />} />
+							<Route path='/admin/reimbursement/update' element={<GetAllReimbursement />} />
+						</Route>
+						<Route
+							element={
+								<UserPrivateRoute permission={"readSingle-reimbursement"} />
+							}>
+							<Route path='/admin/reimbursement/user/:id' element={<UserReimbursement />} />
+						</Route>
+
+
+							{/* === === === Deductions Routes === === === */}
+							<Route
+								element={
+									<UserPrivateRoute permission={"create-deductions"} />
+								}>
+								<Route path='/admin/deductions/new' element={<NewDeductions />} />
+							</Route>
+
+							{/* === === === Salary Routes === === === */}
+							<Route
+								element={
+									<UserPrivateRoute permission={"readAll-user"} />
+								}>
+								<Route path='/admin/salary/list' element={<SalaryList />} />
+							</Route>
+							<Route
+								element={
+									<UserPrivateRoute permission={"create-salary"} />
+								}>
+								<Route path='/admin/salary/new' element={<NewSalary />} />
+							</Route>
+
 						{/* === === === Attendance Routes === === === */}
 						<Route
 							element={<UserPrivateRoute permission={"readAll-attendance"} />}>

@@ -1,4 +1,4 @@
-import { Button, DatePicker, Drawer, Form, Input, Radio, Select } from "antd";
+import { Button, DatePicker, Drawer, Form, Input, InputNumber, Radio, Select } from "antd";
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -11,13 +11,14 @@ import {
 } from "../../../redux/rtk/features/leave/leaveSlice";
 import getUserFromToken from "../../../utils/getUserFromToken";
 import moment from "moment";
+import { loadSingelReimbursementApplication, reviewReimbursementApplication } from "../../../redux/rtk/features/reimbursement/reimbursement";
 
-const ReviewLeavePopup = () => {
+const ReviewReimbursementPopup = () => {
 	const { id } = useParams("id");
 	const dispatch = useDispatch();
 	const [form] = Form.useForm();
 	const [loader, setLoader] = useState(false);
-	const data = useSelector((state) => state.leave.leave);
+	const data = useSelector((state) => state.reimbursement.reimbursement);
 	const userId = getUserFromToken();
 	const [status, setStatus] = useState(null);
 	const { TextArea } = Input;
@@ -28,23 +29,24 @@ const ReviewLeavePopup = () => {
 			...data,
 			userId: userId,
 			status: status,
-			acceptLeaveFrom: moment(data?.leaveFrom),
-			acceptLeaveTo: moment(data?.leaveTo),
+			date: data?.date ? moment(data?.date) : null,
 		});
+        // console.log('data',data)
 	}, [data]);
 
 	const onFinish = async (values) => {
 		const FormData = {
 			...values,
+            date:values.date
 		};
 		// console.log('FormData',FormData)
 		const resp = await dispatch(
-			reviewLeaveApplication({ id: id, values: FormData })
+			reviewReimbursementApplication({ id: id, values: FormData })
 		);
 
 		if (resp.payload.message === "success") {
 			setOpen(false);
-			dispatch(loadSingelLeaveApplication(id));
+			dispatch(loadSingelReimbursementApplication(id));
 			setLoader(false);
 			setStatus(null);
 		} else {
@@ -67,17 +69,17 @@ const ReviewLeavePopup = () => {
 	return (
 		<>
 			<Button onClick={showDrawer} className='mt-4' type='primary'>
-				Review Leave
+				Review Reimbursement
 			</Button>
 			{data && (
 				<Drawer
 					width={720}
-					title='Leave Review'
+					title='Reimbursement Review'
 					placement='right'
 					onClose={onClose}
 					open={open}>
 					<h2 className='text-2xl font-semibold mb-4 text-center mt-5'>
-						Approve Leave
+						Approve Reimbursement
 					</h2>
 					<Form
 						className='list-inside list-none border-2 border-inherit rounded px-5 py-5 m-5 mt-10'
@@ -95,50 +97,60 @@ const ReviewLeavePopup = () => {
 						onFinishFailed={onFinishFailed}
 						autoComplete='off'>
 						<div>
-							<Form.Item
+                        <Form.Item
+						style={{ marginBottom: "10px" }}
+						label='Accept Date'
+						name='date'
+						valuePropName='date'>
+						<DatePicker
+							className='date-picker hr-staffs-date-picker'
+                            defaultValue={initialValues.date}
+						/>
+					</Form.Item>
+                             
+                            <Form.Item
 								style={{ marginBottom: "10px" }}
-								label='Accept From'
-								name='acceptLeaveFrom'
-								rules={[
-									{
-										required: true,
-										message: "Please input Date !",
-									},
-								]}>
-								<DatePicker format={"DD-MM-YYYY"} />
+								label='Reason'>
+                                  {data?.reason}
+							</Form.Item>
+                            <Form.Item
+								style={{ marginBottom: "10px" }}
+								label='Amount'>
+                                 {data?.amount}
 							</Form.Item>
 
-							<Form.Item
-								style={{ marginBottom: "10px" }}
-								label='Accept To'
-								name='acceptLeaveTo'
-								rules={[
-									{
-										required: true,
-										message: "Please input Date!",
-									},
-								]}>
-								<DatePicker format={"DD-MM-YYYY"} />
-							</Form.Item>
 
+                            <Form.Item
+								style={{ marginBottom: "10px" }}
+								label='Approval Name'
+								name='approveName'>
+								       <Input placeholder="Approval Name"/>
+							</Form.Item>
 							<Form.Item
 								style={{ marginBottom: "10px" }}
 								label='Comment'
-								name='reviewComment'>
+								name='approveComment'>
 								       <TextArea
-												placeholder="Review Comment"
+												placeholder="Approve Comment"
 												autoSize={{
 												minRows: 3,
 												maxRows: 5,
 												}}
 									/>
 							</Form.Item>
-
-							{/* {status === null && (
-								<p className='text-red-500 text-center mb-3'>
-									Please select status
-								</p>
-							)} */}
+                            <Form.Item
+									style={{ marginBottom: "10px" }}
+									label='Approve Amount '
+									name='approveAmount'
+									
+									rules={[
+										{
+											required: true,
+											message: "Please input amount",
+										},
+									]}>
+									<InputNumber  placeholder="amount" style={{ width: "100%" }} />
+								</Form.Item>
 
 							<Form.Item
 								style={{ marginBottom: "10px" }}
@@ -153,35 +165,10 @@ const ReviewLeavePopup = () => {
 								<Radio.Group
 									buttonStyle='solid'
 									onChange={(e) => setStatus(e.target.value)}>
-									<Radio.Button value='ACCEPTED'>ACCEPTED</Radio.Button>
-									<Radio.Button value='REJECTED'>REJECTED</Radio.Button>
+									<Radio.Button value='ACCEPTED'>Approved</Radio.Button>
+									<Radio.Button value='REJECTED'>Not Approved</Radio.Button>
 								</Radio.Group>
 							</Form.Item>
-                                {status==='ACCEPTED' &&  
-									<Form.Item
-									style={{ marginBottom: "10px" }}
-									label='Leave Type'
-									name='paidOrUnpaid'
-									rules={[
-										{
-											required: true,
-											message: "Please input your shift!",
-										},
-									]}
-									>
-									<Select
-										mode='single'
-										placeholder='Leave Type'
-										optionFilterProp='children'
-										style={{
-											width: "100%",
-										}}
-										>
-										 <Select.Option key='Paid' value="Paid">Paid</Select.Option>
-										 <Select.Option key='UnPaid' value="UnPaid">UnPaid</Select.Option>
-									</Select>
-								</Form.Item>
-								}
 							<Form.Item
 								style={{ marginBottom: "10px" }}
 								wrapperCol={{
@@ -196,7 +183,7 @@ const ReviewLeavePopup = () => {
 									block
 									disabled={status === null}
 									loading={loader}>
-									Review Leave
+									Review Reimbursement
 								</Button>
 							</Form.Item>
 						</div>
@@ -206,4 +193,4 @@ const ReviewLeavePopup = () => {
 		</>
 	);
 };
-export default ReviewLeavePopup;
+export default ReviewReimbursementPopup;

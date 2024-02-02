@@ -2,6 +2,8 @@ import axios from "axios";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import "./card.css";
+import { useDispatch } from "react-redux";
+import { uploadAttachmentFile } from "../../redux/rtk/features/uploadFiles/uploadFiles";
 
 const UploadMany = ({ urlPath }) => {
 	const [loader, setLoader] = useState(false);
@@ -12,7 +14,7 @@ const UploadMany = ({ urlPath }) => {
 	const handleOnChange = (e) => {
 		setFile(e.target.files[0]);
 	};
-
+    const dispatch =useDispatch()
 	const csvFileToArray = (string) => {
 		const csvHeader = string.slice(0, string.indexOf("\n")).split(",");
 		const csvRows = string.slice(string.indexOf("\n") + 1).split("\n");
@@ -47,11 +49,15 @@ const UploadMany = ({ urlPath }) => {
 	const handleOnSubmit = (e) => {
 		e.preventDefault();
 		setLoader(true);
+		const formData = new FormData();
+				formData.append("files", file); // Assuming 'file' is the file you want to upload
 
+				dispatch(uploadAttachmentFile(formData));
+        // dispatch(uploadAttachmentFile(file))	
 		if (file) {
 			fileReader.onload = function (event) {
 				const text = event.target.result;
-				csvFileToArray(text);
+				// csvFileToArray(text);
 			};
 
 			fileReader.readAsText(file);
@@ -78,7 +84,7 @@ const UploadMany = ({ urlPath }) => {
           mb-4 file:mb-0 file:ml-4'
 					type='file'
 					id='csvFileInput'
-					accept='.csv'
+					accept='*'
 					onChange={handleOnChange}
 				/>
 

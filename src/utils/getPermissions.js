@@ -5,6 +5,7 @@ const getPermissions = () => {
 
 	if (token) {
 		const permissions = jwtDecode(token)?.permissions;
+		// console.log('permissions',permissions)
 		return permissions;
 	}
 };

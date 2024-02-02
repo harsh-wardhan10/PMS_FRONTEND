@@ -229,7 +229,83 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 				},
 			],
 		},
+		    (hasPermission("create-reimbursement") ||
+			 hasPermission("update-reimbursement") ||
+			 hasPermission("readAll-reimbursement")) && {
+			label: "Reimbursement",
+			key: "reimbursement",
+			icon: <UsergroupDeleteOutlined />,
+			children: [
+				hasPermission("create-reimbursement") && {
+					label: (
+						<NavLink to='/admin/reimbursement/new'>
+							<span> New Reimbursement </span>
+						</NavLink>
+					),
+					key: "newReimbursement",
+					icon: <SubnodeOutlined />,
+				},
+				hasPermission("readAll-reimbursement") && {
+					label: (
+						<NavLink to='/admin/reimbursement'>
+							<span>Reimbursement Status</span>
+						</NavLink>
+					),
+					key: "ReimbursementStatus",
+					icon: <FileDoneOutlined />,
+				},
+				hasPermission("update-reimbursement") && {
+					label: (
+						<NavLink to={`/admin/reimbursement/user/${user}`}>
+							<span>My Reimbursement</span>
+						</NavLink>
+					),
+					key: "myReimbursement",
+					icon: <FileDoneOutlined />,
+				},
+			],
+		},
+							(hasPermission("create-deductions") ||
+							hasPermission("update-deductions") ||
+							hasPermission("readAll-deductions")) && {
+						label: (
+							<NavLink to='/admin/deductions/new'>
+								<span>Deductions</span>
+							</NavLink>
+						),
+						key: "deductions",
+						icon: <UsergroupDeleteOutlined />,
+					},
 
+					(hasPermission("create-salary") ||
+					hasPermission("update-salary") ||
+					hasPermission("readAll-salary")) && {
+				   label: "Salary",
+				   key: "salary",
+				   icon: <UsergroupDeleteOutlined />,
+				   children: [
+
+						hasPermission("readAll-user") && {
+							label: (
+								<NavLink to='/admin/salary/list'>
+									<span> Employee List</span>
+								</NavLink>
+							),
+							key: "employeeList",
+							icon: <FileDoneOutlined />,
+						},
+						hasPermission("create-salary") && {
+							label: (
+								<NavLink to='/admin/salary/new'>
+									<span> Create New Record </span>
+								</NavLink>
+							),
+							key: "newrecord",
+							icon: <SubnodeOutlined />,
+						},
+				   ],
+			   },
+		
 		(hasPermission("readAll-weeklyHoliday") ||
 			hasPermission("readAll-publicHoliday")) && {
 			label: "HOLIDAY",

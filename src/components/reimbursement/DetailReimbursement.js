@@ -10,17 +10,18 @@ import tw from "tailwind-styled-components";
 import { useParams } from "react-router-dom";
 import PageTitle from "../page-header/PageHeader";
 import dayjs from "dayjs";
-import ReviewLeavePopup from "../UI/PopUp/ReviewLeavePopup";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
+import { loadSingelReimbursementApplication } from "../../redux/rtk/features/reimbursement/reimbursement";
+import ReviewReimbursementPopup from "../UI/PopUp/ReviewReimbursementPopup";
 
-const DetailLeave = () => {
+const DetailReimbursement = () => {
 	const { id } = useParams("id");
-	const leave = useSelector((state) => state.leave.leave);
+	const reimbursement = useSelector((state) => state.reimbursement.reimbursement);
 	const dispatch = useDispatch();
 	const users = useSelector((state) => state.users?.list);
 	useEffect(() => {
-		dispatch(loadSingelLeaveApplication(id));
+		dispatch(loadSingelReimbursementApplication(id));
 		dispatch(loadAllStaff({ status: true }));
 		return () => {
 			dispatch(clearLeaveApplication());
@@ -59,120 +60,95 @@ const DetailLeave = () => {
 				<Card className='mt-4'>
 					<div className='text-center mb-4'>
 						{" "}
+                        {console.log('reimbursement',reimbursement)}
 						<h2 className='text-2xl font-semibold text-gray-600'>
-							Leave Application #{leave?.id}{" "}
+							Reimbursement Application #{reimbursement?.id}{" "}
 						</h2>
 					</div>
 					{/* {console.log('leave',leave,'users',users)} */}
-					{leave ? (
+					{reimbursement ? (
 						<div className='flex justify-center '>
 							<ul className='list-inside list-none border-2 border-inherit rounded px-5 py-5 '>
 								<ListItem>
 									Name :{" "}
 									<TextInside>
 										{(
-											leave?.user.firstName +
+											reimbursement?.user.firstName +
 											" " +
-											leave?.user.lastName
+											reimbursement?.user.lastName
 										).toUpperCase()}{" "}
 									</TextInside>
 								</ListItem>
+
 								<ListItem>
-									Leave Type : <TextInside>{leave.leaveType}{leave.paidOrUnpaid ? `(${leave.paidOrUnpaid})`:''}</TextInside>
+                                Reimbursement Reason :{" "}
+									<TextInside>{reimbursement.reason || "No reason"}</TextInside>
+								</ListItem>
+                                <ListItem>
+                                Reimbursement Amount :{" "}
+                                    {reimbursement.approveAmount ? 
+                                    <TextInside>{reimbursement.approveAmount || "No Amount"}</TextInside>
+                                    : <TextInside>{reimbursement.amount || "No Amount"}</TextInside>}
+									
 								</ListItem>
 								<ListItem>
-									Leave From :{" "}
+                                Reimbursement Status :{" "}
 									<TextInside>
-										{dayjs(leave.leaveFrom).format("DD-MM-YYYY")}
-									</TextInside>
-								</ListItem>
-
-								<ListItem>
-									Leave To :{" "}
-									<TextInside>
-										{dayjs(leave.leaveTo).format("DD-MM-YYYY")}
-									</TextInside>
-								</ListItem>
-
-								<ListItem>
-									Leave Duration :{" "}
-									<TextInside className='text-red-500'>
-										{leave.leaveDuration} Days
-									</TextInside>
-								</ListItem>
-
-								<ListItem>
-									Leave Reason :{" "}
-									<TextInside>{leave.reason || "No reason"}</TextInside>
-								</ListItem>
-
-								<ListItem>
-									Leave Status :{" "}
-									<TextInside>
-										{leave.status === "PENDING" ? (
+										{reimbursement.status === "PENDING" ? (
 											<span className='text-yellow-500'>
-												{leave.status.toUpperCase()}
+												{reimbursement.status.toUpperCase()}
 											</span>
-										) : leave.status === "ACCEPTED" ? (
+										) : reimbursement.status === "ACCEPTED" ? (
 											<span className='text-green-500'>
-												{leave.status.toUpperCase()}
+												{reimbursement.status.toUpperCase()}
 											</span>
 										) : (
 											<span className='text-red-500'>
-												{leave.status.toUpperCase()}
+												{reimbursement.status.toUpperCase()}
 											</span>
 										)}
 									</TextInside>
 								</ListItem>
 
 								<ListItem>
-									Leave Accepted From :{" "}
+									Reimbursement Accepted On :{" "}
 									<TextInside>
-										{leave.acceptLeaveFrom
-											? dayjs(leave.acceptLeaveFrom).format("DD-MM-YYYY")
+										{reimbursement.date
+											? dayjs(reimbursement.date).format("DD-MM-YYYY")
 											: "ON REVIEW"}
 									</TextInside>
 								</ListItem>
 
 								<ListItem>
-									Leave Accepted To :{" "}
-									<TextInside>
-										{leave.acceptLeaveTo
-											? dayjs(leave.acceptLeaveTo).format("DD-MM-YYY")
-											: "ON REVIEW"}
-									</TextInside>
-								</ListItem>
-
-								<ListItem>
-									Leave Accepted By :{" "}
+									Reimbursement Accepted By :{" "}
 									<TextInside className='text-green-500'>
-									{leave.acceptLeaveBy ? 
+									{reimbursement.approveReimbursementBy ? 
 										<>
 										{users.map((item)=>{
-                                             if(item.id === leave.acceptLeaveBy){
+                                             if(item.id === reimbursement.approveReimbursementBy){
 												return item.userName
 											 } 
 										} 
 										 )}
 										</>
 										 :'ON REVIEW'}
-										{/* {(leave.acceptLeaveBy?.firstName || "ON") +
+										{/* {(reimbursement.acceptLeaveBy?.firstName || "ON") +
 											" " +
-											(leave.acceptLeaveBy?.lastName || "REVIEW")} */}
+											(reimbursement.acceptLeaveBy?.lastName || "REVIEW")} */}
 									</TextInside>
 								</ListItem>
 
 								<ListItem>
 									Review Comment :{" "}
-									<TextInside>{leave.reviewComment || "No comment"}</TextInside>
+									<TextInside>{reimbursement.approveComment || "No comment"}</TextInside>
 								</ListItem>
 
-								<ListItem>
+								{/* <ListItem>
 									Attachment :{" "}
 									<TextInside>
 									<span>
-										{leave.attachment?.length> 0 ? (
-											leave?.attachment?.map((item)=>{
+										{reimbursement.attachment?.length> 0 ? (
+											reimbursement?.attachment?.map((item)=>{
 											  return(
 												 <div>
 												 	{item}	
@@ -187,26 +163,26 @@ const DetailLeave = () => {
 
 										</span>
 									</TextInside>
-								</ListItem>
+								</ListItem> */}
 							</ul>
 						</div>
 					) : (
 						<Loader />
 					)}
 					<UserPrivateComponent permission={"update-leaveApplication"}>
-						{leave?.status === "PENDING" && (
+						{reimbursement?.status === "PENDING" && (
 							<div className='flex justify-center items-center'>
-								<ReviewLeavePopup />
+								<ReviewReimbursementPopup />
 							</div>
 						)}
-						{leave?.status === "REJECTED" && (
+						{reimbursement?.status === "REJECTED" && (
 							<div className='flex justify-center items-center'>
-								<ReviewLeavePopup />
+								<ReviewReimbursementPopup />
 							</div>
 						)}
-						{leave?.status === "ACCEPTED" && (
+						{reimbursement?.status === "ACCEPTED" && (
 							<div className='flex justify-center items-center'>
-								<ReviewLeavePopup />
+								<ReviewReimbursementPopup />
 							</div>
 						)}
 					</UserPrivateComponent>
@@ -238,4 +214,4 @@ ml-2
 text-sm
 text-gray-900
 `;
-export default DetailLeave;
+export default DetailReimbursement;

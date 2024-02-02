@@ -97,7 +97,7 @@ const CustomTable = ({ list, data }) => {
 					</div>
 				)}
 			</div>
-			{list && (
+			{/* {list && (
 				<div style={{ marginBottom: "30px" }}>
 					<ColVisibilityDropdown
 						options={columns}
@@ -105,7 +105,7 @@ const CustomTable = ({ list, data }) => {
 						columnsToShowHandler={columnsToShowHandler}
 					/>
 				</div>
-			)}
+			)} */}
 			<Table
 				loading={!list}
 				columns={columnsToShow}
@@ -178,6 +178,15 @@ const DetailLeavePolicy = () => {
 											)}
 										</UserPrivateComponent>
 									</div>
+								</div>
+								<div className="grid grid-cols-3"> 
+								        <div> <p> <b> Sick Leaves:</b>{leavePolicy.sickLeaves}</p></div>
+										<div> <p> <b> Causal Leaves : </b>{leavePolicy.causalLeaves} </p></div>
+										<div> <p> <b> Monthly Halfdays : </b> {leavePolicy.monthlyHalfdays} </p></div> 
+										<div> <p> <b> Allowed Monthly Late Comings :</b>{leavePolicy.monthlyLatecomings} </p></div>
+										<div> <p> <b> Sandwich Leave Policy :</b>{leavePolicy.sandwichPolicy ? 'true':"false"} </p></div>
+										<div> <p> <b> Club Leave Policy : </b>{leavePolicy.leaveclubPolicy ?'true':"false"} </p></div>
+										
 								</div>
 								<CustomTable list={leavePolicy.user} data={leavePolicy} />
 							</div>
