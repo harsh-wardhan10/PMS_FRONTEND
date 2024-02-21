@@ -11,6 +11,7 @@ import {
 } from "../../../redux/rtk/features/leave/leaveSlice";
 import getUserFromToken from "../../../utils/getUserFromToken";
 import moment from "moment";
+import { loadAllbulkAttendance, updateBulkAttendance } from "../../../redux/rtk/features/attendance/attendanceSlice";
 
 const ReviewLeavePopup = () => {
 	const { id } = useParams("id");
@@ -18,6 +19,7 @@ const ReviewLeavePopup = () => {
 	const [form] = Form.useForm();
 	const [loader, setLoader] = useState(false);
 	const data = useSelector((state) => state.leave.leave);
+	const { list, loading } = useSelector((state) => state.attendance);
 	const userId = getUserFromToken();
 	const [status, setStatus] = useState(null);
 	const { TextArea } = Input;
@@ -31,12 +33,15 @@ const ReviewLeavePopup = () => {
 			acceptLeaveFrom: moment(data?.leaveFrom),
 			acceptLeaveTo: moment(data?.leaveTo),
 		});
+		dispatch(loadAllbulkAttendance())
 	}, [data]);
 
 	const onFinish = async (values) => {
 		const FormData = {
 			...values,
 		};
+		
+		// console.log('data',data)
 		// console.log('FormData',FormData)
 		const resp = await dispatch(
 			reviewLeaveApplication({ id: id, values: FormData })
@@ -47,6 +52,59 @@ const ReviewLeavePopup = () => {
 			dispatch(loadSingelLeaveApplication(id));
 			setLoader(false);
 			setStatus(null);
+			if (values.status === 'ACCEPTED') {
+				const leavesTo = values.acceptLeaveTo;
+				const leavesFrom = values.acceptLeaveFrom;
+				
+				const filteredLeaves = list.filter(item => {
+					const itemDate = new Date(item.date);
+					const fromDate = new Date(leavesFrom);
+					fromDate.setDate(fromDate.getDate() - 1);
+					const toDate = new Date(leavesTo);
+					return (
+						itemDate >= fromDate &&
+						itemDate <= toDate &&
+						(item.status === 'Uninformed' || item.status==='UnApproved leave') &&
+						item.log === '' &&
+						item.emailId === data.user.email
+					);
+				});
+				const modifiedLeaves = filteredLeaves.map(item => {
+					return {
+						...item,
+						status: `${data.leaveType}(${values.paidOrUnpaid})`  // Assuming values.paidOrUnpaid contains the desired status
+					};
+				});
+				// console.log('Modified Leaves:', modifiedLeaves);
+				dispatch(updateBulkAttendance(modifiedLeaves))
+				dispatch(loadAllbulkAttendance())
+			}
+			else if(values.status === 'REJECTED'){
+				const leavesTo = values.acceptLeaveTo;
+				const leavesFrom = values.acceptLeaveFrom;
+				const filteredLeaves = list.filter(item => {
+					const itemDate = new Date(item.date);
+					const fromDate = new Date(leavesFrom);
+					fromDate.setDate(fromDate.getDate() - 1);
+					const toDate = new Date(leavesTo);
+					return (
+						itemDate >= fromDate &&
+						itemDate <= toDate &&
+						(item.status === 'sickLeave(UnPaid)' || item.status==='sickLeave(Paid)' || item.status==='causalLeave(Paid)' || item.status=== 'causalLeave(UnPaid)' || item.status === 'Uninformed') &&
+						item.log === '' &&
+						item.emailId === data.user.email
+					);
+				});
+				const modifiedLeaves = filteredLeaves.map(item => {
+					return {
+						...item,
+						status: `UnApproved leave` // Assuming values.paidOrUnpaid contains the desired status
+					};
+				});
+				// console.log('Modified Leaves:', modifiedLeaves);
+				dispatch(updateBulkAttendance(modifiedLeaves))
+				dispatch(loadAllbulkAttendance())
+			}
 		} else {
 			setLoader(false);
 		}
@@ -79,6 +137,7 @@ const ReviewLeavePopup = () => {
 					<h2 className='text-2xl font-semibold mb-4 text-center mt-5'>
 						Approve Leave
 					</h2>
+					{/* {console.log('list',list)} */}
 					<Form
 						className='list-inside list-none border-2 border-inherit rounded px-5 py-5 m-5 mt-10'
 						form={form}

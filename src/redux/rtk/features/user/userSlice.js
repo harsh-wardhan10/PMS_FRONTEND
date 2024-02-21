@@ -35,7 +35,32 @@ export const addStaff = createAsyncThunk("user/addStaff", async (values) => {
 		};
 	}
 });
-
+export const checkEmployeeId = createAsyncThunk("user/checkEmployeeId", async (values) => {
+	try {
+		const { data } = await axios({
+			method: "post",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json;charset=UTF-8",
+			},
+			url: `user/checkEmployeeId`,
+			data: {
+				...values,
+			},
+		});
+		// toast.success("Registration successful");
+		return {
+			data,
+			message: "success",
+		};
+	} catch (error) {
+		// toast.error("Error in adding staff try again");
+		console.log(error.message);
+		return {
+			message: "error",
+		};
+	}
+});
 export const deleteStaff = createAsyncThunk("user/deleteStaff", async (id) => {
 	try {
 		const resp = await axios({
@@ -176,6 +201,21 @@ const userSlice = createSlice({
 		});
 
 		builder.addCase(addStaff.rejected, (state, action) => {
+			state.loading = false;
+			state.error = action.payload.message;
+		});
+		
+		// 2) ====== check for Employee Id ======
+
+		builder.addCase(checkEmployeeId.pending, (state) => {
+			state.loading = true;
+		});
+
+		builder.addCase(checkEmployeeId.fulfilled, (state, action) => {
+			state.loading = false;
+		});
+
+		builder.addCase(checkEmployeeId.rejected, (state, action) => {
 			state.loading = false;
 			state.error = action.payload.message;
 		});

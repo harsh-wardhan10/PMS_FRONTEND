@@ -8,6 +8,7 @@ const initialState = {
 	attendance: null,
 	error: "",
 	loading: false,
+	singleAttendanceData:null
 
 };
 
@@ -105,6 +106,39 @@ export const addBulkAttendance = createAsyncThunk(
 					"Content-Type": "application/json;charset=UTF-8",
 				},
 				url: `attendance/createbulkAttendance?query=bulkpunch`,
+				data: {
+					data:values,
+				},
+			});
+			toast.success("Bulk Attendance Added");
+			return {
+				data,
+				message: "success",
+			};
+		} catch (error) {
+			toast.success("Attendance Entries Added");
+			// toast.error("Error in adding Bulk Attendance try again");
+			// console.log(error);
+			return {
+				message: error.response.data.message,
+				data: error.response.data.results
+			};
+		}
+	}
+);
+export const addoverwriteAttendance = createAsyncThunk(
+	"attendance/overwritebulkAttendance",
+	async (values) => {
+	
+		try {
+
+			const { data } = await axios({
+				method: "post",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json;charset=UTF-8",
+				},
+				url: `attendance/overwritebulkAttendance?query=bulkpunch`,
 				data: {
 					data:values,
 				},
@@ -268,6 +302,109 @@ export const loadAttendanceByUserId = createAsyncThunk(
 		}
 	}
 );
+export const updateBulkAttendance = createAsyncThunk(
+	"attendance/updatebulkAttendance",
+	async (values) => {
+	
+		try {
+
+			const { data } = await axios({
+				method: "post",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json;charset=UTF-8",
+				},
+				url: `attendance/updatebulkAttendance`,
+				data: {
+					data:values,
+				},
+			});
+			// toast.success("Attendance Updated Successfully");
+			return {
+				data,
+				message: "success",
+			};
+		} catch (error) {
+			// toast.success("Attendance Entries Added");
+			// toast.error("Error in adding Bulk Attendance try again");
+			// console.log(error);
+			return {
+				message: error.response.data.message,
+				data: error.response.data.results
+			};
+		}
+	}
+);
+export const deleteAttendanceData = createAsyncThunk(
+	"attendance/deleteAttendanceData",
+	async (values) => {
+	
+		try {
+
+			const { data } = await axios({
+				method: "post",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json;charset=UTF-8",
+				},
+				url: `attendance/deleteAttendanceData`,
+				data: {
+					data:values,
+				},
+			});
+			toast.success("Attendance Deleted Successfully");
+			return {
+				data,
+				message: "success",
+			};
+		} catch (error) {
+			toast.success("Error in Deleting Attendance");
+			// toast.error("Error in adding Bulk Attendance try again");
+			// console.log(error);
+			return {
+				message: error.response.data.message,
+				data: error.response.data.results
+			};
+		}
+	}
+);
+
+export const getAttendanceDataByEmail = createAsyncThunk(
+	"attendance/getAttendanceDataByEmail",
+	async (values) => {
+	//   console.log('values', values)
+		try {
+
+			const { data } = await axios({
+				method: "post",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json;charset=UTF-8",
+				},
+				url: `attendance/getAttendanceDataByEmail`,
+				data: {
+					emailId:values,
+				},
+			});
+			// toast.success("Attendance Deleted Successfully");
+			return {
+				data,
+				message: "success",
+			};
+		} catch (error) {
+			// toast.success("Error in Deleting Attendance");
+			// toast.error("Error in adding Bulk Attendance try again");
+			// console.log(error);
+			return {
+				message: error.response.data.message,
+				data: error.response.data.results
+			};
+		}
+	}
+);
+
+	
+
 
 const clockInSlice = createSlice({
 	name: "clockIn",
@@ -423,6 +560,22 @@ const clockInSlice = createSlice({
 			state.loading = false;
 			state.error = action.payload.message;
 		});
+
+			// 4) ====== builders for getAttendanceDataByEmail ======
+
+			builder.addCase(getAttendanceDataByEmail.pending, (state) => {
+				state.loading = true;
+			});
+	
+			builder.addCase(getAttendanceDataByEmail.fulfilled, (state, action) => {
+				state.loading = false;
+				state.singleAttendanceData = action.payload;
+			});
+	
+			builder.addCase(getAttendanceDataByEmail.rejected, (state, action) => {
+				state.loading = false;
+				state.error = action.payload.message;
+			});
 	},
 });
 

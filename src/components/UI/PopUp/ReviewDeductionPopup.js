@@ -1,4 +1,4 @@
-import { Button, DatePicker, Drawer, Form, Input, InputNumber, Radio, Select, Tag } from "antd";
+import { Button, DatePicker, Drawer, Form, Input, InputNumber, Radio, Select } from "antd";
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -11,43 +11,42 @@ import {
 } from "../../../redux/rtk/features/leave/leaveSlice";
 import getUserFromToken from "../../../utils/getUserFromToken";
 import moment from "moment";
-import { loadSingelReimbursementApplication, reviewReimbursementApplication } from "../../../redux/rtk/features/reimbursement/reimbursement";
+import { loadSingelDeductionsApplication, reviewDeductionsApplication } from "../../../redux/rtk/features/deductions/deductionSlice";
 
-const ReviewReimbursementPopup = () => {
+const ReviewDeductionPopup = () => {
 	const { id } = useParams("id");
 	const dispatch = useDispatch();
 	const [form] = Form.useForm();
 	const [loader, setLoader] = useState(false);
-	const data = useSelector((state) => state.reimbursement.reimbursement);
+	const data = useSelector((state) => state.deductions.deduction);
 	const userId = getUserFromToken();
 	const [status, setStatus] = useState(null);
 	const { TextArea } = Input;
 	const [initialValues, setInitialValues] = useState({});
 	const { Option } = Select;
-    const currentDate = new Date();
-    const [AcceptAmountRead,setAcceptAmountRead]=useState(false)
 	useEffect(() => {
 		setInitialValues({
 			...data,
 			userId: userId,
 			status: status,
-            approveAmount:data?.amount
+			date: data?.date ? moment(data?.date) : null,
 		});
         // console.log('data',data)
 	}, [data]);
 
 	const onFinish = async (values) => {
 		const FormData = {
-            ...values,        
-        };
-		// console.log('FormData' , FormData , moment(values.acceptDate),moment(currentDate))
+			...values,
+            date:values.date
+		};
+		// console.log('FormData',FormData)
 		const resp = await dispatch(
-			reviewReimbursementApplication({ id: id, values: FormData })
+			reviewDeductionsApplication({ id: id, values: FormData })
 		);
 
 		if (resp.payload.message === "success") {
 			setOpen(false);
-			dispatch(loadSingelReimbursementApplication(id));
+			dispatch(loadSingelDeductionsApplication(id));
 			setLoader(false);
 			setStatus(null);
 		} else {
@@ -70,17 +69,17 @@ const ReviewReimbursementPopup = () => {
 	return (
 		<>
 			<Button onClick={showDrawer} className='mt-4' type='primary'>
-				Review Reimbursement
+				Review Deduction
 			</Button>
 			{data && (
 				<Drawer
 					width={720}
-					title='Reimbursement Review'
+					title='Deduction Review'
 					placement='right'
 					onClose={onClose}
 					open={open}>
 					<h2 className='text-2xl font-semibold mb-4 text-center mt-5'>
-						Approve Reimbursement
+						Approve Deduction
 					</h2>
 					<Form
 						className='list-inside list-none border-2 border-inherit rounded px-5 py-5 m-5 mt-10'
@@ -101,18 +100,19 @@ const ReviewReimbursementPopup = () => {
                         <Form.Item
 						style={{ marginBottom: "10px" }}
 						label='Apply Date'
+                        name='date'
+						valuePropName='date'
 						>
-						<p>{data?.applyDate ?dayjs(data?.applyDate).format("DD-MM-YYYY"):'' }</p>
+						<p>{data?.date ?dayjs(data?.date).format("DD-MM-YYYY"):'' }</p>
 					</Form.Item>
                         <Form.Item
 						style={{ marginBottom: "10px" }}
 						label='Select Accept Date'
-						name='acceptDate'
-						valuePropName='acceptDate'>
+						name='date'
+						valuePropName='date'>
 						<DatePicker
 							className='date-picker hr-staffs-date-picker'
-                            defaultValue={moment(currentDate)}
-                            format="DD-MM-YYYY"
+                            defaultValue={initialValues.date}
 						/>
 					</Form.Item>
                              
@@ -156,9 +156,8 @@ const ReviewReimbursementPopup = () => {
 											required: true,
 											message: "Please input amount",
 										},
-									]}
-                                    className="INputNUmber_class">
-									<InputNumber readOnly={AcceptAmountRead}  placeholder="amount" style={{ width: "100%" , backgroundColor: `${AcceptAmountRead ? 'lightgrey':''}`}}/>
+									]}>
+									<InputNumber  placeholder="amount" style={{ width: "100%" }} />
 								</Form.Item>
 
 							<Form.Item
@@ -173,26 +172,11 @@ const ReviewReimbursementPopup = () => {
 								]}>
 								<Radio.Group
 									buttonStyle='solid'
-									onChange={(e) => {
-                                        setStatus(e.target.value)
-                                        if(e.target.value==='REJECTED'){
-                                            form.setFieldsValue({ approveAmount: 0 });
-                                            setAcceptAmountRead(true)
-                                        }
-                                        else{
-                                            form.setFieldsValue({ approveAmount: data.amount }); 
-                                            setAcceptAmountRead(false)
-                                        }
-                                        }}>
+									onChange={(e) => setStatus(e.target.value)}>
 									<Radio.Button value='ACCEPTED'>Approved</Radio.Button>
 									<Radio.Button value='REJECTED'>Not Approved</Radio.Button>
 								</Radio.Group>
 							</Form.Item>
-                            {/* <Form.Item
-									style={{ marginBottom: "10px",marginLeft:'70px' }}
-									>
-                                            <Tag color="rgba(0,0,0,0.1)"><p className="text-[13px] text-black "> Note: The reimbursement will be credit in the salary for the month in <br/> which the reimbursement is accepted.</p></Tag>
-                                     </Form.Item> */}
 							<Form.Item
 								style={{ marginBottom: "10px" }}
 								wrapperCol={{
@@ -207,7 +191,7 @@ const ReviewReimbursementPopup = () => {
 									block
 									disabled={status === null}
 									loading={loader}>
-									Review Reimbursement
+									Review Deduction
 								</Button>
 							</Form.Item>
 						</div>
@@ -217,4 +201,4 @@ const ReviewReimbursementPopup = () => {
 		</>
 	);
 };
-export default ReviewReimbursementPopup;
+export default ReviewDeductionPopup;

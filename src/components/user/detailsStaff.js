@@ -54,7 +54,7 @@ const DetailStaff = () => {
 	const error = useSelector((state) => state.users.error);
 	const designation = useSelector((state) => state.designations.list);
 
-	console.log(data, "data");
+	// console.log(data, "data");
 
 	//Delete Supplier
 	const onDelete = async() => {
@@ -98,7 +98,7 @@ const DetailStaff = () => {
 	if (!isLogged) {
 		return <Navigate to={"/admin/auth/login"} replace={true} />;
 	}
-	console.log('user',user)
+	// console.log('user',user)
 	return (
 		<div>
 			<UserPrivateComponent permission={"readSingle-user"}>

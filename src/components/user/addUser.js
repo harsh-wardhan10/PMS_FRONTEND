@@ -25,10 +25,11 @@ import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { getDepartments } from "../department/departmentApis";
 import { loadAllEmploymentStatus } from "../../redux/rtk/features/employemntStatus/employmentStatusSlice";
 import { loadAllShift } from "../../redux/rtk/features/shift/shiftSlice";
-import { addStaff } from "../../redux/rtk/features/user/userSlice";
+import { addStaff, checkEmployeeId } from "../../redux/rtk/features/user/userSlice";
 import { loadAllWeeklyHoliday } from "../../redux/rtk/features/weeklyHoliday/weeklyHolidaySlice";
 import { loadAllLeavePolicy } from "../../redux/rtk/features/leavePolicy/leavePolicySlice";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
+import { loadAllTaxes } from "../../redux/rtk/features/tax/taxSlice";
 
 const AddUser = () => {
 	const [loader, setLoader] = useState(false);
@@ -42,6 +43,8 @@ const AddUser = () => {
         taxType:'',
 		amount:''
 	}])
+	const [employeeIdMessage, setEmployeeIdMessage] = useState('');
+
 	const [education, setEducation] = useState([
 		// {
 		// 	degree: "",
@@ -62,7 +65,7 @@ const AddUser = () => {
 	const shift = useSelector((state) => state.shift?.list);
 	const weeklyHoliday = useSelector((state) => state.weeklyHoliday?.list);
 	const leavePolicy = useSelector((state) => state.leavePolicy?.list);
-
+	const Taxlist = useSelector((state) => state.taxList.list);
 	useEffect(() => {
 		getRoles()
 			.then((d) => setList(d))
@@ -81,6 +84,7 @@ const AddUser = () => {
 		dispatch(loadAllShift());
 		dispatch(loadAllWeeklyHoliday());
 		dispatch(loadAllLeavePolicy());
+		dispatch(loadAllTaxes());
 	}, []);
 
 	const [form] = Form.useForm();
@@ -100,6 +104,7 @@ const AddUser = () => {
 			taxes:taxesArr
 
 		};
+		// console.log('FormData',FormData)
 		try {
 			// console.log('FormData',FormData)
 			const resp = await dispatch(addStaff(FormData));
@@ -125,7 +130,23 @@ const AddUser = () => {
 	};
 
 	const bloodGroups = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]; // blood groups
-
+   const handleEmployeeIdChange=(e)=>{
+        //  console.log('e.target.value',e.target.value)
+	  if(e.target.value ===''){
+		setEmployeeIdMessage('')
+	}
+	else{
+		form.setFieldsValue({ employeeId: e.target.value });
+		const EmployeeIdResponse=dispatch(checkEmployeeId({employeeId:e.target.value}))
+   
+		EmployeeIdResponse.then((res)=>{
+		   // console.log('EmployeeIdResponse',res.payload.data.message)
+		   setEmployeeIdMessage(res.payload.data.message); 
+		}).catch((err)=>{
+		   console.log('EmployeeId Error',err)
+		})
+	}
+   }
 	return (
 		<Fragment bordered={false}>
 			<UserPrivateComponent permission={"create-user"}>
@@ -320,7 +341,11 @@ const AddUser = () => {
 											message: "Please input Employee ID!",
 										},
 									]}>
-									<Input placeholder='OE-012' />
+									<Input onChange={(e)=>handleEmployeeIdChange(e)} placeholder='OE-012' 
+									//  validateStatus={employeeIdMessage ? 'error' : ''}
+									 help={employeeIdMessage} // Display the message as help text
+									/>
+									{employeeIdMessage==='Employee Id already exists' ? <p className="text-red-500">{employeeIdMessage}</p> :<p className="text-green-500">{employeeIdMessage}</p>}
 								</Form.Item>
 								<Form.Item
 									style={{ marginBottom: "10px" }}
@@ -531,11 +556,6 @@ const AddUser = () => {
 												</Option>
 											))}
 									</Select>
-									{/*<BigDrawer
-									title={"new Role"}
-									btnTitle={"Role"}
-									children={<AddRole drawer={true} />}
-										/> */}
 								</Form.Item>
 
 								<Form.Item
@@ -621,12 +641,12 @@ const AddUser = () => {
 										placeholder='Please select type'
 
 										onChange={(value)=> item.taxType=value }>
-												<Option value='TaxA'>
-													Tax A
+												{Taxlist.map((item)=>{
+													return 	<Option value={item.taxName}>
+													{item.taxName}
 												</Option>
-												<Option value='TaxB'>
-													Tax B
-												</Option>
+												})}
+
 									</Select>
 									  <InputNumber style={{ width: "100%", margin:'10px',marginLeft:'0px' }}  onChange={(value)=>{
 										 return item.amount = value
@@ -727,7 +747,8 @@ const AddUser = () => {
 								type='primary'
 								htmlType='submit'
 								shape='round'
-								loading={loader}>
+								loading={loader}
+								disabled={employeeIdMessage === 'Employee Id already exists'}>
 								Add New Staff
 							</Button>
 						</Form.Item>

@@ -1,4 +1,4 @@
-import { Button, Col, DatePicker, Form, Input, InputNumber, Row, Select, Typography } from "antd";
+import { Button, Col, DatePicker, Form, Input, InputNumber, Row, Select, Tag, Typography } from "antd";
 
 import dayjs from "dayjs";
 import React, { Fragment, useEffect, useRef, useState } from "react";
@@ -8,36 +8,77 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import {
 	loadAllShift,
-	loadSingleShift,
 } from "../../redux/rtk/features/shift/shiftSlice";
 import getUserFromToken from "../../utils/getUserFromToken";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
-import { addReimbursement } from "../../redux/rtk/features/reimbursement/reimbursement";
 import { addDeductions } from "../../redux/rtk/features/deductions/deductionSlice";
+import { uploadDeductionFile } from "../../redux/rtk/features/uploadDeductionFiles/uploadDeductionFiles";
 
 const NewDeductions = ({ drawer }) => {
 	const [loader, setLoader] = useState(false);
 	
 	const users = useSelector((state) => state.users?.list);
 
-
 	//get id from JWT token in localstorage and decode it
 	const { TextArea } = Input;
 	const id = getUserFromToken();
 	const dispatch = useDispatch();
+    const [files, setFiles] = useState([]);
+	const fileInputRef = useRef();
+    const [showExceedsMsg, setshowExceedsMsg] =useState(false)
 
+	const handleOnChange = (event) => {
+		let currentFilesArr=[]
+		const selectedFiles = event.target.files;
+		const selectedFilesArray = Array.from(selectedFiles);
+		currentFilesArr.push(selectedFilesArray[0])
+		files.forEach((item)=>{
+			currentFilesArr.push(item)
+		})
+		
+		const totalSize = Array.from(currentFilesArr).reduce(
+		  (accumulator, file) => accumulator + file.size,
+		  0
+		);
+		const totalSizeInMB = totalSize/(1024*1024)
+	    // console.log('currentFilesArr',currentFilesArr,'files',files,'totalSize',totalSize,'totalSizeInMB',totalSizeInMB)
+		// Check if total size exceeds 5 MB
+		if (totalSizeInMB.toFixed(2) > 5) {
+
+		  alert("Total file size exceeds 5 MB");
+		 
+		  fileInputRef.current.value = null;
+		  return;
+		}
+	  else {
+		setFiles([...files, ...selectedFilesArray]);
+	  }
+		// Handle files as usual
+		
+	  };
+  
+	const handleRemoveFile = (fileIndex) => {
+	  // Remove the file at the specified index
+	  setFiles((prevFiles) => prevFiles.filter((file, index) => index !== fileIndex));
+	};
 	const { Title } = Typography;
 	const [form] = Form.useForm();
 
 	const onFinish = async (values) => {
-		
+		values.attachment=files.map(item => item.name)
 		const deductionsData = {
 			...values,
             date:dayjs(values.date),
 			userId: values.userId,
 		};
         //   console.log('deductionsData',deductionsData,'values',values)
+        files.forEach((item)=>{
+            const formData = new FormData();
+            formData.append("files", item); 
+            // Assuming 'file' is the file you want to upload
+            dispatch(uploadDeductionFile(formData));
+        })
 		setLoader(true);
 		const resp = await dispatch(addDeductions(deductionsData));
 		if (resp.payload.message === "success") {
@@ -147,6 +188,54 @@ const NewDeductions = ({ drawer }) => {
 												}}
 											/>
 									</Form.Item>
+                                    <Form.Item
+										style={{ marginBottom: "20px" }}
+										label='Attachments'
+										name='attachment'
+										rules={[
+										{
+											required: false,
+											message: "Please input your shift!",
+										},
+									]} className="form_item_leave_page">
+									<input
+										// required={true}
+										className='text-sm text-slate-500
+														file:mr-4 file:py-2 file:px-4
+														file:rounded-full file:border-0
+														file:text-sm file:font-semibold
+														file:bg-blue-50 file:text-blue-700
+														hover:file:bg-blue-100
+														mt-4 file:mt-0 file:ml-4
+														mb-4 file:mb-0 file:ml-4'
+										type='file'
+										id='csvFileInput'
+										accept='image/jpeg,application/pdf,image/png,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+										multiple 
+										ref={fileInputRef}
+										onChange={handleOnChange}
+									/>
+									{files.map((file, index) => (
+									 <div key={index} className="my-[10px]">
+										{file.name}
+										<button type="danger" className="mt-[0px] ml-[15px]" onClick={() => handleRemoveFile(index)}>
+										<i class="bi bi-x-circle"></i>
+										</button>
+									</div>
+									))}
+									{showExceedsMsg ? 
+									<p className="text-red-500">Sum of files size exceed 5 MB</p> :<Tag color="rgba(0,0,0,0.1)"><p className="text-[13px] text-black"> Note: The sum of all files size should not exceed 5 MB </p></Tag>	
+								    } 
+									</Form.Item>
+                                    <Form.Item
+									style={{ marginBottom: "10px" }}
+									wrapperCol={{
+										offset: 6,
+										span: 6,
+									}}>
+                                            <Tag color="rgba(0,0,0,0.1)"><p className="text-[13px] text-black"> Note: Deductions will be deducted for the salary of the month in <br/> which the date of deduction exists. </p></Tag>
+                                     </Form.Item>
+
 								<Form.Item
 									style={{ marginBottom: "10px" }}
 									wrapperCol={{

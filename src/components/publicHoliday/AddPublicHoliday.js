@@ -23,6 +23,7 @@ import {
 } from "../../redux/rtk/features/publicHoliday/publicHolidaySlice";
 import dayjs from "dayjs";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
+import { loadAllbulkAttendance, updateBulkAttendance } from "../../redux/rtk/features/attendance/attendanceSlice";
 
 function CustomTable({ list, loading }) {
 	const [columnsToShow, setColumnsToShow] = useState([]);
@@ -125,13 +126,16 @@ const AddPublicHoliday = ({ drawer }) => {
 	const [form] = Form.useForm();
 	const dispatch = useDispatch();
 
+	const attendance = useSelector((state) => state.attendance);
 	useEffect(() => {
 		dispatch(loadAllPublicHoliday());
+		dispatch(loadAllbulkAttendance())
 	}, []);
 
 	const { Title } = Typography;
 
 	const onFinish = async (values) => {
+       
 		setLoader(true);
 		const resp = await dispatch(addSinglePublicHoliday(values));
 
@@ -139,6 +143,21 @@ const AddPublicHoliday = ({ drawer }) => {
 			setLoader(false);
 			form.resetFields();
 			dispatch(loadAllPublicHoliday());
+			const filteredData=attendance.list.filter(item => {
+				const itemDate= new Date(item.date).setHours(0,0,0,0)
+				return (
+					itemDate===values.date._d.setHours(0,0,0,0) &&
+					item.status !== "In" && item.status !== "Out"
+				)
+			} )
+			const modifiedHoliday = filteredData.map(item => {
+				return {
+					...item,
+					status: `Public Holiday` // Assuming values.paidOrUnpaid contains the desired status
+				};
+			 });
+			    dispatch(updateBulkAttendance(modifiedHoliday))
+				dispatch(loadAllbulkAttendance())
 		} else {
 			setLoader(false);
 		}
@@ -210,7 +229,7 @@ const AddPublicHoliday = ({ drawer }) => {
 										span: 12,
 									}}>
 									<Button
-										onClick={() => setLoader(true)}
+										// onClick={() => setLoader(true)}
 										type='primary'
 										size='large'
 										htmlType='submit'

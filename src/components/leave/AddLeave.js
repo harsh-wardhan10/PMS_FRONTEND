@@ -1,4 +1,4 @@
-import { Button, Col, DatePicker, Form, Input, Row, Select, Typography } from "antd";
+import { Button, Col, DatePicker, Form, Input, Row, Select, Tag, Typography } from "antd";
 
 import dayjs from "dayjs";
 import React, { Fragment, useEffect, useRef, useState } from "react";
@@ -16,6 +16,7 @@ import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
 import UploadMany from "../Card/UploadMany";
 import { uploadAttachmentFile } from "../../redux/rtk/features/uploadFiles/uploadFiles";
+import { loadAllbulkAttendance, updateBulkAttendance } from "../../redux/rtk/features/attendance/attendanceSlice";
 
 const AddLeave = ({ drawer }) => {
 	const [loader, setLoader] = useState(false);
@@ -30,12 +31,38 @@ const AddLeave = ({ drawer }) => {
 	const fileInputRef = useRef();
 	const dispatch = useDispatch();
 	const [files, setFiles] = useState([]);
-  
+	const { list, loading } = useSelector((state) => state.attendance);
+    const [showExceedsMsg, setshowExceedsMsg] =useState(false)
 	const handleOnChange = (event) => {
-	  const selectedFiles = event.target.files;
-	  // Update the files state with the selected files
-	  setFiles((prevFiles) => [...prevFiles, ...Array.from(selectedFiles)]);
-	};
+		let currentFilesArr=[]
+		const selectedFiles = event.target.files;
+		const selectedFilesArray = Array.from(selectedFiles);
+		currentFilesArr.push(selectedFilesArray[0])
+		files.forEach((item)=>{
+			currentFilesArr.push(item)
+		})
+		
+		const totalSize = Array.from(currentFilesArr).reduce(
+		  (accumulator, file) => accumulator + file.size,
+		  0
+		);
+		const totalSizeInMB = totalSize/(1024*1024)
+	    // console.log('currentFilesArr',currentFilesArr,'files',files,'totalSize',totalSize,'totalSizeInMB',totalSizeInMB)
+		// Check if total size exceeds 5 MB
+		if (totalSizeInMB.toFixed(2) > 5) {
+
+		  alert("Total file size exceeds 5 MB");
+		 
+		  fileInputRef.current.value = null;
+		  return;
+		}
+	  else {
+		setFiles([...files, ...selectedFilesArray]);
+	  }
+		// Handle files as usual
+		
+		
+	  };
   
 	const handleRemoveFile = (fileIndex) => {
 	  // Remove the file at the specified index
@@ -50,6 +77,7 @@ const AddLeave = ({ drawer }) => {
 	useEffect(() => {
 		dispatch(loadAllShift());
 		dispatch(loadAllStaff({ status: true }));
+		dispatch(loadAllbulkAttendance())
 	}, []);
 
 	const { Title } = Typography;
@@ -59,7 +87,7 @@ const AddLeave = ({ drawer }) => {
 		const leaveTo = form.getFieldValue('leaveTo');
 	
 		if (leaveFrom && leaveTo && leaveFrom.isAfter(leaveTo)) {
-		  callback('Start Date must be before End Date');
+		  callback('Start Date must be lesser than End Date');
 		} else {
 		  callback();
 		}
@@ -72,20 +100,50 @@ const AddLeave = ({ drawer }) => {
 			leaveFrom: dayjs(values.leaveFrom).format(),
 			leaveTo: dayjs(values.leaveTo).format(),
 		};
-		// console.log('files',files)
+		
+		// console.log('files',files)   
 		files.forEach((item)=>{
 			const formData = new FormData();
 			formData.append("files", item); 
 			 // Assuming 'file' is the file you want to upload
 			dispatch(uploadAttachmentFile(formData));
 		})
-	      console.log('values.attachment',values.attachment)      
+   
 		setLoader(true);
+		
 		const resp = await dispatch(addLeaveApplication(leaveData));
 		if (resp.payload.message === "success") {
 			setLoader(false);
 			form.resetFields();
 			dispatch(loadAllShift());
+
+				const leavesTo = values.leaveTo;
+				const leavesFrom = values.leaveFrom;
+				const selectedUser =users.find(item => item.id  === values.userId)
+				const filteredLeaves = list.filter(item => {
+					const itemDate = new Date(item.date);
+					const fromDate = new Date(leavesFrom);
+					fromDate.setDate(fromDate.getDate() - 1);
+					const toDate = new Date(leavesTo);
+					return (
+						itemDate >= fromDate &&
+						itemDate <= toDate &&
+						(item.status === 'Uninformed' || item.status==='UnApproved leave') &&
+						item.log === '' &&
+						item.emailId === selectedUser.email
+					);
+				});
+				const modifiedLeaves = filteredLeaves.map(item => {
+					return {
+						...item,
+						status: `UnApproved leave` // Assuming values.paidOrUnpaid contains the desired status
+					};
+				});
+				// console.log('Modified Leaves:', modifiedLeaves);
+				dispatch(updateBulkAttendance(modifiedLeaves))
+				dispatch(loadAllbulkAttendance())
+			
+
 		} else {
 			setLoader(false);
 		}
@@ -140,7 +198,7 @@ const AddLeave = ({ drawer }) => {
 										placeholder='Select User'
 										optionFilterProp='children'>
 											{users.map((item)=>{
-										    return <Select.Option value={item.id}>{item.firstName} {item.lastName} - {item.employeeId  }</Select.Option>
+										    return <Select.Option value={item.id}>{item.firstName} {item.lastName} - {item.employeeId}</Select.Option>
 											})}
 									</Select>
 								</Form.Item>
@@ -172,7 +230,7 @@ const AddLeave = ({ drawer }) => {
 											required: true,
 											message: "Please input your start date!",
 										},
-										{
+										 {
 											validator: validateDateRange,
 										  },
 									]}>
@@ -188,7 +246,7 @@ const AddLeave = ({ drawer }) => {
 											required: true,
 											message: "Please input your end date!",
 										},
-										{
+									 	 {
 											validator: validateDateRange,
 										  },
 									]}>
@@ -234,7 +292,7 @@ const AddLeave = ({ drawer }) => {
 														mb-4 file:mb-0 file:ml-4'
 										type='file'
 										id='csvFileInput'
-										accept='*'
+										accept='image/jpeg,application/pdf,image/png,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 										multiple 
 										ref={fileInputRef}
 										onChange={handleOnChange}
@@ -247,8 +305,11 @@ const AddLeave = ({ drawer }) => {
 										</button>
 									</div>
 									))}
-									
+									{showExceedsMsg ? 
+									<p className="text-red-500">Sum of files size exceed 5 MB</p> :<Tag color="rgba(0,0,0,0.1)"><p className="text-[13px] text-black"> Note: The sum of all files size should not exceed 5 MB </p></Tag>	
+								    } 
 									</Form.Item>
+								
 								<Form.Item
 									style={{ marginBottom: "10px" }}
 									wrapperCol={{

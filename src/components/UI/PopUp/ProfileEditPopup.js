@@ -28,6 +28,7 @@ import { loadAllLeavePolicy } from "../../../redux/rtk/features/leavePolicy/leav
 import { loadAllWeeklyHoliday } from "../../../redux/rtk/features/weeklyHoliday/weeklyHolidaySlice";
 import { useParams } from "react-router-dom";
 import moment from "moment";
+import { loadAllTaxes } from "../../../redux/rtk/features/tax/taxSlice";
 
 const ProfileEditPopup = ({ data }) => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,7 +44,7 @@ const ProfileEditPopup = ({ data }) => {
 	const { Title } = Typography;
 	const { Option } = Select;
 	const [list, setList] = useState(null);
-
+	const Taxeslist = useSelector((state) => state.taxList.list);
 	const [department, setDepartment] = useState(null);
 
 	const [initialValues, setInitialValues] = useState({});
@@ -64,6 +65,7 @@ const ProfileEditPopup = ({ data }) => {
 		dispatch(loadAllShift());
 		dispatch(loadAllLeavePolicy());
 		dispatch(loadAllWeeklyHoliday());
+		dispatch(loadAllTaxes());
 	}, []);
 
 	useEffect(() => {
@@ -89,14 +91,14 @@ const ProfileEditPopup = ({ data }) => {
 			shiftId: user.shiftId ? user.shiftId : "",
 			leavePolicyId: user.leavePolicyId ? user.leavePolicyId : "",
 			weeklyHolidayId: user.weeklyHolidayId ? user.weeklyHolidayId : "",
-            salary:user?.salaryHistory[0]?.salary ? user?.salaryHistory[0]?.salary :'',
-			TDS:user?.salaryHistory[0]?.TDS ?user?.salaryHistory[0]?.TDS:'',
-			ESIC:user?.salaryHistory[0]?.ESIC?user?.salaryHistory[0]?.ESIC:'',
-			PF:user?.salaryHistory[0]?.PF?user?.salaryHistory[0]?.PF:'',
+            salary:user?.baseSalary ? user?.baseSalary :'',
+			TDS:user?.TDS ?user?.TDS:'',
+			ESIC:user?.ESIC?user?.ESIC:'',
+			PF:user?.PF?user?.PF:'',
 			startDate:moment(user?.salaryHistory[0]?.startDate)?moment(user?.salaryHistory[0]?.startDate):'',
 			endDate:moment(user?.salaryHistory[0]?.endDate)?moment(user?.salaryHistory[0]?.endDate):''
 		});
-		settaxes(user?.salaryHistory[0]?.taxes)
+		settaxes(user?.taxes?.length>0 ?user?.taxes:[{id:1}])
 		
 	}, [id]);
 
@@ -631,12 +633,11 @@ const ProfileEditPopup = ({ data }) => {
 											});
 											// item.taxType=value 
 										}}>
-												<Option value='TaxA'>
-													Tax A
+												{Taxeslist.map((item)=>{
+													return <Option value={item.taxName}>
+													{item.taxName}
 												</Option>
-												<Option value='TaxB'>
-													Tax B
-												</Option>
+												})}
 									</Select>
 									  <InputNumber defaultValue={item.amount} style={{ width: "100%", margin:'10px',marginLeft:'0px' }}  onChange={(value)=>{
 										 settaxes((prevTaxes) => {

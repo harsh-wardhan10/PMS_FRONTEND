@@ -127,7 +127,7 @@ function CustomTable({ list, loading }) {
 		setColumnsToShow(val);
 	};
 
-	const addKeys = (arr) => arr.map((i) => ({ ...i, key: i.id }));
+	const addKeys = (arr) => arr?.map((i) => ({ ...i, key: i.id }));
 
 	return (
 		<Card className='mt-5'>

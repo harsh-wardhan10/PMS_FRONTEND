@@ -1,13 +1,13 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Card, DatePicker, Segmented, Table, Tag ,Button, Modal} from "antd";
+import { Card, DatePicker, Segmented, Table, Tag ,Button, Modal, Checkbox, Form} from "antd";
 import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import { CSVLink } from "react-csv";
 import { useDispatch, useSelector } from "react-redux";
 import ColVisibilityDropdown from "../Shared/ColVisibilityDropdown";
 import { CsvLinkBtn, TableHeraderh2 } from "../UI/CsvLinkBtn";
-import { loadAllAttendancePaginated,clearAttendanceList, addManualAttendance, addBulkAttendance, loadBulkAttendancePaginated, loadAllAttendance, loadAllbulkAttendance } from "../../redux/rtk/features/attendance/attendanceSlice";
+import { loadAllAttendancePaginated,clearAttendanceList, addManualAttendance, addBulkAttendance, loadBulkAttendancePaginated, loadAllAttendance, loadAllbulkAttendance, getAttendanceDataByEmail, addoverwriteAttendance } from "../../redux/rtk/features/attendance/attendanceSlice";
 import BtnSearchSvg from "../UI/Button/btnSearchSvg";
 import { VioletLinkBtn } from "../UI/AllLinkBtn";
 import Papa from 'papaparse';
@@ -31,6 +31,7 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 	const [dropZone, setDropZone] = useState(false);
 	const [isUpload, setisUpload]=  useState(false)
 	const [excludedDataEntries, setExcludedDataEntries] =useState()
+	const [overwriteData, setoverwriteData] =useState(false)
 	const showModal = () => {
 	  setIsModalOpen(true);
 	};
@@ -78,13 +79,6 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 				return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
 			  }
 		},
-		// {
-		// 	id:1,
-		// 	title:"Employee Id",
-		// 	dataIndex:'employeeId',
-		// 	key:"employeeId",
-		// 	render:(employeeId)=>`${employeeId}`
-		// },
 		{
 			id: 2,
 			title: "Sick Leaves",
@@ -92,13 +86,6 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 			key: "totalSickLeaves",
 			render: (totalSickLeaves) => `${totalSickLeaves}`,
 		},
-		// {
-		// 	id: 3,
-		// 	title: "Causal Leaves",
-		// 	dataIndex: "totalCausalLeaves",
-		// 	key: "totalCausalLeaves",
-		// 	render: (totalCausalLeaves) => `${totalCausalLeaves}`,
-		// },
 		{
 			id: 4,
 			title: "Paid Leaves",
@@ -150,7 +137,9 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 			dataIndex: "data",
 			key: "data",
 			render: (data) => (
-				<button onClick={()=>{navigate(`/admin/attendance/${data[0].emailId}`,{state:data})}}>
+				<button onClick={()=>{
+					// dispatch(getAttendanceDataByEmail(data[0].emailId))
+					navigate(`/admin/attendance/${data[0].emailId}`,{state:data})}}>
 				 View
 				</button>
 			),
@@ -285,9 +274,22 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 	},[arrayData])
   const handleBulkupload= ()=>{
 
+
+	function formatDate(dateString) {
+		// Split the date string by '/' to get day, month, and year
+		const [day, month, year] = dateString.split('/');
+	  
+		// Add leading zeros to day and month if necessary
+		const formattedDay = day.padStart(2, '0');
+		const formattedMonth = month.padStart(2, '0');
+	  
+		// Return the formatted date string
+		return `${formattedDay}/${formattedMonth}/${year}`;
+	  }
+	  
 	const createNewObject = (item, key, email) => {
     const newObj = {
-        date: item.Date,
+        date: formatDate(item.Date),
         status: item.Status,
         log: item[key],
         emailId: email,
@@ -312,14 +314,23 @@ const processData = (data) => {
     return newData;
 };
 	const processedData = processData(arrayData);
-
 	    //  const CleanData=  rejectUncompleteEntry(processedData)
 	    //  console.log('CleanData',CleanData)
 	     const getAllDatesData = getAllDates(processedData)
 		 const CleanData=  rejectUncompleteEntry(getAllDatesData)
-		 console.log('processedData',processedData,getAllDatesData,CleanData)
-      const bulkUploadResult=  dispatch(addBulkAttendance(CleanData))
-	  setSummaryData(bulkUploadResult)
+
+		// console.log('CleanData',CleanData)
+		if(overwriteData){
+			const bulkUploadResult= dispatch(addoverwriteAttendance(CleanData))
+		    setSummaryData(bulkUploadResult)
+		}
+		else{
+
+			const bulkUploadResult=  dispatch(addBulkAttendance(CleanData))
+			setSummaryData(bulkUploadResult)
+		
+		}
+
 	  handleCancel()
 	  handleOpenSecondModal()	
    }
@@ -351,9 +362,9 @@ const processData = (data) => {
   
 			// Check if the first and last status are equal to "In" and "Out" respectively
 			// console.log('emailGroup',emailGroup)
-			if ((firstStatus === 'In' && lastStatus === 'Out') || emailGroup[0].status==='Absent' ||emailGroup[0].status=== "Weekend" || emailGroup[0].status==='Public Holiday' || emailGroup[0].status==='causalLeave' || emailGroup[0].status==='sickLeave') {
+			if ((firstStatus === 'In' && lastStatus === 'Out') || emailGroup[0].status==='Uninformed' || emailGroup[0].status==='UnApproved leave' || emailGroup[0].status=== "Weekend" || emailGroup[0].status==='Public Holiday' || emailGroup[0].status==='causalLeave' || emailGroup[0].status==='causalLeave(Paid)' || emailGroup[0].status==='causalLeave(UnPaid)' || emailGroup[0].status==='sickLeave' || emailGroup[0].status==='sickLeave(Paid)' || emailGroup[0].status==='sickLeave(UnPaid)') {
 				const isValidDates = emailGroup.every(item => {
-					let itemDate = moment(item.date, "MM-DD-YY").format("MM-DD-YYYY")
+					let itemDate = moment(item.date, "MM-DD-YYYY").format("MM-DD-YYYY")
 					return moment(itemDate, 'MM-DD-YYYY', true).isValid();
 				})
 				if (isValidDates) {
@@ -373,21 +384,28 @@ const processData = (data) => {
 		},
 		{ filteredData: [], excludedData: [] }
 	  );
-    //   console.log('excludedData',excludedData,'filteredData',filteredData)
+      //   console.log('excludedData',excludedData)
 	  setExcludedDataEntries(excludedData);
 	  return filteredData;
 	}
   };
 
   const getAllDates=(data)=>{
-
-	function standardizeDateFormat(dateString) {
-		const [month, day, year] = dateString?.split('/');
+    let rejectedDateEntries=[]
+	function standardizeDateFormat(item) {
+		let itemDate = moment(item.date, "MM-DD-YYYY").format("MM-DD-YYYY")
+	if(moment(itemDate, 'MM-DD-YYYY', true).isValid()){
+		const [month, day, year] = item.date?.split('/');
 		return `${month.padStart(2, '0')}/${day.padStart(2, '0')}/${year}`;
+	  }
+	  else {
+		rejectedDateEntries.push(item)
+	  } 
 	}
-	
+	setExcludedDataEntries(rejectedDateEntries);
 	// Find the startDate and endDate
-	const dates = data.map(item => new Date(standardizeDateFormat(item.date)));
+	
+	const dates = data.map(item => new Date(standardizeDateFormat(item)));
 	const startDate = new Date(Math.min(...dates));
 	const endDate = new Date(Math.max(...dates));
 	
@@ -413,7 +431,7 @@ const processData = (data) => {
 		if (!groupedData[item.emailId]) {
 			groupedData[item.emailId] = [];
 		}
-		groupedData[item.emailId].push(standardizeDateFormat(item.date));
+		groupedData[item.emailId].push(standardizeDateFormat(item));
 	});
 	
 	// Create the result array with "Absent" entries for missing dates
@@ -421,6 +439,7 @@ const processData = (data) => {
 	const result = [];
 	for (const emailId in groupedData) {
 		const emailDates = groupedData[emailId];
+		// console.log('emailDates',emailDates,'allDates',allDates,groupedData ,'groupedData',groupedData[emailId])
 		const missingDates = allDates.filter(date => !emailDates.includes(date));
 		
 		missingDates.forEach(date => {
@@ -431,7 +450,7 @@ const processData = (data) => {
 				log:''
 			});
 		});
-		
+		//  console.log('result',result)
 		result.push(...data.filter(item => item.emailId === emailId));
 	}
 	
@@ -441,19 +460,14 @@ const processData = (data) => {
 	return result
   } 
   const getAbsentStatus=(date, emailId)=>{
-	// console.log('users emailId',users , date, emailId)
-	// console.log('publicHolidayList',publicHolidayList)
-
 				const dateStr = date;
 			const dateObj = new Date(dateStr);
-
 			// Get the day of the week as a number (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
 			const dayOfWeekNumber = dateObj.getDay();
 
 			// Convert the day of the week number to a string
 			const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 			const CurrentDay= daysOfWeek[dayOfWeekNumber];
-
 
 	  let weeklyHoliday
 	  let leaveApplication
@@ -464,7 +478,7 @@ const processData = (data) => {
 			leaveApplication=item.leaveApplication
 	    }
 	  })
-	  console.log('leaveApplication',leaveApplication)
+	//   console.log('leaveApplication',leaveApplication)
 	  const formatDate = (dateString) => {
 		const dateObj = new Date(dateString);
 		const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
@@ -480,23 +494,34 @@ const processData = (data) => {
 	}
 	else {
         const leaveType = getLeaveTypeForDate(date, leaveApplication);
+        // console.log('leaveType',leaveType,date,emailId)
         if (leaveType) {
             return leaveType;
-        }
+        }    
 		else {
-			return "Absent"
+			return "Uninformed"
 		}
 	}
 
  }
  const getLeaveTypeForDate = (date, leaveApplication) => {
     const checkDate = new Date(date);
+
     for (const leave of leaveApplication) {
-           
+		
 			const leaveFromDate = new Date(leave.acceptLeaveFrom ? leave.acceptLeaveFrom : leave.leaveFrom);
 			const leaveToDate = new Date(leave.acceptLeaveTo ? leave.acceptLeaveTo :leave.leaveTo);
-        if (checkDate >= leaveFromDate && checkDate <= leaveToDate) {
-            return `${leave.leaveType} (${leave.paidOrUnpaid})`;
+			checkDate.setHours(0, 0, 0, 0)
+			leaveFromDate.setHours(0, 0, 0, 0);
+            leaveToDate.setHours(0, 0, 0, 0);
+			
+            if (checkDate >= leaveFromDate && checkDate <= leaveToDate) {
+              if(leave.status ==='REJECTED' || leave.status==='PENDING'){
+				return 'UnApproved leave'
+			  }
+			  else{
+				return `${leave.leaveType}${leave.paidOrUnpaid || leave.paidOrUnpaid !== '' ?`(${leave.paidOrUnpaid})`:'' }`;
+			  } 
         }
     }
     return null;
@@ -548,6 +573,7 @@ const processData = (data) => {
 		         <Modal title="Choose Or Drag drop file to upload" open={isModalOpen} 
 			     	onCancel={handleCancel}
 					 footer={customFooter}
+					 className='w-[750px]'
 					>
 				    {dropZone ? <>
 						{dropZoneContent}
@@ -570,7 +596,47 @@ const processData = (data) => {
 						Drag & Drop 
 					</div>
 					<button className="mt-[15px] ant-btn ant-btn-primary ant-btn-md ant-btn-block" onClick={() => fileInputRef.current.click()}> Or  Choose File</button>
+					<div> 
 					<a href="/Sample_file.xlsx" download="Sample_file.xlsx">Download Sample File</a>
+					</div>
+				      	<Form>
+                          <Form.Item
+										style={{ marginBottom: "10px", marginTop: "10px"}}
+										label=''
+										name=''
+										rules={[
+											{
+												required: false,
+												message: "Please check overwrite date",
+											},
+										]} 
+										>
+											
+										 <Checkbox className="margin-auto" label="" onChange={(e)=>{
+											setoverwriteData(e.target.checked)
+										}}>
+											Overwrite existing data entries for same date
+										</Checkbox>
+									</Form.Item>
+									</Form>
+					<Tag color="rgb(229, 246, 253)" style={{padding:'5px', marginBottom:'5px',marginTop:'5px'}} ><p className="text-[13px] text-[#014361]"><i class="bi bi-info-circle text-[#0288d1] text-[15px] mr-[3px]" ></i>  Date should be in DD-MM-YYYY </p></Tag>
+					<Tag color="#fdeded" style={{padding:'5px', marginBottom:'5px',marginTop:'5px'}} >
+					<p className="text-[13px] text-[#5f2120]">
+				    <i class="bi bi-info-circle text-[#d32f2f] text-[15px] mr-[8px]" ></i> 
+					In case of any date being left unentered between the earliest date in the sheet and the latest date <br/>in the sheet, the system will automatically classify it as follows:
+					<br/><br/>
+					<ul>
+						 <li>-If the date corresponds to a holiday listed in the system, it will be marked as a "Holiday." </li>
+						 <li>-If the date corresponds to a weekly off day as per the shift schedule, it will be marked as a "Weekly Off." </li>
+						 <li>-If the date corresponds to an approved leave request then it will be marked accordingly. </li>
+						 <li>-If the date does not match any of the above criteria, it will be marked as an "Unapproved Leave." </li>
+						 <br/>
+						 This automated classification ensures accurate tracking and management of employee <br/> schedules and absences.
+					</ul>
+					
+                   </p>
+			   </Tag>
+
 				 </div>
 					} 		  
 	     		</Modal>
@@ -590,32 +656,6 @@ const processData = (data) => {
 						</CSVLink>
 					</CsvLinkBtn>
                     
-					{/*<div>
-						<Segmented
-							className='text-center rounded text-red-500 mt-0.5'
-							size='middle'
-							options={[
-								{
-									label: (
-										<span>
-											<i className='bi bi-person-lines-fill'></i> Active
-										</span>
-									),
-									value: "true",
-								},
-								{
-									label: (
-										<span>
-											<i className='bi bi-person-dash-fill'></i> Inactive
-										</span>
-									),
-									value: "false",
-								},
-							]}
-							value={status}
-							onChange={onChange}
-						/>
-            </div> */}
 				</div>
 			)}
            
@@ -662,32 +702,23 @@ const GetAllAttendance = (props) => {
 	const [summaryData, setSummaryData] =useState()
 
 	const { RangePicker } = DatePicker;
+
 	const last30days = () => {
 		const currentDate = new Date();
 		const yesterday = new Date(currentDate);
 		yesterday.setDate(currentDate.getDate() - 30);
 		return yesterday
 	  };
+
 	const [enddate, setenddate] = useState(new Date());
 	const [startdate, setstartdate] = useState(last30days());
+
 	useEffect(() => {
-		// dispatch(
-		// 	loadAllAttendancePaginated({
-		// 		page: 1,
-		// 		limit: 30,
-		// 		startdate,
-		// 		enddate,
-		// 	})
-		// );
-		// dispatch(
-		// 	loadBulkAttendancePaginated({
-		// 		page: 1,
-		// 		limit: 30,
-		// 	})
-		// );
+	
 		dispatch(loadAllbulkAttendance())
 		dispatch(loadAllPublicHoliday());
-		// console.log('listlist',list)
+
+		
 	}, [refresh , props.load]);
   
 //   useEffect(()=>{   
@@ -788,8 +819,10 @@ const GetAllAttendance = (props) => {
  		}, []);
 		//  console.log('formattedList',formattedList)
     const updatedAttendanceList = formattedList?.map(entry => {
-		const { emailId, data,leaveApplication } = entry;
-	  
+
+		const { emailId, data, leaveApplication } = entry;
+
+	    //    console.log('leaveApplication',leaveApplication,'data',data)
 		let totalAbsenties = 0;
 		let totalLateComings = 0;
 		let totalLongBreaks=0;
@@ -797,8 +830,10 @@ const GetAllAttendance = (props) => {
 		let totalSickLeaves=0;
 		let totalCausalLeaves=0;
 		let totalPaidLeaves=0;
-		let totalUnPaidLeaves=0
+		let totalUnPaidLeaves=0;
+		let totalPaidLeavesX=0
 		// Create an array of all dates within the specified range, excluding Saturdays and Sundays
+		
 		const allDates = [];
 		let currentDate = moment(startdate, 'DD/MM/YYYY');
 		const endDate = moment(enddate, 'DD/MM/YYYY');
@@ -859,63 +894,94 @@ const GetAllAttendance = (props) => {
 			return hours * 60 + minutes;
 		}
 
-             // calculate totalsickleave and causalleaves
-
-			        const uniqueSickLeaveDates = new Set();
-					const uniqueCausalLeaveDates = new Set();
-
-					allDates.forEach(date => {
-						const leaveEntries = leaveApplication.filter(item => {
-							const leaveFrom = moment(item.leaveFrom, 'YYYY-MM-DDTHH:mm:ss.SSSZ');
-							const leaveTo = moment(item.leaveTo, 'YYYY-MM-DDTHH:mm:ss.SSSZ');
-							const currentDate = moment(date, 'MM/DD/YY');
-
-							if (
-								(leaveFrom.isSameOrBefore(currentDate, 'day') && leaveTo.isSameOrAfter(currentDate, 'day')) ||
-								(leaveFrom.isSame(currentDate, 'day') || leaveTo.isSame(currentDate, 'day'))
-							) {
-								// Check if the leave date has already been processed for the specific leave type
-								if (item.leaveType === 'sickLeave' && uniqueSickLeaveDates.has(currentDate.format('MM/DD/YY'))) {
-									return false;
-								} else if (item.leaveType === 'causalLeave' && uniqueCausalLeaveDates.has(currentDate.format('MM/DD/YY'))) {
-									return false;
-								}
-
-								// Add the leave date to the set based on leave type
-								if (item.leaveType === 'sickLeave') {
-									uniqueSickLeaveDates.add(currentDate.format('MM/DD/YY'));
-								} else if (item.leaveType === 'causalLeave') {
-									uniqueCausalLeaveDates.add(currentDate.format('MM/DD/YY'));
-								}
-
-								return true;
-							}
-
-							return false;
-						});
-						// console.log('leaveEntries', leaveEntries, leaveApplication);
-						leaveEntries.forEach(leave => {
-							if (leave.leaveType === 'sickLeave') {
-								 if(leave.paidOrUnpaid==='Paid'){
-									totalPaidLeaves +=1
-								 }
-								 else if(leave.paidOrUnpaid==='UnPaid'){
-									totalUnPaidLeaves +=1
-								 }
-								totalSickLeaves += 1;
-							} else if (leave.leaveType === 'causalLeave') {
-								if(leave.paidOrUnpaid==='Paid'){
-									totalPaidLeaves +=1
-								 }
-								 else if(leave.paidOrUnpaid==='UnPaid'){
-									totalUnPaidLeaves +=1
-								 }
-								totalCausalLeaves += 1;
-							}
-						});
-					});
-			     // console.log('uniqueSickLeaveDates',uniqueSickLeaveDates,'uniqueCausalLeaveDates',uniqueCausalLeaveDates)
+	          
 		
+		  
+		   // Calculate totalUnpaidLeaves
+				allDates.forEach(date => {
+					const dateExists = data.some(item => item.date === date);
+					if (!dateExists) {
+						totalUnPaidLeaves+=1;
+					}
+				});
+				            
+				const remainingDates = allDates.filter(date => !data.some(item => item.date === date));
+				data.forEach(item => {
+					if (allDates.includes(item.date)) {
+						// Date matches, check status
+						if (item.status ==='Uninformed' || item.status==='UnApproved leave' || item.status==='sickLeave(UnPaid)' || item.status==="causalLeave(UnPaid)") {
+							// Do something based on the status
+							totalUnPaidLeaves+=1;
+						}
+					}
+				});
+
+				// Calculate totalPaidLeaves
+				data.forEach(item => {
+					if (allDates.includes(item.date)) {
+						// Date matches, check status
+						if (item.status==='sickLeave(Paid)' || item.status==="causalLeave(Paid)") {
+							// Do something based on the status
+							totalPaidLeaves+=1;
+						}
+					}
+				});
+
+				// console.log('remainingDates',remainingDates,'leaveApplication',leaveApplication) 
+				remainingDates.forEach(date => {
+					leaveApplication.forEach(item => {
+						const leaveFrom = new Date(item.acceptLeaveFrom);
+						const leaveTo = new Date(item.acceptLeaveTo);
+						const currentDate = new Date(date);
+						
+							currentDate.setHours(0, 0, 0, 0)
+							leaveFrom.setHours(0, 0, 0, 0);
+							leaveTo.setHours(0, 0, 0, 0);
+
+						if (currentDate >= leaveFrom && currentDate <= leaveTo && item.status === "ACCEPTED" && item.paidOrUnpaid==='Paid') {
+							totalPaidLeaves+=1;
+							totalPaidLeavesX+=1;
+						}
+						else if(currentDate >= leaveFrom && currentDate <= leaveTo && item.status === "ACCEPTED" && item.paidOrUnpaid==='UnPaid'){
+							totalUnPaidLeaves+=1
+						}
+
+					});
+				});
+               
+
+
+             
+		    //  Calculate totalSickleaves
+			
+			
+			data.forEach(item => {
+				if (allDates.includes(item.date)) {
+					// Date matches, check status
+					if (item.status==='sickLeave(Paid)' || item.status==='sickLeave(UnPaid)') {
+						// Do something based on the status
+						totalSickLeaves+=1;
+					}
+				}
+			});
+
+             //    console.log('leaveApplication',leaveApplication)
+			remainingDates.forEach(date => {
+				leaveApplication.forEach(item => {
+					const leaveFrom = new Date(item.acceptLeaveFrom);
+					const leaveTo = new Date(item.acceptLeaveTo);
+					const currentDate = new Date(date);
+						currentDate.setHours(0, 0, 0, 0)
+						leaveFrom.setHours(0, 0, 0, 0);
+						leaveTo.setHours(0, 0, 0, 0);
+
+					if (currentDate >= leaveFrom && currentDate <= leaveTo && item.status === "ACCEPTED" && item.leaveType==='sickLeave') {
+						totalSickLeaves+=1;
+					}
+				});
+			});
+
+
 			// Iterate over each date in alldates array
 			 allDates.forEach(date => {
 				const entriesForDate = data.filter(item => moment(item.date, 'MM/DD/YY').format('MM/DD/YY') === moment(date, 'MM/DD/YY').format('MM/DD/YY'));
@@ -1067,14 +1133,15 @@ const GetAllAttendance = (props) => {
 			});
 		// Check each date in the range
 		// console.log('allDates',allDates)
+	
 		allDates.forEach(date => {
 			const inEntry = data.find(item =>
 				{  
-                   return (moment(item.date, 'MM/DD/YY').isSame(date, 'day') &&item.status === 'In')
+                   return (moment(item.date, 'MM/DD/YY').isSame(date, 'day') && item.status === 'In')
 				}
 				
 			);
-		 //    console.log('inEntry',inEntry, 'data',data,'allDates',allDates)
+		    // console.log('inEntry',inEntry, 'data',data,'allDates',allDates)
 	
 		  if (inEntry) {
 			const shiftStartTime = moment(inEntry.shift ? inEntry.shift.startTime: '').format('h:mm:ss A')
@@ -1093,8 +1160,9 @@ const GetAllAttendance = (props) => {
 			    totalAbsenties += 1;
 		  }
 		})
+		totalUnPaidLeaves = totalUnPaidLeaves - totalPaidLeavesX
 		// Return a new object with the existing properties, totalAbsenties, and totalLateComings
-		return { emailId, data, totalAbsenties, totalLateComings,totalSickLeaves, totalCausalLeaves,totalHalfDays , totalLongBreaks, totalPaidLeaves, totalUnPaidLeaves};
+		return { emailId, data, totalAbsenties, totalLateComings, totalSickLeaves, totalCausalLeaves, totalHalfDays , totalLongBreaks, totalPaidLeaves, totalUnPaidLeaves };
 	  });
 	  
 	//   console.log('updatedAttendanceList',updatedAttendanceList);
@@ -1121,7 +1189,8 @@ const GetAllAttendance = (props) => {
 	const endDateObj = moment(enddate,'DD-MM-YYYY');
 	const newStartDate = startDateObj.format('DD/MM/YYYY');
 	const newEndDate = endDateObj.format('DD/MM/YYYY');
-
+	
+    console.log('newStartDate',newStartDate,'newEndDate',newEndDate)
 	// calculateTotalAbsenties(newStartDate , newEndDate) 
 	calculateLateComingAndTotalAbsentiesTime(newStartDate,newEndDate)
 
@@ -1183,8 +1252,7 @@ const GetAllAttendance = (props) => {
 						</div>
 					</div>
 					{/*TODO : ADD TOTAL AMOUNT HERE */}
-		             {/* {console.log('list', list, 'users',users )} */}
-		
+		             {/* {console.log('attendanceList', attendanceList)} */}
 					<CustomTable
 						list={attendanceList}
 						loading={loading}

@@ -8,11 +8,11 @@ const initialState = {
     error:''
 };
 
-export const uploadAttachmentFile = createAsyncThunk(
-	"files/uploadAttachmentFile",
+export const uploadReimbursementFile = createAsyncThunk(
+	"reimbursement-files/uploadReimbursementFile",
 	async (formData) => {
 		try {
-			const { data } = await axios.post(`files/`, formData, {
+			const { data } = await axios.post(`reimbursement-files/`, formData, {
 				headers: {
 					"Content-Type": "multipart/form-data",
 				},
@@ -34,8 +34,8 @@ export const uploadAttachmentFile = createAsyncThunk(
 		}
 	}
 );
-const uploadAttachmentSlice = createSlice({
-	name: "leaveApplication",
+const uploadReimbursementAttachmentSlice = createSlice({
+	name: "reimbursement",
 	initialState,
 	reducers: {
 		clearuploadAttachment: (state) => {
@@ -44,20 +44,20 @@ const uploadAttachmentSlice = createSlice({
 	},
 	extraReducers: (builder) => {
         // =============Upload Single Attachment=====================
-		builder.addCase(uploadAttachmentFile.pending, (state) => {
+		builder.addCase(uploadReimbursementFile.pending, (state) => {
 			state.loading = true;
 		});
-        builder.addCase(uploadAttachmentFile.fulfilled, (state, action) => {
+        builder.addCase(uploadReimbursementFile.fulfilled, (state, action) => {
 			state.loading = false;
 			state.attachment = action.payload;
 		});
 
-		builder.addCase(uploadAttachmentFile.rejected, (state, action) => {
+		builder.addCase(uploadReimbursementFile.rejected, (state, action) => {
 			state.loading = false;
 			state.error = action.payload.message;
 		});
 	},
 });
 
-export default uploadAttachmentSlice.reducer;
-export const { clearuploadAttachment } = uploadAttachmentSlice.actions;
+export default uploadReimbursementAttachmentSlice.reducer;
+export const { clearuploadAttachment } = uploadReimbursementAttachmentSlice.actions;

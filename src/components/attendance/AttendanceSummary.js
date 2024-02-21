@@ -19,7 +19,7 @@ const AttendanceSummary = ({ visible, onClose , summaryData,refresh,excludedData
   useEffect(()=>{
 
     summaryData?.then((res)=>{
-      console.log('res',res)
+      // console.log('res',res)
      errorData.push({
           message:res.payload.message,
           data:res.payload.data,
@@ -56,7 +56,7 @@ const AttendanceSummary = ({ visible, onClose , summaryData,refresh,excludedData
                     setShowError(false)
                     setExcludedData(false)
           }}> Success - {successCount}</h1>
-            {console.log('errorData',errorData)}
+            {/* {console.log('errorData',errorData)} */}
        </div>
          <div> 
            <h1 className='text-red-500 font-bold text-[15px]' onClick={()=>{

@@ -1,6 +1,6 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useState } from "react";
-import { Segmented, Select, Table, Tag } from "antd";
+import { Segmented, Table, Tag } from "antd";
 import { useEffect } from "react";
 import { CSVLink } from "react-csv";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,13 +17,14 @@ import dayjs from "dayjs";
 import BtnViewSvg from "../UI/Button/btnViewSvg";
 import ViewBtn from "../Buttons/ViewBtn";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
-import { List } from "antd/lib/form/Form";
+import { loadAllReimbursementApplication, loadReimbursementByStatus } from "../../redux/rtk/features/reimbursement/reimbursement";
+import { loadAllDeductionsApplication } from "../../redux/rtk/features/deductions/deductionSlice";
 
-function CustomTable({ list, total }) {
+function CustomTable({ list }) {
 	const dispatch = useDispatch();
 	const [status, setStatus] = useState("true");
 	const [columnsToShow, setColumnsToShow] = useState([]);
-	const { Option } = Select;
+
 	const columns = [
 		{
 			id: 1,
@@ -34,46 +35,33 @@ function CustomTable({ list, total }) {
 
 		{
 			id: 2,
-			title: " Name",
-			key: "name",
+			title: "Name",
+			key: "user",
 			dataIndex: "user",
 			render: ({ firstName, lastName }) => firstName + " " + lastName,
 		},
 		{
-			id: 3,
-			title: "Leave Type",
-			dataIndex: "leaveType",
-			key: "leaveType",
-			render: (leaveType, record) => `${leaveType}  ${record.paidOrUnpaid ? `(${record.paidOrUnpaid})` :''  }   `,
-
-		},
-		{
 			id: 4,
-			title: "Leave From",
-			dataIndex: "leaveFrom",
-			key: "leaveFrom",
-			render: (leaveFrom) => dayjs(leaveFrom).format("DD-MM-YYYY"),
+			title: "Deduction Reason",
+			dataIndex: "reason",
+			key: "reason",
+			render: (reason) => `${reason}`
+		},
+        {
+			id: 4,
+			title: "Deduction Amount",
+			dataIndex: "amount",
+			key: "amount",
+			render: (amount) => `${amount}`
 		},
 		{
 			id: 5,
-			title: "Leave To",
-			dataIndex: "leaveTo",
-			key: "leaveTo",
-			render: (leaveTo) => dayjs(leaveTo).format("DD-MM-YYYY"),
+			title: "Deduction Date",
+			dataIndex: "date",
+			key: "date",
+			render: (date) => dayjs(date).format("DD-MM-YYYY"),
 		},
-		{
-			id: 6,
-			title: "Leave Duration",
-			dataIndex: "leaveDuration",
-			key: "leaveDuration",
-			render: (leaveDuration) => {
-				if (leaveDuration > 1) {
-					return <span>{leaveDuration} days</span>;
-				} else {
-					return <span>{leaveDuration} day</span>;
-				}
-			},
-		},
+
 		{
 			id: 7,
 			title: "Status",
@@ -81,33 +69,32 @@ function CustomTable({ list, total }) {
 			key: "status",
 			render: (status) => {
 				if (status === "ACCEPTED") {
-					return <Tag color='green'>{status.toUpperCase()}</Tag>;
+					return <Tag color='green'>{status?.toUpperCase()}</Tag>;
 				} else if (status === "REJECTED") {
-					return <Tag color='red'>{status.toUpperCase()}</Tag>;
+					return <Tag color='red'>{status?.toUpperCase()}</Tag>;
 				} else {
-					return <Tag color='yellow'>{status.toUpperCase()}</Tag>;
+					return <Tag color='yellow'>{status?.toUpperCase()}</Tag>;
 				}
 			},
 		},
-
-		{
-			id: 7,
-			title: "Action",
-			key: "action",
-			render: ({ id }) => (
-				<ViewBtn
-					path={`/admin/leave/${id}`}
-					text='View'
-					icon={<BtnViewSvg />}
-				/>
-			),
-		},
+		// {
+		// 	id: 7,
+		// 	title: "Action",
+		// 	key: "action",
+		// 	render: ({ id }) => (
+		// 		<ViewBtn
+		// 			path={`/admin/deductions/${id}`}
+		// 			text='View'
+		// 			icon={<BtnViewSvg />}
+		// 		/>
+		// 	),
+		// },
 	];
 	//make a onChange function
 	const onChange = (value) => {
 		setStatus(value);
 		dispatch(
-			loadLeaveApplicationByStatus({ page: 1, limit: 20, status: value })
+			loadReimbursementByStatus({ page: 1, limit: 20, status: value })
 		);
 	};
 
@@ -120,7 +107,7 @@ function CustomTable({ list, total }) {
 	};
 
 	const onAllClick = () => {
-		dispatch(loadAllLeaveApplication());
+		dispatch(loadAllDeductionsApplication());
 		setStatus("all");
 	};
 
@@ -130,7 +117,7 @@ function CustomTable({ list, total }) {
 		<div className='ant-card p-4 rounded mt-5'>
 			<div className='flex my-2 justify-between'>
 				<div className='w-50'>
-					<h4 className='text-2xl mb-2'> Leave Applications</h4>
+					<h4 className='text-2xl mb-2'> Deductions Applications</h4>
 				</div>
 				{list && (
 					<div className='flex justify-end mr-4'>
@@ -193,7 +180,6 @@ function CustomTable({ list, total }) {
 					/>
 				</div>
 			)}
-			
 			<Table
 				className='text-center'
 				scroll={{ x: true }}
@@ -202,7 +188,7 @@ function CustomTable({ list, total }) {
 					defaultPageSize: 20,
 					pageSizeOptions: [10, 20, 50, 100, 200],
 					showSizeChanger: true,
-					total: total ? total : 100,
+					total: list ? list?.length : 100,
 					onChange: (page, limit) => {
 						dispatch(loadLeaveApplicationByStatus({ page, limit, status }));
 					},
@@ -214,70 +200,30 @@ function CustomTable({ list, total }) {
 	);
 }
 
-const GetAllLeaves = (props) => {
+const GetAllDeductions = (props) => {
 	const dispatch = useDispatch();
-	const list = useSelector((state) => state.leave.list);
-	const total = useSelector((state) => state.leave.total);
-    const [filterData, setfilterData] =useState(list)
-	const [userId , setuserId] =useState()
-
-	const uniqueNamesWithIds = Array.from(
-		list.reduce((map, item) => {
-			const userId = item.userId;
-			if (!map.has(userId)) {
-				map.set(userId, {
-					userId,
-					name: `${item?.user?.firstName} ${item?.user?.lastName}`
-				});
-			}
-			return map;
-		}, new Map()).values()
-	);
-	
+	const list = useSelector((state) => state.deductions.list);
 
 	useEffect(() => {
-		dispatch(loadAllLeaveApplication());
-		dispatch(countLeaveApplication());
-	
+        
+		dispatch(loadAllDeductionsApplication());
+
 	}, []);
 
-
-	const handleSelectChange = (value) => {
-		setuserId(value);
-		if(value==='selectName'){
-			setfilterData([])
-		}
-		setfilterData(list.filter(item => item.userId === value))
-    };
+	// useEffect(() => {
+	//   deleteHandler(list, deletedId);
+	// }, [deletedId, list]);
 
 	return (
 		<UserPrivateComponent permission={"readAll-leaveApplication"}>
-
+			  {/* {console.log('list',list)} */}
 			<div className='card card-custom'>
-				<div className='card-body relative'>
-				<div> 
-					{/* {console.log('list',list,'filterData',filterData)} */}
-				<div className="absolute  z-[999] top-[74px] left-[217px]"> 
-				<Select
-                            defaultValue="Select Name"
-							placeholder='Select Name'
-                            style={{ width: 200, marginRight: 16 }}
-                            onChange={handleSelectChange}
-                            value={userId}
-                        >
-                            <Option value="selectName">Select All</Option>
-                             {uniqueNamesWithIds.map((item)=>{
-								return  <Option value={item.userId}>{item?.name}</Option>
-							 })}
-                          </Select>
-				</div>
-		      
-			</div>
-					<CustomTable list={filterData.length>0 ?filterData:list} total={total} />
+				<div className='card-body'>
+					<CustomTable list={list} />
 				</div>
 			</div>
 		</UserPrivateComponent>
 	);
 };
 
-export default GetAllLeaves;
+export default GetAllDeductions;

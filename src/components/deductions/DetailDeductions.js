@@ -10,17 +10,19 @@ import tw from "tailwind-styled-components";
 import { useParams } from "react-router-dom";
 import PageTitle from "../page-header/PageHeader";
 import dayjs from "dayjs";
-import ReviewLeavePopup from "../UI/PopUp/ReviewLeavePopup";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
+import ReviewReimbursementPopup from "../UI/PopUp/ReviewReimbursementPopup";
+import { loadSingelDeductionsApplication } from "../../redux/rtk/features/deductions/deductionSlice";
+import ReviewDeductionPopup from "../UI/PopUp/ReviewDeductionPopup";
 
-const DetailLeave = () => {
+const DetailDeductions = () => {
 	const { id } = useParams("id");
-	const leave = useSelector((state) => state.leave.leave);
+	const deduction = useSelector((state) => state.deductions.deduction);
 	const dispatch = useDispatch();
 	const users = useSelector((state) => state.users?.list);
 	useEffect(() => {
-		dispatch(loadSingelLeaveApplication(id));
+		dispatch(loadSingelDeductionsApplication(id));
 		dispatch(loadAllStaff({ status: true }));
 		return () => {
 			dispatch(clearLeaveApplication());
@@ -28,7 +30,7 @@ const DetailLeave = () => {
 	}, []);
 	const handleDownload = async (attachment) => {
 		if (attachment) {
-		  const downloadUrl = `${process.env.REACT_APP_API}/utils/leaves/uploads/${attachment}`;
+		  const downloadUrl = `${process.env.REACT_APP_API}/utils/deductions/uploads/${attachment}`;
 	  
 		  try {
 			const response = await fetch(downloadUrl);
@@ -55,124 +57,99 @@ const DetailLeave = () => {
 	return (
 		<div>
 			<PageTitle title='Back' />
-			<UserPrivateComponent permission={"readSingle-leaveApplication"}>
+			<UserPrivateComponent permission={"readSingle-deductions"}>
 				<Card className='mt-4'>
 					<div className='text-center mb-4'>
 						{" "}
 						<h2 className='text-2xl font-semibold text-gray-600'>
-							Leave Application #{leave?.id}{" "}
+                         Deduction Application #{deduction?.id}{" "}
 						</h2>
 					</div>
 					{/* {console.log('leave',leave,'users',users)} */}
-					{leave ? (
+                    {/* {console.log('deduction',deduction)} */}
+					{deduction ? (
 						<div className='flex justify-center '>
 							<ul className='list-inside list-none border-2 border-inherit rounded px-5 py-5 '>
 								<ListItem>
 									Name :{" "}
 									<TextInside>
 										{(
-											leave?.user.firstName +
+											deduction?.user.firstName +
 											" " +
-											leave?.user.lastName
-										).toUpperCase()}{" "}
+											deduction?.user.lastName
+										)?.toUpperCase()}{" "}
 									</TextInside>
 								</ListItem>
+
 								<ListItem>
-									Leave Type : <TextInside>{leave.leaveType}{leave.paidOrUnpaid ? `(${leave.paidOrUnpaid})`:''}</TextInside>
+                                Deduction Reason :{" "}
+									<TextInside>{deduction.reason || "No reason"}</TextInside>
+								</ListItem>
+                                <ListItem>
+                                Deduction Amount :{" "}
+                                    {deduction.approveAmount ? 
+                                    <TextInside>{deduction.approveAmount || "No Amount"}</TextInside>
+                                    : <TextInside>{deduction.amount || "No Amount"}</TextInside>}
+									
 								</ListItem>
 								<ListItem>
-									Leave From :{" "}
+                                Deduction Status :{" "}
 									<TextInside>
-										{dayjs(leave.leaveFrom).format("DD-MM-YYYY")}
-									</TextInside>
-								</ListItem>
-
-								<ListItem>
-									Leave To :{" "}
-									<TextInside>
-										{dayjs(leave.leaveTo).format("DD-MM-YYYY")}
-									</TextInside>
-								</ListItem>
-
-								<ListItem>
-									Leave Duration :{" "}
-									<TextInside className='text-red-500'>
-										{leave.leaveDuration} Days
-									</TextInside>
-								</ListItem>
-
-								<ListItem>
-									Leave Reason :{" "}
-									<TextInside>{leave.reason || "No reason"}</TextInside>
-								</ListItem>
-
-								<ListItem>
-									Leave Status :{" "}
-									<TextInside>
-										{leave.status === "PENDING" ? (
+										{deduction.status === "PENDING" ? (
 											<span className='text-yellow-500'>
-												{leave.status.toUpperCase()}
+												{deduction.status?.toUpperCase()}
 											</span>
-										) : leave.status === "ACCEPTED" ? (
+										) : deduction.status === "ACCEPTED" ? (
 											<span className='text-green-500'>
-												{leave.status.toUpperCase()}
+												{deduction.status?.toUpperCase()}
 											</span>
 										) : (
 											<span className='text-red-500'>
-												{leave.status.toUpperCase()}
+												{deduction.status?.toUpperCase()}
 											</span>
 										)}
 									</TextInside>
 								</ListItem>
 
 								<ListItem>
-									Leave Accepted From :{" "}
+                                Deduction Accepted On :{" "}
 									<TextInside>
-										{leave.acceptLeaveFrom
-											? dayjs(leave.acceptLeaveFrom).format("DD-MM-YYYY")
+										{deduction.date
+											? dayjs(deduction.date).format("DD-MM-YYYY")
 											: "ON REVIEW"}
 									</TextInside>
 								</ListItem>
 
 								<ListItem>
-									Leave Accepted To :{" "}
-									<TextInside>
-										{leave.acceptLeaveTo
-											? dayjs(leave.acceptLeaveTo).format("DD-MM-YYYY")
-											: "ON REVIEW"}
-									</TextInside>
-								</ListItem>
-                               {/* {console.log('leave.acceptLeaveTo',leave.acceptLeaveTo,dayjs(leave.acceptLeaveTo).format("DD-MM-YYY"))} */}
-								<ListItem>
-									Leave Accepted By :{" "}
+                                Deduction Accepted By :{" "}
 									<TextInside className='text-green-500'>
-									{leave.acceptLeaveBy ? 
+									{deduction.approveDeductionBy ? 
 										<>
 										{users.map((item)=>{
-                                             if(item.id === leave.acceptLeaveBy){
+                                             if(item.id === deduction.approveDeductionBy){
 												return item.userName
 											 } 
 										} 
 										 )}
 										</>
 										 :'ON REVIEW'}
-										{/* {(leave.acceptLeaveBy?.firstName || "ON") +
+										{/* {(deduction.acceptLeaveBy?.firstName || "ON") +
 											" " +
-											(leave.acceptLeaveBy?.lastName || "REVIEW")} */}
+											(deduction.acceptLeaveBy?.lastName || "REVIEW")} */}
 									</TextInside>
 								</ListItem>
 
 								<ListItem>
 									Review Comment :{" "}
-									<TextInside>{leave.reviewComment || "No comment"}</TextInside>
+									<TextInside>{deduction.approveComment || "No comment"}</TextInside>
 								</ListItem>
 
 								<ListItem>
 									Attachment :{" "}
 									<TextInside>
 									<span>
-										{leave.attachment?.length> 0 ? (
-											leave?.attachment?.map((item)=>{
+										{deduction.attachment?.length> 0 ? (
+											deduction?.attachment?.map((item)=>{
 											  return(
 												 <div>
 												 	{item}	
@@ -193,20 +170,20 @@ const DetailLeave = () => {
 					) : (
 						<Loader />
 					)}
-					<UserPrivateComponent permission={"update-leaveApplication"}>
-						{leave?.status === "PENDING" && (
+					<UserPrivateComponent permission={"update-deductions"}>
+						{deduction?.status === "PENDING" && (
 							<div className='flex justify-center items-center'>
-								<ReviewLeavePopup />
+								<ReviewDeductionPopup />
 							</div>
 						)}
-						{leave?.status === "REJECTED" && (
+						{deduction?.status === "REJECTED" && (
 							<div className='flex justify-center items-center'>
-								<ReviewLeavePopup />
+								<ReviewDeductionPopup />
 							</div>
 						)}
-						{leave?.status === "ACCEPTED" && (
+						{deduction?.status === "ACCEPTED" && (
 							<div className='flex justify-center items-center'>
-								<ReviewLeavePopup />
+								<ReviewDeductionPopup />
 							</div>
 						)}
 					</UserPrivateComponent>
@@ -238,4 +215,4 @@ ml-2
 text-sm
 text-gray-900
 `;
-export default DetailLeave;
+export default DetailDeductions;

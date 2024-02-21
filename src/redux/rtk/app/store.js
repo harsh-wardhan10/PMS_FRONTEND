@@ -29,7 +29,14 @@ import attendancelistSlice from "../features/attendance/attendancelistSlice";
 import appSettingsSlice from "../features/appSettings/appSettingsSlice";
 import uploadAttachmentSlice from '../features/uploadFiles/uploadFiles'
 import reimbursementSlice from '../features/reimbursement/reimbursement'
+import DeductionsSlice from '../features/deductions/deductionSlice'
+import uploadReimbursementAttachmentSlice from '../features/uploadReimbusementFiles/uploadReimbusementFiles'
+import uploadDeductionAttachmentSlice from '../features/uploadDeductionFiles/uploadDeductionFiles'
+import TaxlistSlice from '../features/tax/taxSlice'
+import salaryFieldSlice from "../features/salary/salaryFieldSlice";
+
 const reduxLogger = require("redux-logger");
+
 const logger = reduxLogger.createLogger();
 
 const store = configureStore({
@@ -51,6 +58,8 @@ const store = configureStore({
 		awardHistory: awardHistorySlice,
 		leavePolicy: leavePolicySlice,
 		reimbursement:reimbursementSlice,
+		deductions:DeductionsSlice,
+		taxList:TaxlistSlice,
 		weeklyHoliday: weeklyHolidaySlice,
 		publicHoliday: publicHolidaySlice,
 		milestone: milestoneSlice,
@@ -62,7 +71,10 @@ const store = configureStore({
 		taskTime: taskTimeSlice,
 		taskPriority: taskPrioritySlice,
 		appsetting:appSettingsSlice,
-		attachment:uploadAttachmentSlice
+		attachment:uploadAttachmentSlice,
+		uploadReimbursementAttachmentSlice:uploadReimbursementAttachmentSlice,
+		uploadDeductionAttachmentSlice:uploadDeductionAttachmentSlice,
+		salaryField:salaryFieldSlice
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({

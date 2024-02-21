@@ -265,17 +265,79 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 				},
 			],
 		},
-							(hasPermission("create-deductions") ||
-							hasPermission("update-deductions") ||
-							hasPermission("readAll-deductions")) && {
-						label: (
-							<NavLink to='/admin/deductions/new'>
-								<span>Deductions</span>
-							</NavLink>
-						),
-						key: "deductions",
-						icon: <UsergroupDeleteOutlined />,
-					},
+		(hasPermission("create-deductions") ||
+		hasPermission("update-deductions") ||
+		hasPermission("readAll-deductions")) && {
+	   label: "Deductions",
+	   key: "deductions",
+	   icon: <UsergroupDeleteOutlined />,
+	   children: [
+		   hasPermission("create-deductions") && {
+			   label: (
+				   <NavLink to='/admin/deductions/new'>
+					   <span> New Deductions </span>
+				   </NavLink>
+			   ),
+			   key: "newReimbursement",
+			   icon: <SubnodeOutlined />,
+		   },
+		   hasPermission("readAll-deductions") && {
+			   label: (
+				   <NavLink to='/admin/deductions'>
+					   <span>Deductions Status</span>
+				   </NavLink>
+			   ),
+			   key: "ReimbursementStatus",
+			   icon: <FileDoneOutlined />,
+		   },
+		   hasPermission("update-deductions") && {
+			   label: (
+				   <NavLink to={`/admin/deductions/user/${user}`}>
+					   <span>My Deductions</span>
+				   </NavLink>
+			   ),
+			   key: "myReimbursement",
+			   icon: <FileDoneOutlined />,
+		   },
+	   ],
+   },	     
+   
+   (hasPermission("create-tax") ||
+   hasPermission("update-tax") ||
+   hasPermission("readAll-tax")) && {
+  label: "Tax",
+  key: "taxes",
+  icon: <UsergroupDeleteOutlined />,
+  children: [
+	  hasPermission("create-tax") && {
+		  label: (
+			  <NavLink to='/admin/tax/new'>
+				  <span> New Tax </span>
+			  </NavLink>
+		  ),
+		  key: "newReimbursement",
+		  icon: <SubnodeOutlined />,
+	  },
+	  hasPermission("readAll-tax") && {
+		  label: (
+			  <NavLink to='/admin/taxes'>
+				  <span>Tax Status</span>
+			  </NavLink>
+		  ),
+		  key: "ReimbursementStatus",
+		  icon: <FileDoneOutlined />,
+	  },
+	//   hasPermission("update-tax") && {
+	// 	  label: (
+	// 		  <NavLink to={`/admin/deductions/user/${user}`}>
+	// 			  <span>My Taxes</span>
+	// 		  </NavLink>
+	// 	  ),
+	// 	  key: "myReimbursement",
+	// 	  icon: <FileDoneOutlined />,
+	//   },
+  ],
+},
 
 					(hasPermission("create-salary") ||
 					hasPermission("update-salary") ||
@@ -284,25 +346,25 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 				   key: "salary",
 				   icon: <UsergroupDeleteOutlined />,
 				   children: [
-
 						hasPermission("readAll-user") && {
 							label: (
-								<NavLink to='/admin/salary/list'>
-									<span> Employee List</span>
+								<NavLink to='/admin/salary/createFields'>
+									<span> Create Salary Fields</span>
 								</NavLink>
 							),
 							key: "employeeList",
 							icon: <FileDoneOutlined />,
 						},
-						hasPermission("create-salary") && {
+						hasPermission("readAll-user") && {
 							label: (
-								<NavLink to='/admin/salary/new'>
-									<span> Create New Record </span>
+								<NavLink to='/admin/salary/list'>
+									<span> Salary List</span>
 								</NavLink>
 							),
-							key: "newrecord",
-							icon: <SubnodeOutlined />,
+							key: "employeeList",
+							icon: <FileDoneOutlined />,
 						},
+					
 				   ],
 			   },
 		

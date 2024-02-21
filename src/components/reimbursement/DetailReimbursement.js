@@ -29,7 +29,7 @@ const DetailReimbursement = () => {
 	}, []);
 	const handleDownload = async (attachment) => {
 		if (attachment) {
-		  const downloadUrl = `${process.env.REACT_APP_API}/utils/leaves/uploads/${attachment}`;
+		  const downloadUrl = `${process.env.REACT_APP_API}/utils/reimbursements/uploads/${attachment}`;
 	  
 		  try {
 			const response = await fetch(downloadUrl);
@@ -60,7 +60,7 @@ const DetailReimbursement = () => {
 				<Card className='mt-4'>
 					<div className='text-center mb-4'>
 						{" "}
-                        {console.log('reimbursement',reimbursement)}
+                        {/* {console.log('reimbursement',reimbursement)} */}
 						<h2 className='text-2xl font-semibold text-gray-600'>
 							Reimbursement Application #{reimbursement?.id}{" "}
 						</h2>
@@ -109,12 +109,19 @@ const DetailReimbursement = () => {
 										)}
 									</TextInside>
 								</ListItem>
-
+                                <ListItem>
+									Reimbursement Applied On :{" "}
+									<TextInside>
+										{reimbursement.applyDate
+											? dayjs(reimbursement.applyDate).format("DD-MM-YYYY")
+											: "ON REVIEW"}
+									</TextInside>
+								</ListItem>
 								<ListItem>
 									Reimbursement Accepted On :{" "}
 									<TextInside>
-										{reimbursement.date
-											? dayjs(reimbursement.date).format("DD-MM-YYYY")
+										{reimbursement.acceptDate
+											? dayjs(reimbursement.acceptDate).format("DD-MM-YYYY")
 											: "ON REVIEW"}
 									</TextInside>
 								</ListItem>
@@ -143,7 +150,7 @@ const DetailReimbursement = () => {
 									<TextInside>{reimbursement.approveComment || "No comment"}</TextInside>
 								</ListItem>
 
-								{/* <ListItem>
+								<ListItem>
 									Attachment :{" "}
 									<TextInside>
 									<span>
@@ -163,7 +170,7 @@ const DetailReimbursement = () => {
 
 										</span>
 									</TextInside>
-								</ListItem> */}
+								</ListItem>
 							</ul>
 						</div>
 					) : (

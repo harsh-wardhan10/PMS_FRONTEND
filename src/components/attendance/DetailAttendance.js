@@ -6,11 +6,11 @@ import tw from "tailwind-styled-components";
 import { useLocation, useParams } from "react-router-dom";
 import PageTitle from "../page-header/PageHeader";
 import { VioletLinkBtn } from "../UI/AllLinkBtn";
-import { Card, DatePicker, Segmented, Table, Tag ,Button, Modal} from "antd";
+import { Card, DatePicker, Segmented, Table,Divider, Radio, Tag ,Button, Modal} from "antd";
 import { CsvLinkBtn } from "../UI/CsvLinkBtn";
 import { CSVLink } from "react-csv";
 import ColVisibilityDropdown from "../Shared/ColVisibilityDropdown";
-import { loadBulkAttendancePaginated } from "../../redux/rtk/features/attendance/attendanceSlice";
+import { deleteAttendanceData, getAttendanceDataByEmail, loadAllbulkAttendance, loadBulkAttendancePaginated } from "../../redux/rtk/features/attendance/attendanceSlice";
 import dayjs from "dayjs";
 import moment from 'moment';
 import { loadAllAccount } from "../../redux/rtk/features/account/accountSlice";
@@ -37,40 +37,108 @@ const DetailAttendance = () => {
 	const dispatch = useDispatch();
     const singleData = useLocation()
 	const [attendanceData, setAttendanceData] =useState()
+	const { singleAttendanceData } = useSelector((state)=> state.attendance)
 	useEffect(() => {
 		// dispatch(loadSingleAttendance(id));
 
 		// return () => {
 		// 	dispatch(clearAttendance());
 		// };
+	    
+	   const sortedDatafilter =singleAttendanceData?.data?.attendanceData
+	//    console.log('sortedDatafilter',sortedDatafilter)
 		dispatch(loadAllAppSettings())
+
              if(!isfilter){
-				setAttendanceData(singleData.state)
+				if (!Array.isArray(sortedDatafilter)) {
+					// console.error('attendanceData is not an array:', attendanceData);
+					return;
+				}
+			
+				const sortedData = [...sortedDatafilter]?.sort((a, b) => {
+					// Extract date components from the string (assuming "MM/DD/YY" format)
+					const [monthA, dayA, yearA] = a.date.split('/').map(Number);
+					const [monthB, dayB, yearB] = b.date.split('/').map(Number);
+			
+					// Create Date objects
+					const dateA = new Date(yearA, monthA - 1, dayA); // Month is 0-indexed
+					const dateB = new Date(yearB, monthB - 1, dayB); // Month is 0-indexed
+			
+					// Compare dates
+					return dateA - dateB;
+				});
+				setAttendanceData(sortedData)
+				// setisfilter(true)
 			 }
-	}, [attendanceData]);
+	}, [singleAttendanceData]);
+
+
+	useEffect(()=>{
+		
+		// console.log('singleAttendanceData',singleAttendanceData)
+
+		dispatch(getAttendanceDataByEmail(singleData.state[0]?.emailId))
+
+	},[singleData.state[0]?.emailId])
 	function CustomTable({ list, total, status, setStatus, loading }) {
+
 		const [columnsToShow, setColumnsToShow] = useState([]);
 		const [CSVlist, setCSVlist]=useState([])
 		const dispatch = useDispatch();
-	
-		const columns = [
+		const [select, setSelect] = useState({
+			selectedRowKeys: [],
+			loading: false,
+		  });
+		const [selectedRowKeys, setSelectedRowKeys] = useState();
 
-			{
-				id: 10,
+		const rowSelection = {
+			selectedRowKeys,
+			onChange: (selectedRowKeys, selectedRows) => {
+			  setSelectedRowKeys(selectedRowKeys);
+			},
+			onSelect: (record, selected, selectedRows) => {
+			  const keys = selected ? [record.id] : [];
+			  setSelectedRowKeys(keys);
+			//   console.log('selectedRowKeys',selectedRowKeys)
+			},
+			onSelectAll: (selected, selectedRows, changeRows) => {
+			  const keys = selected ? changeRows.map(row => row.id) : [];
+			  setSelectedRowKeys(keys);
+			//   console.log('selectedRowKeys',selectedRowKeys)
+			},
+		  };
+		  const handleDeleteSelected = () => {
+			// Handle delete action for selected items
+			// console.log('Selected Row Keys:', selectedRowKeys);
+			const filteredList = list.filter(item => selectedRowKeys.includes(item.id));
+		
+            // console.log('filteredList',filteredList)
+			dispatch(deleteAttendanceData(filteredList))
+			dispatch(loadAllbulkAttendance())
+			setTimeout(()=>{
+				dispatch(getAttendanceDataByEmail(singleData.state[0]?.emailId))
+			}, 3000)
+			
+			// Dispatch action to delete selected items
+		  };
+		
+		
+		const columns = [
+		   {
 				title: "Date",
 				dataIndex: "date",
 				key: "date",
 				render: (date) => `${ new Date(date).toDateString()}`,
 			},
 			{
-				id: 2,
+				
 				title: "Status",
 				dataIndex: "status",
 				key: "status",
 				render: (status) => `${status}`,
 			},
 			{
-				id: 3,
+				
 				title: "Log",
 				dataIndex: `log`,
 				key: "log",
@@ -78,11 +146,11 @@ const DetailAttendance = () => {
 					// dayjs(street).format("DD-MM-YYYY, h:mm A") || "NONE",
 			},
 			{
-				id: 4,
+			
 				title: "Shift",
 				dataIndex: `shift`,
 				key: "shift",
-				render: (shift) => `${shift.name}`
+				render: (shift) => `${singleData.state[0]?.shift?.name}`
 					// dayjs(street).format("DD-MM-YYYY, h:mm A") || "NONE",
 			}
 		];
@@ -128,6 +196,9 @@ const DetailAttendance = () => {
 					  </div>
 					  <div className='text-center my-2 flex justify-end'>
 							
+					         {/* <CsvLinkBtn onClick={handleDeleteSelected}>
+									Delete Selected Rows
+							</CsvLinkBtn> */}
 							<CsvLinkBtn onClick={handlecsvclick}>
 								<CSVLink data={CSVlist} filename='Attendance_list'>
 									Download CSV
@@ -136,7 +207,7 @@ const DetailAttendance = () => {
 						</div>
 				 </div>
 				)}
-			   
+                  
 				<Table
 					scroll={{ x: true }}
 					loading={loading}
@@ -145,12 +216,16 @@ const DetailAttendance = () => {
 						pageSizeOptions: [30, 40, 50, 100, 200],
 						showSizeChanger: true,
 						total: list ?  list.length : 10,
-						onChange: (page, limit) => {
-							dispatch(
-								loadBulkAttendancePaginated({ page, limit })
-							);
-						},
+						// onChange: (page, limit) => {
+						// 	dispatch(
+						// 		loadBulkAttendancePaginated({ page, limit })
+						// 	);
+						// },
 					}}
+					// rowSelection={{
+					// 	type: 'checkbox',
+					// 	...rowSelection
+					//   }}
 					columns={columnsToShow}
 					dataSource={ list?  list : []}
 				/>
@@ -196,6 +271,8 @@ const DetailAttendance = () => {
 		const formattedWorkHour = `${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
 		return formattedWorkHour
    }
+
+
 	return (
 		<div>
 			<PageTitle title='Back' />
@@ -206,7 +283,7 @@ const DetailAttendance = () => {
 						Attendance Status #{singleData.state[0]?.userData[0]?.firstName} {" "} {singleData.state[0]?.userData[0]?.lastName}{" "}
 					    
 					</h2>
-					{console.log('singleData.state',singleData.state)}
+					{/* {console.log('singleData.state',singleData.state)} */}
 				</div>
 				   <div className="grid grid-cols-3 mb-[15px]"> 
 				   <p className="text-gray-600 font-semibold"> EmailId - {singleData.state[0]?.emailId}</p>
@@ -216,9 +293,7 @@ const DetailAttendance = () => {
 					<p className="text-gray-600 font-semibold"> Shift End Time  - {moment(singleData.state[0]?.shift?.endTime).format('h:mm:ss A') }</p>
 					<p className="text-gray-600 font-semibold"> Shift Work Hour  - {convertoHours(singleData.state[0]?.shift?.workHour)} hrs</p>
 				   </div>
-					
-				
-				{/* {console.log('attendanceData',attendanceData,singleData.state)} */}
+				{/* {console.log('attendanceData',attendanceData)} */}
 				<div className='flex justify-end'>
 					{/* {console.log('startdate',moment(startdate, 'DD/MM/YYYY') , 'enddate',moment(enddate, 'DD/MM/YYYY'))} */}
 					<RangePicker
@@ -231,14 +306,15 @@ const DetailAttendance = () => {
 						className="range-picker mr-3"
 						style={{ maxWidth: '400px', marginBottom:"10px" }}
 						/>
-						
 						</div>
-
+                {/* {console.log('singleData.state',singleData.state)} */}
 				 {singleData.state?(
 					<div className="">
 						<ul className='list-inside list-none border-2 border-inherit rounded px-5 py-5 '>
 						<CustomTable
-						list={attendanceData}
+						list={attendanceData?.map(item => {
+							return { ...item, key: item.id };
+						  })}
 						total={100}
 					/>
 						</ul>

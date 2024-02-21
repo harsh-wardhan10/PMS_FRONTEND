@@ -290,7 +290,7 @@ body {
 
 .ant-input-number {
 	color: var(--text) !important;
-	background-color: var(--bg-secondary) !important;
+	background-color: var(--bg-secondary) ;
 }
 
 .ant-input-number-status-error:not(.ant-input-number-disabled):not(

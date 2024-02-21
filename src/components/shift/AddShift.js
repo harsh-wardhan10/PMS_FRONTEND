@@ -174,7 +174,7 @@ const AddShift = ({ drawer }) => {
 		}
 		const shiftData={ ...values,  graceTimeCheckbox, breakTimeCheckbox}
 		
-		console.log('shiftData',shiftData)
+		// console.log('shiftData',shiftData)
 
 		const resp = await dispatch(addShift(shiftData));
 		if (resp.payload.message === "success") {

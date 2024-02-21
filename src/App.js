@@ -85,8 +85,14 @@ import GetAllReimbursement from "./components/reimbursement/GetAllReimbursement.
 import DetailReimbursement from "./components/reimbursement/DetailReimbursement.js";
 import NewDeductions from "./components/deductions/NewDeductions.js";
 import SalaryList from "./components/salary/SalaryList.js";
-import NewSalary from "./components/salary/NewSalary.js";
 import UserReimbursement from "./components/reimbursement/UserReimbursement.js";
+import DetailDeductions from "./components/deductions/DetailDeductions.js";
+import GetAllDeductions from "./components/deductions/GetAllDeductions.js";
+import NewTax from "./components/Tax/NewTax.js";
+import GetAllTaxes from "./components/Tax/GetAllTaxes.js";
+import CreateSalaryFields from "./components/salary/CreateSalaryFields.js";
+import SalarySheetHistory from "./components/salary/SalarySheetHistory.js";
+import SalarySheet from "./components/salary/SalarySheet.js";
 
 function App() {
 	return (
@@ -300,6 +306,56 @@ function App() {
 								}>
 								<Route path='/admin/deductions/new' element={<NewDeductions />} />
 							</Route>
+							<Route
+							element={
+								<UserPrivateRoute permission={"readAll-deductions"} />
+							}>
+							<Route path='/admin/deductions/:id' element={<DetailDeductions />} />
+							<Route path='/admin/deductions' element={<GetAllDeductions />} />
+						</Route>
+						<Route
+							element={
+								<UserPrivateRoute permission={"update-deductions"} />
+							}>
+							<Route path='/admin/deductions/update/:id' element={<DetailDeductions />} />
+							<Route path='/admin/deductions/update' element={<GetAllDeductions />} />
+						</Route>
+						<Route
+							element={
+								<UserPrivateRoute permission={"readSingle-deductions"} />
+							}>
+							<Route path='/admin/deductions/user/:id' element={<UserReimbursement />} />
+						</Route>
+
+
+							{/* === === === Tax Routes === === === */}
+							<Route
+								element={
+									<UserPrivateRoute permission={"create-tax"} />
+								}>
+								<Route path='/admin/tax/new' element={<NewTax />} />
+							</Route>
+							<Route
+							element={
+								<UserPrivateRoute permission={"readAll-tax"} />
+							}>
+							<Route path='/admin/deductions/:id' element={<DetailDeductions />} />
+							<Route path='/admin/taxes' element={<GetAllTaxes />} />
+						</Route>
+						<Route
+							element={
+								<UserPrivateRoute permission={"update-deductions"} />
+							}>
+							<Route path='/admin/deductions/update/:id' element={<DetailDeductions />} />
+							<Route path='/admin/deductions/update' element={<GetAllDeductions />} />
+						</Route>
+						<Route
+							element={
+								<UserPrivateRoute permission={"readSingle-deductions"} />
+							}>
+							<Route path='/admin/deductions/user/:id' element={<UserReimbursement />} />
+						</Route>
+
 
 							{/* === === === Salary Routes === === === */}
 							<Route
@@ -310,11 +366,24 @@ function App() {
 							</Route>
 							<Route
 								element={
-									<UserPrivateRoute permission={"create-salary"} />
+									<UserPrivateRoute permission={"readAll-user"} />
 								}>
-								<Route path='/admin/salary/new' element={<NewSalary />} />
+								<Route path='/admin/salary/createFields' element={<CreateSalaryFields />} />
 							</Route>
-
+                       
+							<Route
+								element={
+									<UserPrivateRoute permission={"readAll-salary"} />
+								}>
+								<Route path='/admin/salary/sheet/history' element={<SalarySheetHistory />} />
+							</Route>
+							<Route
+								element={
+									<UserPrivateRoute permission={"readAll-salary"} />
+								}>
+								<Route path='/admin/salary/sheet/history/:id/:name' element={<SalarySheet />} />
+							</Route>
+							
 						{/* === === === Attendance Routes === === === */}
 						<Route
 							element={<UserPrivateRoute permission={"readAll-attendance"} />}>

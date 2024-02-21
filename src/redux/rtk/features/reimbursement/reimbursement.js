@@ -126,7 +126,7 @@ const ReimbursementSlice = createSlice({
 	},
 	extraReducers: (builder) => {
 
-		// 1) ====== builders for loadAllLeaveApplication ======
+		// 1) ====== builders for addReimbursement ======
 
 		builder.addCase(addReimbursement.pending, (state) => {
 			state.loading = true;
