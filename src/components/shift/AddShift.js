@@ -108,7 +108,6 @@ function CustomTable({ list }) {
 					/>
 				</div>
 			)}
-
 			<Table
 				scroll={{ x: true }}
 				loading={!list}

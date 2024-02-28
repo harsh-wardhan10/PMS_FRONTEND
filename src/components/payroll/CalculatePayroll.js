@@ -1,4 +1,4 @@
-import { Button, Card, DatePicker, Input, InputNumber, Table } from "antd";
+import { Button, Card, DatePicker, Input, InputNumber, Modal, Table } from "antd";
 import React from "react";
 import { CsvLinkBtn } from "../UI/CsvLinkBtn";
 import { CSVLink } from "react-csv";
@@ -16,8 +16,10 @@ import {
 } from "../../redux/rtk/features/payroll/payrollSlice";
 import { useNavigate } from "react-router-dom";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
+import PaySlipRequest from "../UI/PopUp/PaySlipRequest";
 
 function CustomTable({ list, loading }) {
+
 	const [columnsToShow, setColumnsToShow] = useState([]);
 	const dispatch = useDispatch();
 
@@ -276,7 +278,7 @@ const CalculatePayroll = () => {
 	const [month, setMonth] = useState(dayjs().format("M"));
 	const [year, setYear] = useState(dayjs().format("YYYY"));
 	const [loading, setLoading] = useState(false);
-
+    const [isModalVisible, setIsModalVisible] = useState(false);
 	const payroll = useSelector((state) => state.payroll.list);
 	const loader = useSelector((state) => state.payroll.loading);
 
@@ -344,7 +346,13 @@ const CalculatePayroll = () => {
 			console.log(error);
 		}
 	};
-
+	const showModaltwo = () => {
+		setIsModalVisible(true);
+	  };
+	  
+	  const closeModaltwo = () => {
+		setIsModalVisible(false);
+	  };
 	return (
 		<div>
 			<PageTitle title='Back' />
@@ -374,8 +382,23 @@ const CalculatePayroll = () => {
 							onChange={onYearChange}
 							defaultValue={dayjs()}
 						/>
-					</div>
+					   <CsvLinkBtn onClick={() => {
+                              // navigate('/admin/salary/sheet/history')
+                             showModaltwo()
 
+                            }} className="cursor-pointer ml-[10px] text-center">
+                           Request Payslip
+                       </CsvLinkBtn>
+						      <Modal
+                        title=""
+                        visible={isModalVisible}
+                        onCancel={closeModaltwo}
+                        footer={null}
+                        className='w-[750px]'
+                      >
+                        <PaySlipRequest />
+                      </Modal>
+					</div>
 					<CustomTable list={payroll} loading={loader} />
 
 					<div className='flex justify-end'>

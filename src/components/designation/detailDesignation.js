@@ -7,7 +7,6 @@ import { toast } from "react-toastify";
 import {
 	clearDesignation,
 	deleteDesignation,
-	loadAllDesignationByEmployee,
 	loadSingleDesignation,
 } from "../../redux/rtk/features/designation/designationSlice";
 import Loader from "../loader/loader";
@@ -71,7 +70,7 @@ const DetailDesignation = () => {
 										<h5>
 											<i className='bi bi-person-lines-fill'></i>
 											<span className='mr-left text-xl'>
-												ID : {designation.designationId} | {designation.name}
+												 {designation.name}
 											</span>
 										</h5>
 									</div>

@@ -1,5 +1,4 @@
 import { configureStore } from "@reduxjs/toolkit";
-
 import dashboardReducer from "../features/dashboard/dashboardSlice";
 import designationReducer from "../features/designation/designationSlice";
 import userReducer from "../features/user/userSlice";

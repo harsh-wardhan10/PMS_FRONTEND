@@ -179,7 +179,7 @@ const DetailDepartment = () => {
 							<div>
 								<div className='flex justify-between '>
 									<h3 className={"text-xl"}>
-										ID : {department.id} | {department.name}
+									 {department.name}
 									</h3>
 									<UserPrivateComponent permission={"update-department"}>
 										<div className='flex justify-end'>

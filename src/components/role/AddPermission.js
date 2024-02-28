@@ -10,7 +10,6 @@ import {
 	Tag,
 	Typography,
 } from "antd";
-
 import { Fragment, useEffect, useState } from "react";
 import {
 	Navigate,
@@ -26,12 +25,30 @@ import Loader from "../loader/loader";
 
 function PermissionList(props) {
 	const permissionNames = props.permissionNames;
+
 	const { selectedPermission, setSelectedPermission } = props;
 
-	// const onChange = (e) => {
-	// 	const { value } = e.target;
-	// };
 
+	const filteredName=(name)=>{
+		const parts = name.split("-");
+        return parts[0];
+	}
+
+	const uniqueValues = new Set();
+
+const extractedValues = permissionNames
+  .map(item => {
+    const parts = item.name.split("-");
+    return parts[1];
+  })
+//   .filter(value => {
+//     if (!uniqueValues.has(value)) {
+//       uniqueValues.add(value);
+//       return true;
+//     }
+//     return false;
+//   });
+	//   console.log('extractedValues',extractedValues)
 	const permissionElements = permissionNames.map((item) => (
 		<Fragment key={item.id}>
 			<Checkbox
@@ -45,7 +62,8 @@ function PermissionList(props) {
 					});
 				}}
 				checked={selectedPermission[item.id]}>
-				{item.name}
+				{/* {item.name} */}
+				{filteredName(item.name)}
 			</Checkbox>
 		</Fragment>
 	));
@@ -53,11 +71,15 @@ function PermissionList(props) {
 	const rows = [];
 	for (let i = 0; i < permissionElements.length; i += 5) {
 		rows.push(
-			<div
-				key={i}
-				className='flex justify-between m-4 border-2 border-indigo-100 px-4 py-3'>
+			<div className="flex items-center permission_div_wrapper p-[5px]"> 
+	         {extractedValues[i]}
+			 <div
+			 	key={i}
+				className='flex justify-between m-4 border-2 border-indigo-100 px-4 py-3 w-[100%]'>
 				{permissionElements.slice(i, i + 5)}
 				<br />
+			</div>
+						
 			</div>
 		);
 	}
@@ -75,15 +97,17 @@ const AddPermission = () => {
 	const { data } = location.state;
 	const roleName = data.name;
 	const rolePermissions = data.rolePermission;
-	console.log(rolePermissions, "rolePermissions");
+	// console.log(rolePermissions, "rolePermissions");
 
 	const { Title } = Typography;
 	const [form] = Form.useForm();
 	const [loader, setLoader] = useState(false);
 
 	useEffect(() => {
+
 		loadPermission().then((d) => {
 			setPermissions(d);
+			console.log('d',d)
 			const permissions = d.reduce((acc, item) => {
 				acc[item.id] = rolePermissions.some((i) => i.permission_id === item.id);
 				return acc;
@@ -110,7 +134,7 @@ const AddPermission = () => {
 				permission_id: permisionIds.map(Number),
 			};
 
-			console.log(data, "data");
+			// console.log(data, "data");
 
 			const resp = await addPermission(data); //permision func
 
@@ -141,6 +165,7 @@ const AddPermission = () => {
 		<>
 			<PageTitle title={"Back"} />
 			<UserPrivateComponent permission={"create-rolePermission"}>
+				{/* {console.log('permissions',permissions,'selectedPermission',selectedPermission)} */}
 				<Row className='mr-top' justify={"center"}>
 					<Col
 						xs={24}

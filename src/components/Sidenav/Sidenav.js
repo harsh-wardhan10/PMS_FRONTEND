@@ -53,7 +53,7 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 			hasPermission("readAll-role") ||
 			hasPermission("readAll-designation") ||
 			hasPermission("readAll-department")) && {
-			label: "HR",
+			label: "Employee",
 			key: "hr",
 			icon: <UserOutlined />,
 			children: [
@@ -103,6 +103,15 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 					key: "department",
 					icon: <UserSwitchOutlined />,
 				},
+				hasPermission("readAll-employmentStatus") && {
+								label: (
+									<NavLink to='/admin/employment-status'>
+										<span>Status</span>
+									</NavLink>
+								),
+								key: "employementStatus",
+								icon: <FileDoneOutlined />,
+							},
 			],
 		},
 
@@ -141,7 +150,7 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 				hasPermission("create-payroll") && {
 					label: (
 						<NavLink to='/admin/payroll/new'>
-							<span>Calculate Payroll</span>
+							<span>Playslip</span>
 						</NavLink>
 					),
 					key: "calculatePayroll",
@@ -176,22 +185,22 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 			],
 		},
 
-		hasPermission("readAll-employmentStatus") && {
-			label: "EMPLOYEMENT",
-			key: "employementStatus",
-			icon: <RocketOutlined />,
-			children: [
-				hasPermission("readAll-employmentStatus") && {
-					label: (
-						<NavLink to='/admin/employment-status'>
-							<span>Status</span>
-						</NavLink>
-					),
-					key: "employementStatus",
-					icon: <FileDoneOutlined />,
-				},
-			],
-		},
+		// hasPermission("readAll-employmentStatus") && {
+		// 	label: "EMPLOYEMENT",
+		// 	key: "employementStatus",
+		// 	icon: <RocketOutlined />,
+		// 	children: [
+		// 		hasPermission("readAll-employmentStatus") && {
+		// 			label: (
+		// 				<NavLink to='/admin/employment-status'>
+		// 					<span>Status</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "employementStatus",
+		// 			icon: <FileDoneOutlined />,
+		// 		},
+		// 	],
+		// },
 
 		(hasPermission("create-leaveApplication") ||
 			hasPermission("readAll-leaveApplication") ||
@@ -519,7 +528,7 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 				hasPermission("readAll-award") && {
 					label: (
 						<NavLink to='/admin/award'>
-							<span>Award</span>
+							<span>Award List</span>
 						</NavLink>
 					),
 					key: "award",

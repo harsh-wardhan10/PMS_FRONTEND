@@ -12,7 +12,8 @@ const initialState = {
 	salaryHistoryRecord:[],
     getinitialSalaryHistoryRecordstate:[],
 	salarySheetHistory:[],
-	SalaryHistoryRecordId:[]
+	SalaryHistoryRecordId:[],
+	salaryFileLocation:null
 };
 export const addBulkSalaryFields = createAsyncThunk(
 	"salaryField/createbulkSalaryFields",
@@ -356,7 +357,30 @@ export const getSalaryHistoryRecordById = createAsyncThunk(
 		}
 	}
 );
+export const uploadSalarySheetFile = createAsyncThunk(
+	"salary-files/uploadSalarySheetFile",
+	async (formData) => {
+		console.log('formData', formData)
+		try {
+			const { data } = await axios.post(`salary-files/`, formData, {
+				headers: {
+					"Content-Type": "multipart/form-data",
+				},
+			});
 
+			return {
+				data,
+				message: "success",
+			};
+		} catch (error) {
+			console.log(error.message);
+
+			return {
+				message: "error",
+			};
+		}
+	}
+);
 
 const salaryFieldSlice = createSlice({
 	name: "salaryField",
@@ -449,6 +473,24 @@ const salaryFieldSlice = createSlice({
 					state.loading = false;
 					state.error = action.payload.message;
 				});	
+                // 6) ====== builders for uploadSalarySheetFile ======	
+
+				builder.addCase(uploadSalarySheetFile.pending, (state) => {
+					state.loading = true;
+				});
+
+				builder.addCase(uploadSalarySheetFile.fulfilled, (state, action) => {
+					state.loading = false;
+					// console.log('action.payload',action.payload)
+					state.salaryFileLocation = action.payload.data.location;
+				});
+
+				builder.addCase(uploadSalarySheetFile.rejected, (state, action) => {
+					state.loading = false;
+					state.error = action.payload.message;
+				});	
+				
+				
 	},
 });
 

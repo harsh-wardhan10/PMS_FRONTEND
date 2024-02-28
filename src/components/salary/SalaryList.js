@@ -1,12 +1,11 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { useMemo, useState } from "react";
-import { Button, Checkbox, DatePicker, Form, Modal, Segmented, Select, Table, Tag } from "antd";
+import { useCallback, useMemo, useState } from "react";
+import { Button, Checkbox, DatePicker, Form, Modal, Popover, Segmented, Select, Table, Tag, Tooltip } from "antd";
 import { useEffect } from "react";
 import { CSVLink } from "react-csv";
 import { useDispatch, useSelector } from "react-redux";
 import ColVisibilityDropdown from "../Shared/ColVisibilityDropdown";
 import { CsvLinkBtn } from "../UI/CsvLinkBtn";
-import { GreenLinkBtn } from "../UI/AllLinkBtn";
 import BtnAllSvg from "../UI/Button/btnAllSvg";
 import {
 	loadLeaveApplicationByStatus,
@@ -14,21 +13,21 @@ import {
 import BtnViewSvg from "../UI/Button/btnViewSvg";
 import ViewBtn from "../Buttons/ViewBtn";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
-import { loadAllReimbursementApplication, loadReimbursementByStatus } from "../../redux/rtk/features/reimbursement/reimbursement";
+import { loadAllReimbursementApplication, loadReimbursementByStatus, loadSingelReimbursementApplication, loadSingleReimbursementHistory } from "../../redux/rtk/features/reimbursement/reimbursement";
 import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
 import moment from "moment";
 import { useRef } from "react";
 import Papa, { unparse } from 'papaparse';
 import * as XLSX  from 'xlsx';
-import { loadAllDeductionsApplication } from "../../redux/rtk/features/deductions/deductionSlice";
-import { UploadSalaryHistoryRecords, createSalaryHistoryRecord, createSalarySheetHistory, getSalaryHistoryRecord, getinitialSalaryHistoryRecord, loadAllBulkSalaryFields, updateSalaryFields, updateSalarySheetHistory } from "../../redux/rtk/features/salary/salaryFieldSlice";
-import { toast } from "react-toastify";
+import { loadAllDeductionsApplication, loadSingelDeductionsApplication, loadSingleDeductionsHistory } from "../../redux/rtk/features/deductions/deductionSlice";
+import { UploadSalaryHistoryRecords, createSalaryHistoryRecord, createSalarySheetHistory, getSalaryHistoryRecord, getinitialSalaryHistoryRecord, loadAllBulkSalaryFields, updateSalaryFields, updateSalarySheetHistory, uploadSalarySheetFile } from "../../redux/rtk/features/salary/salaryFieldSlice";
 import TotalPayableDays from "../../utils/TotalPayableDays";
 import { getAttendanceDataByEmail, loadAllbulkAttendance } from "../../redux/rtk/features/attendance/attendanceSlice";
 import { loadAllPublicHoliday } from "../../redux/rtk/features/publicHoliday/publicHolidaySlice";
-import { triggerFocus } from "antd/lib/input/Input";
 import { useNavigate } from "react-router-dom";
 import SalarySheetHistory from "./SalarySheetHistory";
+import dayjs from "dayjs";
+import ExcelJS from 'exceljs';
 
 
 function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) {
@@ -51,45 +50,164 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
     const  reimbursementList  = useSelector(state=> state.reimbursement.list)
     const deductionsList =useSelector(state=> state.deductions.list)
     const salaryFieldList =useSelector(state=> state.salaryField.list)
+    // const { salaryFileLocation }  = useSelector(state=> state.salaryField)
     const [updatedCSVList, setupdatedCSVList] =useState()
     const [updatedSalaryHistoryList, setupdatedSalaryHistoryList] = useState()
     const [UploadCSvMsg, setUploadCSVMsg]=useState()
     const [UploadCSvwarningMsg, setUploadCSvwarningMsg]=useState()
     const [uploadextraFieldsMsg, setuploadextraFieldsMsg] =useState()
     const [monthlySalaryErrorMsg, setmonthlySalaryErrorMsg] =useState()
-
     const oneMonthAgo = moment().subtract(1, 'months');
-  
-    const  attendancelist = useSelector((state) => state.attendance.list);
+    const attendancelist = useSelector((state) => state.attendance.list);
     const publicHolidayList = useSelector((state) => state.publicHoliday);
     const [sheetName, setsheetName] = useState()
+    const [showFooter, setshowFooter] =useState(false) 
+    const [seletedSalaryFile ,setSelectedSalaryFile] = useState()
+    const [CSVlist, setCSVlist]=useState([])
+    let finalContent ='No Reimbursement'
+    let finalContentTwo='No Deductions'
     // const salaryHistoryRecordData = useSelector(state=> state.salaryField.salaryHistoryRecord)
+    const reimbursementlist = useSelector((state) => state.reimbursement.list);
+    const deductionslist = useSelector((state) => state.deductions.list);
     const showModal = () => {
         setIsModalOpen(true);
       };
+
       const [dropZone, setDropZone] = useState(false);
       const [dropZoneContent, setDropZoneContent] = useState('');
+     useEffect(()=>{
+        dispatch(loadAllReimbursementApplication())
+        dispatch(loadAllDeductionsApplication())
+     },[])
 
+      const handleToolTipContent =  (Reimbursement, record) => {
+        
+            let tooltipContent = '';
+             const filteredData= reimbursementlist.filter(item => item.userId ===record.id)
 
-	//make a onChange function
-	const onChange = (value) => {
-		setStatus(value);
-		dispatch(
-			loadReimbursementByStatus({ page: 1, limit: 20, status: value })
-		);
-	};
+             if(filteredData.length>0){
 
-	useEffect(() => {
-  
+                  tooltipContent= filteredData.map((item, index)=>{
+
+                              const oneMonthAgoMonth = oneMonthAgo.month()+1; 
+                              const oneMonthAgoYear =  oneMonthAgo.year(); 
+                              const acceptDateMonth = moment(item.acceptDate).month() + 1;    
+                              const acceptDateYear = moment(item.acceptDate).year();
+                        //  console.log('acceptDateYear',acceptDateYear,'acceptDateMonth',acceptDateMonth,'oneMonthAgoYear',oneMonthAgoYear,'oneMonthAgoMonth',oneMonthAgoMonth)
+                        //  console.log('item', item)
+                        if(item.status==='ACCEPTED' && (acceptDateMonth === oneMonthAgoMonth && acceptDateYear === oneMonthAgoYear)){
+                          return `<div key={index}>
+                                    <span>Amount: ${item.approveAmount}</span>
+                                    <span>Date: ${dayjs(item.acceptDate).format('YYYY-MM-DD')}</span>
+                                   </div>`
+                            // `Amount ${item.approveAmount} on ${dayjs(item.acceptDate)}`;
+                        }
+                  }).join('');
+                  finalContent=tooltipContent
+             }
+             else{
+              finalContent="No Reimbursement"
+             }
+               return finalContent
+    }
+
+    const handleToolTipContentDeduction =(deductions, record)=>{
+    
+      let tooltipContent = '';
+      
+      const filteredData= deductionslist.filter(item => item.userId ===record.id)
+
+      if(filteredData.length>0){
+
+           tooltipContent= filteredData.map((item,index)=>{
+
+                       const oneMonthAgoMonth = oneMonthAgo.month()+1; 
+                       const oneMonthAgoYear =  oneMonthAgo.year(); 
+                       const acceptDateMonth = moment(item.date).month() + 1;    
+                       const acceptDateYear = moment(item.date).year();
+                 //  console.log('acceptDateYear',acceptDateYear,'acceptDateMonth',acceptDateMonth,'oneMonthAgoYear',oneMonthAgoYear,'oneMonthAgoMonth',oneMonthAgoMonth)
+                  // console.log('item', item)
+                 if(item.status==='ACCEPTED' && (acceptDateMonth === oneMonthAgoMonth && acceptDateYear === oneMonthAgoYear)){
+                   return `<div key={index}>
+                            <span>Amount: ${item.approveAmount}</span>
+                            <span>Date: ${dayjs(item.date).format('YYYY-MM-DD')}</span>
+                          </div>`
+                //  `Amount ${item.approveAmount} on ${dayjs(item.date)}`;
+                 }
+           }).join('');
+           finalContentTwo=tooltipContent
+      }
+      else{
+        finalContentTwo="No Deductions"
+      }
+
+         return finalContentTwo
+    }
+	  useEffect(() => {
+
        if (list && list.length > 0) {
 
               const keys = Object.keys(list[0])
               const filteredKeys = keys.filter(key => key !== 'id');
-              let columnstwo  = filteredKeys.map(key => ({
-                  title: key,
-                  dataIndex: key,
-                  key: key,
-              }));
+
+              let columnstwo = filteredKeys.map(key => {
+
+                 if(key ==='userName'){
+                  return {
+                    title: 'User Name',
+                    dataIndex: 'userName',
+                    key: 'userName',
+                    render: (userName, record) => {
+                        return <div className="pointer" onClick={()=>{ navigate(`/admin/hr/staffs/${record.id}`)}}> 
+                                     {userName}
+                                  </div>
+                    }
+                };
+                 }
+                 else if (key === 'Reimbursement') {
+                    return {
+                        title: 'Reimbursement',
+                        dataIndex: 'Reimbursement',
+                        key: 'Reimbursement',
+                        render: (Reimbursement, record) => {
+                            return <Tooltip title={()=>{
+                                const tooltipContent=handleToolTipContent(Reimbursement, record)
+                              return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+                            }}>
+                                      <div className=""> 
+                                         {Reimbursement}
+                                      </div>
+                                  </Tooltip>
+                        }
+                    };
+                }
+                else if (key === 'Deductions') {
+                  return {
+                      title: 'Deductions',
+                      dataIndex: 'Deductions',
+                      key: 'Deductions',
+                      render: (Deductions, record) => {
+                          return <Tooltip title={()=>{
+                            const tooltipContent=handleToolTipContentDeduction(Deductions, record)
+                            return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+                          }}
+                          >
+                                    <div className=""> 
+                                       {Deductions}
+                                    </div>
+                                </Tooltip>
+                      }
+                  };
+              } 
+                else {
+                    return {
+                        title: key,
+                        dataIndex: key,
+                        key: key
+                    };
+                }
+            });
+
               columnstwo.push({
                 id: 7,
                 title: "Action",
@@ -175,7 +293,6 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
             const newList = employeeList.map(item => {
               const userName = `${item.firstName} ${item.lastName}`;
               const employeeId = item.employeeId
-
               
               // Calculate reimbursement only for items with acceptDate in the current CSV month and year
               const userReimbursement = reimbursementList
@@ -351,6 +468,63 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
             // Add data for the current item to the CSV data array
             csvData.push(rowData);
         });
+
+          
+      console.log('csvData',csvData)    // Create a new workbook
+
+    // Create a new workbook
+    const workbook = new ExcelJS.Workbook();
+    
+    // Add a worksheet
+    const sheet = workbook.addWorksheet('Sheet1');
+
+    // Add headers from the first row of csvData
+    if (csvData.length > 0) {
+      const headers = csvData[0];
+      sheet.addRow(headers);
+    }
+
+    // Add rows from csvData
+    csvData.slice(1).forEach((rowData) => {
+      sheet.addRow(rowData);
+    });
+
+    // Protect specific columns
+    const protectedColumns = ['Month', 'Year', 'Reimbursement', 'Deductions'];
+    protectedColumns.forEach((columnName) => {
+      const columnIndex = csvData[0].indexOf(columnName);
+      if (columnIndex !== -1) {
+        sheet.getColumn(columnIndex + 1).eachCell((cell, rowNumber) => {
+          // Skip the header row
+          if (rowNumber !== 1) {
+            cell.protection = {
+              locked: true,
+              lockText:true
+            };
+          }
+        });
+      }
+    });
+
+    // Write the workbook to a buffer
+    workbook.xlsx.writeBuffer()
+      .then((buffer) => {
+        // Create a blob from the buffer
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        
+        // Create a download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'protected_columns.xlsx';
+        
+        // Trigger a click event to start the download
+        a.click();
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+        
         const config = {
             fields: columnNames.map(column => {
                 if (column === "Month" || column === "Year" || column==="reimbursement" || column==="deductions") {
@@ -402,7 +576,9 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
         let inActiveFields=[]
 
           // console.log('arrayData',arrayData ,list)
+          
           const filteredarrayData = arrayData.filter(item => item.userName !=='')
+
           const updatedArrayData = filteredarrayData.map(dataItem => {
             const correspondingListItem = employeeList.find(listItem => listItem.employeeId === dataItem.employeeId || dataItem.employeeId==='');
             if (correspondingListItem) {
@@ -410,12 +586,116 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
             } else {
                 return dataItem;
             }
+          });
+
+          let dataMonth = parseInt(updatedArrayData[0].month) 
+          let dataYear  = parseInt(updatedArrayData[0].year)
+
+          const newList = employeeList.map(item => {
+            const userName = `${item.firstName} ${item.lastName}`;
+            const employeeId = item.employeeId
+            
+            // Calculate reimbursement only for items with acceptDate in the current CSV month and year
+            const userReimbursement = reimbursementList
+                .filter(reim => {
+                    if (reim.userId === item.id && reim.status==='ACCEPTED') {
+                        const acceptDate = new Date(reim.acceptDate);
+                        const reimbMonth = acceptDate.getMonth();
+                        const reimbYear = acceptDate.getFullYear();
+                        return reimbMonth + 1  === dataMonth && reimbYear === dataYear;
+                    }
+                    return false;
+                })
+                .reduce((total, reim) => total + reim.amount, 0);
+                const userDeduction = deductionsList
+                .filter(reim => {
+                    if (reim.userId === item.id) {
+                        const acceptDate = new Date(reim.date);
+                        const reimbMonth = acceptDate.getMonth();
+                        const reimbYear = acceptDate.getFullYear();
+                        return reimbMonth + 1 === dataMonth && reimbYear === dataYear;
+                    }
+                    return false;
+                })
+                .reduce((total, reim) => total + reim.amount, 0);
+            return {
+                id: item.id,
+                userName,
+                employeeId,
+                Reimbursement: userReimbursement,
+                Deductions:userDeduction,
+                "Monthly Salary":item.baseSalary,
+                "Payable days": TotalPayableDays(item.email,dataMonth, dataYear , attendancelist , publicHolidayList, employeeList)
+            };
         });
+        const updatedSalaryFieldList = salaryFieldList?.data?.filter(item => item.fieldName !== "Reimbursement" && item.fieldName !== "Deductions" && item.isActive && item.fieldName !== "Monthly Salary" && item.fieldName!=='Payable days');
+
+        const fieldNames = updatedSalaryFieldList?.map(field => field.fieldName);
+
+        // Adding field names to every item in the newList array
+        const updatedList = newList.map(item => ({
+            ...item,
+            ...fieldNames.reduce((acc, fieldName) => {
+                acc[fieldName] = 0;
+                return acc;
+            }, {})
+        }));  
+          // console.log('updatedList',updatedList)
+          // console.log('updatedArrayData',updatedArrayData);
+          const updatedArrayDataWithOverrides = updatedArrayData.map(dataItem => {
+              // Find the corresponding item in updatedList by ID
+            const listItem = updatedList.find(listItem => listItem.id === dataItem.id);
         
-        // console.log('updatedArrayData',updatedArrayData);
+            if (listItem) {
+                // Create a new object for the updated item
+                const updatedItem = { ...dataItem };
         
-          const hasZeroMonthlySalary = updatedArrayData.some(item => parseInt(item['Monthly Salary']) === 0);
-          const keys = Object.keys(updatedArrayData[0]).filter(key => !['userName', 'Month', 'Year',"employeeId"].includes(key));
+                // Compare specified fields
+                if (parseInt(dataItem.Reimbursement) !== listItem.Reimbursement) {
+                    updatedItem.Reimbursement = {
+                        originalValue: listItem.Reimbursement,
+                        isOverridden: true,
+                        value: dataItem.Reimbursement
+                    };
+                }
+                if (parseInt(dataItem.Deductions) !== listItem.Deductions) {
+                  updatedItem.Deductions = {
+                      originalValue: listItem.Deductions,
+                      isOverridden: true,
+                      value: dataItem.Deductions
+                  };
+                }
+                if(parseInt(dataItem['Payable Monthly Salary']) !== listItem['Payable Monthly Salary']){
+                  updatedItem['Payable Monthly Salary'] = {
+                    originalValue: listItem['Payable Monthly Salary'],
+                    isOverridden: true,
+                    value: dataItem['Payable Monthly Salary']
+                };
+                 }
+                 if(parseInt(dataItem['Payable days']) !== listItem['Payable days']){
+                  updatedItem['Payable days'] = {
+                    originalValue: listItem['Payable days'],
+                    isOverridden: true,
+                    value: dataItem['Payable days']
+                };
+                 }
+                if (parseInt(dataItem['Monthly Salary']) !== listItem['Monthly Salary']) {
+                    updatedItem['Monthly Salary'] = {
+                        originalValue: listItem['Monthly Salary'],
+                        isOverridden: true,
+                        value: dataItem['Monthly Salary']
+                    };
+                }
+                // Add more comparisons for other fields as needed
+        
+                return updatedItem;
+            }
+        
+            return dataItem;
+        });
+          // console.log('updatedArrayDataWithOverrides',updatedArrayDataWithOverrides)
+          const hasZeroMonthlySalary = updatedArrayDataWithOverrides.some(item => parseInt(item['Monthly Salary']) === 0);
+          const keys = Object.keys(updatedArrayDataWithOverrides[0]).filter(key => !['userName', 'Month', 'Year',"employeeId", "id"].includes(key));
           // console.log('keys', keys,salaryFieldList.data)
            activeFields = salaryFieldList.data.filter(item => !item.isNew && !keys.includes(item.fieldName));
            inActiveFields = salaryFieldList.data.filter(item => !item.isActive && !keys.includes(item.fieldName));
@@ -423,14 +703,14 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
         
            if(inActiveFields.length>0){
             const missingFieldsMsg = inActiveFields.map(item => item.fieldName).join(', ');
-            setUploadCSvwarningMsg(`Active Salary Fields : ${missingFieldsMsg} are missing from the upload file and are not added to this months Salary History. If you wish to deactivate the fields then do so from the Salary Fields Section. If you wish to add these fields then reupload the file with updated data.`);
+             setUploadCSvwarningMsg(`Active Salary Fields : ${missingFieldsMsg} are missing from the upload file and are not added to this months Salary History. If you wish to deactivate the fields then do so from the Salary Fields Section. If you wish to add these fields then reupload the file with updated data.`);
            }
            if(hasZeroMonthlySalary){
-            setmonthlySalaryErrorMsg('Monthly Salary cannot be 0. If the user is not active then please update the status from Employee List Section')
+             setmonthlySalaryErrorMsg('Monthly Salary cannot be 0. If the user is not active then please update the status from Employee List Section')
            }
           else if(activeFields.length > 0) {
             const missingFieldsMsg = activeFields.map(item => item.fieldName).join(', ');
-            setUploadCSVMsg(`Mandatory field : ${missingFieldsMsg} are missing in the upload file`);
+             setUploadCSVMsg(`Mandatory field : ${missingFieldsMsg} are missing in the upload file`);
            }
           else {
             const extraFields = keys.filter(key => !salaryFieldList.data.some(item => item.fieldName === key));
@@ -440,43 +720,90 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
               isActive: false,
               isNew: true
             }));
-              if(filteredExtraFieldsWithObjects.length>0){
-                // console.log('filteredExtraFieldsWithObjects',filteredExtraFieldsWithObjects)
-                dispatch(updateSalaryFields(filteredExtraFieldsWithObjects))
-                const mappedExtrafields=filteredExtraFields.map(item => item).join(', ');
-                setuploadextraFieldsMsg(`New Fields :${mappedExtrafields} are added to the salary sheet, these fields are added to your “Create Salary Field” section with inactive status.`)
-                toast.success('New Fields :${mappedExtrafields} are added to the salary sheet, these fields are added to your “Create Salary Field” section with inactive status.')
-              }
-              setsamplefileDownload(true)
 
-              const salarysheetResponse=dispatch(createSalarySheetHistory(sheetName))
+            const formData = new FormData();
 
-              salarysheetResponse.then((res)=>{
-                //  console.log('res', res) 
-                
-                 const salarySheetHistoryId=res.payload.data.data
+            // console.log('seletedSalaryFile',seletedSalaryFile[0])
+          
+            formData.append("files", seletedSalaryFile[0]); 
 
-                 const salaryHistoryResponse =dispatch(UploadSalaryHistoryRecords({ updatedArrayData , overwriteData ,salarySheetHistoryId }))
-                 
-                //  salaryHistoryResponse.then((res)=>{
-                //     // console.log('res',res)
-                //      if(res.payload.data ===undefined){
-                            
-                //      }
-                //     else {
-                //       const totalEntries= res.payload.data.result.filter(item=> item.success === true)
-                //       dispatch(updateSalarySheetHistory({salarySheetHistoryId,totalEntries}))  
-                //     }
+            // const selectedFilesArray = Array.from(formData);
+                   const mappedExtrafields=filteredExtraFields.map(item => item).join(', ');
+                   const missingFieldsMsg = activeFields.map(item => item.fieldName).join(', ');
                    
-                //  }).catch((err)=>{
-                //    console.log(err);
-                //  })
-              }).catch((err)=>{
-                  console.log('Error in salarysheet history', err)
-              })
-              setTimeout(()=>{
-                setIsModalOpen(false);
-              }, 2000)
+              if(filteredExtraFieldsWithObjects.length>0) {
+
+                       const SalarySheetLocation=dispatch(uploadSalarySheetFile(formData))
+
+                          SalarySheetLocation.then((res)=>{
+                            // console.log('res', res)
+
+                           const salarysheetResponse=dispatch(createSalarySheetHistory({sheetName ,overwriteData, salaryFileLocation:res.payload.data.location}))
+
+                           salarysheetResponse.then((res)=>{
+   
+                           const salarySheetHistoryId=res.payload.data.data
+                           const salaryHistoryResponse =dispatch(UploadSalaryHistoryRecords({ updatedArrayDataWithOverrides , overwriteData ,salarySheetHistoryId }))
+                           salaryHistoryResponse.then((res)=>{
+                            const { data } = res.payload;
+
+                            const result = data.results.reduce((acc, item) => {
+
+                                if (item.success) {
+                                    acc.successCount++;
+                                } else {
+                                    acc.failureCount++;
+                                }
+                                return acc;
+                            }, { successCount: 0, failureCount: 0 });
+
+                                dispatch(updateSalarySheetHistory({success:result.successCount , failure:result.failureCount , totalCounts:result.successCount +result.failureCount , salarySheetHistoryId:salarySheetHistoryId ,newFieldsAdded:filteredExtraFields ,existingFieldRemoved:activeFields}))
+                          
+                              })
+
+                           dispatch(updateSalaryFields({ filteredExtraFieldsWithObjects,salarySheetHistoryId }))
+   
+                         }).catch((err)=>{
+                             console.log('Error in salarysheet history', err)
+                         })
+                       })
+                    
+                      setuploadextraFieldsMsg(`New Fields :${mappedExtrafields} are added to the salary sheet, these fields are added to your “Create Salary Field” section with inactive status.`)
+                  
+              }
+              else{
+
+                     const SalarySheetLocation=dispatch(uploadSalarySheetFile(formData))
+
+                       SalarySheetLocation.then((res)=>{
+                        console.log('res', res)
+                           setsamplefileDownload(true)
+
+                           const salarysheetResponse= dispatch(createSalarySheetHistory({sheetName ,overwriteData,salaryFileLocation:res.payload.data.location}))
+                           salarysheetResponse.then((res)=>{
+                           const salarySheetHistoryId=res.payload.data.data
+                           const salaryHistoryResponse = dispatch(UploadSalaryHistoryRecords({ updatedArrayDataWithOverrides , overwriteData ,salarySheetHistoryId }))
+                           salaryHistoryResponse.then((res)=>{
+                            const { data } = res.payload;
+                            const result = data.results.reduce((acc, item) => {
+                                if (item.success) {
+                                    acc.successCount++;
+                                } else {
+                                    acc.failureCount++;
+                                }
+                                return acc;
+                            }, { successCount: 0, failureCount: 0 });
+
+                              dispatch(updateSalarySheetHistory({success:result.successCount , failure:result.failureCount , totalCounts:result.successCount +result.failureCount , salarySheetHistoryId:salarySheetHistoryId ,newFieldsAdded:filteredExtraFields ,existingFieldRemoved:activeFields}))
+                           })
+
+                          }).catch((err)=>{
+                              console.log('Error in salarysheet history', err)
+                          })
+                       })
+              }
+              setshowFooter(true)
+
           }
        
         
@@ -491,6 +818,23 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
            onClick={handleBulkupload}
            >
              Upload Button
+          </Button>
+        </div>
+      );
+      const customFooterTwo = (
+        <div>
+             <Button key="customButton" type="default" onClick={handleCancel}>
+               Cancel
+          </Button>	
+           <Button key="customButton" 
+           type={isUpload? "primary":"default"} disabled={!isUpload} 
+           onClick={()=>{
+            setIsModalOpen(false)
+            setsamplefileDownload(false)
+            setshowFooter(false)}
+          }
+           >
+             ok
           </Button>
         </div>
       );
@@ -514,6 +858,7 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
 		const selectedFile = fileInputRef.current.files[0];
 		// setFile(selectedFile);
     // console.log('selectedFile',selectedFile)
+    setSelectedSalaryFile(fileInputRef.current.files)
     setsheetName(selectedFile.name)
 		if (selectedFile) {
 			 if (selectedFile.name.endsWith('.xlsx')) {
@@ -543,6 +888,7 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
 		// setFile(droppedFile);
     // console.log('droppedFile',droppedFile)
     setsheetName(droppedFile.name)
+    setSelectedSalaryFile(e.dataTransfer.files)
 		if (droppedFile) {
 
 			 if(droppedFile.name.endsWith('.xlsx')){
@@ -567,8 +913,8 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
 		  const data = e.target.result;
 		  const workbook = XLSX.read(data, { type: 'binary' });
 
-
 		  // Assuming the first sheet is the one you want to convert
+      
 		  const sheetName = workbook.SheetNames[0];
 		  const worksheet = workbook.Sheets[sheetName];
 		 
@@ -602,8 +948,28 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
   const closeModaltwo = () => {
     setIsModalVisible(false);
   };
-  
 
+  const handledownloadcsv = () => {
+    // Extract all keys from the list objects
+    const keys = list.reduce((allKeys, obj) => {
+        Object.keys(obj).forEach(key => {
+            if (!allKeys.includes(key)) {
+                allKeys.push(key);
+            }
+        });
+        return allKeys;
+    }, []);
+
+    const csvData = list.map(item => {
+        const rowData = {};
+        keys.forEach(key => {
+            rowData[key] = item[key] || 0;
+        });
+        return rowData;
+    });
+
+    setCSVlist(csvData);
+};
 	return (
 		<div className='ant-card p-4 rounded mt-5'>
 			<div className='flex my-2 justify-between'>
@@ -612,20 +978,19 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
 					<h4 className='text-2xl mb-2'> Salary Sheet</h4>
 				</div>
 				{list && (
-					<div className='flex justify-end mr-4'>
-						<div className='mt-0.5'>
-							<CsvLinkBtn>
-								<CSVLink
-									data={list}
-									className='btn btn-dark btn-sm'
-									style={{ marginTop: "5px" }}
-									filename='leave_applications'>
-									Download CSV
-								</CSVLink>
-							</CsvLinkBtn>
-						</div>
-                      
-					</div>
+            <div className='flex justify-end mr-4'>
+              <div className='mt-0.5'>
+                <CsvLinkBtn onClick={handledownloadcsv}>
+                  <CSVLink
+                    data={CSVlist}
+                    className='btn btn-dark btn-sm'
+                    style={{ marginTop: "5px" }}
+                    filename='Salary_sheet'>
+                    Download CSV
+                  </CSVLink>
+                </CsvLinkBtn>
+              </div>
+            </div>
 				)}
 			</div>
             <div className="flex justify-between pr-[17px]"> 
@@ -657,14 +1022,14 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
                               // navigate('/admin/salary/sheet/history')
                              showModaltwo()
                             }} className="cursor-pointer mt-[15px] mb-[15px] text-center">
-                           Salary History Sheet
+                           Salary Sheet History 
                      </CsvLinkBtn>
                      <Modal
                         title=""
                         visible={isModalVisible}
                         onCancel={closeModaltwo}
                         footer={null}
-                        className='w-[950px]'
+                        className='w-[1150px]'
                       >
                         <SalarySheetHistory />
                       </Modal>
@@ -672,15 +1037,15 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
             </div>
             <Modal title="Upload Salary Sheet" open={isModalOpen} 
 			     	onCancel={handleCancel}
-					 footer={customFooter}
+					 footer={showFooter ? customFooterTwo  : customFooter}
 					 className='w-[750px]'
 					>
 				    {dropZone ? <>
 						{dropZoneContent}
             <br/>
             <>
-            <p className="text-red-500">{monthlySalaryErrorMsg}</p>
-            <p className="text-red-500">{UploadCSvMsg} </p>
+            <p className="text-red-500"> {monthlySalaryErrorMsg}</p>
+            <p className="text-red-500"> {UploadCSvMsg} </p>
             <p className="text-orange-500"> {UploadCSvwarningMsg} </p>
             <p className="text-green-500"> {uploadextraFieldsMsg}</p>
             </>
@@ -785,7 +1150,7 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
 				}}
 				columns={columnsToShow}
 				dataSource={list ? addKeys(list) : []}
-			/>
+			/> 
 		</div>
 	);
 }
@@ -823,9 +1188,9 @@ const SalaryList = (props) => {
                   if(history.month ===currentMonth && history.year ===currentYear) {
                         newObj[history.sfName] = history.sfValue;
                   }
-                  else{
-                    newObj[history.sfName] = 0
-                  }
+                  // else{
+                  //   newObj[history.sfName] = 0
+                  // }
               });
 
               // Return the new object for this user

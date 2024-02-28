@@ -435,15 +435,10 @@ function formatDate(date) {
             return { startDate: formattedStartDate, endDate: formattedEndDate };
         }
     
-    
     const { startDate, endDate } = getMonthStartAndEndDate(month, year);
-    
-    // console.log("Start Date:", startDate);
-    // console.log("End Date:", endDate);
-
         
-   const updatedList= calculateLateComingAndTotalAbsentiesTime(startDate,endDate)
-   const filteredUpdatedList=updatedList.filter(item => item.emailId === email)
+    const updatedList= calculateLateComingAndTotalAbsentiesTime(startDate,endDate)
+    const filteredUpdatedList=updatedList.filter(item => item.emailId === email)
 
 //    console.log('updatedList',updatedList,'filteredUpdatedList',filteredUpdatedList,'email',email)
    if(filteredUpdatedList){

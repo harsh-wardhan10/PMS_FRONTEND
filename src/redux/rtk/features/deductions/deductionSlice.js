@@ -210,7 +210,7 @@ const DeductionsSlice = createSlice({
             });
 
             builder.addCase(loadSingleDeductionsHistory.fulfilled, (state, action) => {
-                console.log(action.payload);
+                // console.log(action.payload);
                 state.loading = false;
                 state.deductionHistory = action.payload;
             });

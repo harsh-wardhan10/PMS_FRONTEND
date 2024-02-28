@@ -165,7 +165,7 @@ const DetailShift = () => {
 						<Fragment key={shift.id}>
 							<div>
 								<div className='flex justify-between '>
-									    <h3 className={"text-xl"}>ID : {shift.id} | {shift.name} </h3>
+									    <h3 className={"text-xl"}>{shift.name} </h3>
 									<div className='flex justify-end'>
 										<UserPrivateComponent permission={"update-shift"}>
 											<ShiftEditPopup data={shift} />

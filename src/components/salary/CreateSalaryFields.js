@@ -12,8 +12,6 @@ import {
 import getUserFromToken from "../../utils/getUserFromToken";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
-import { addDeductions } from "../../redux/rtk/features/deductions/deductionSlice";
-import { uploadDeductionFile } from "../../redux/rtk/features/uploadDeductionFiles/uploadDeductionFiles";
 import { addBulkSalaryFields, loadAllBulkSalaryFields } from "../../redux/rtk/features/salary/salaryFieldSlice";
 
 const CreateSalaryFields = ({ drawer }) => {
@@ -25,17 +23,19 @@ const CreateSalaryFields = ({ drawer }) => {
 	const { TextArea } = Input;
 	const id = getUserFromToken();
 	const dispatch = useDispatch();
-    const [loading, setloading] =useState(false)
+
 	const { Option } = Select;
+
     const [fieldsArray, setFieldsArray] =useState([{
         id:1,
         fieldName:"",
         isActive:false,
-		isNew:true
+		isNew:true,
+		fieldType:""
     }])
 
 	useEffect(()=>{
-
+    //   console.log('salaryFieldList',salaryFieldList)
 
 		if (salaryFieldList?.data?.length > 0) {
 			const filteredSalaryField = salaryFieldList?.data?.filter(item => item.isNew === true)?.map(({ updatedAt, createdAt, userId, ...rest }) => rest);
@@ -56,7 +56,7 @@ const CreateSalaryFields = ({ drawer }) => {
 	const onFinish = async (values) => {
 	   
          const fieldsArrayWithoutId = fieldsArray.map(({ id, ...rest }) => rest);
-          //  console.log('fieldsArrayWithoutId',fieldsArrayWithoutId)
+        //    console.log('fieldsArrayWithoutId',fieldsArrayWithoutId)
 		
 			const resp = await dispatch(addBulkSalaryFields(fieldsArrayWithoutId));
 			if (resp.payload.message === "success") {
@@ -112,13 +112,14 @@ const CreateSalaryFields = ({ drawer }) => {
 							onFinishFailed={onFinishFailed}
 							autoComplete='off'>
 								<div className="mt-[30px] border-t-2"> 
-										<h2 className="text-[17px] ml-[80px] mt-[15px]"> Mandatory Fields</h2>
+										<h2 className="text-[17px] ml-[40px] mt-[15px]"> Mandatory Fields</h2>
 										<div className="grid grid-cols-2 gap-4 mt-[10px]"> 
 											{salaryFieldList?.data?.map((item)=>{
 												if(!item.isNew){
 													return <div className="flex items-center m-[10px] justify-center" key={item.id}>
-													<label className="text-nowrap m-[5px]"> Field Name</label>
+													{/* <label className="text-nowrap m-[5px]"> Field Name</label> */}
 													<Input disabled={true} value={item.fieldName} className="w-[53%] m-[5px] bg-[#efefef] text-[grey]" />
+													{item.fieldType}
 												</div>
 												}
 											})}
@@ -126,18 +127,31 @@ const CreateSalaryFields = ({ drawer }) => {
 								</div>
 								
 							<div className="mt-[30px] border-t-2"> 
-								<h2 className="text-[17px] ml-[80px] mt-[15px]"> Non Mandatory Fields</h2>
+								<h2 className="text-[17px] ml-[40px] mt-[15px]"> Non Mandatory Fields</h2>
 								<div className="grid grid-cols-2 gap-4 mt-[10px]">
 									{fieldsArray.map((item , index)=>{
 									return (
 										<div className="flex items-center m-[10px] justify-center relative" key={item.id}> 
-											<label className="text-nowrap m-[5px]"> Field Name</label>
+											{/* <label className="text-nowrap m-[5px]"> Field Name</label> */}
 											<Input defaultValue={item.fieldName} placeholder="Field Name" className="w-[30%] m-[5px]" onChange={(e)=>{
 											return item.fieldName = e.target.value
 										}}/>
+										 <Select
+                                            defaultValue="Select Name"
+                                            placeholder='Select Name'
+                                            style={{ width: 150, marginRight: 16 }}
+                                            onChange={(value)=> { 
+												return item.fieldType = value
+											}}
+                                            // value={item.fieldType}
+                                           >
+												<Option value={"Neutral"}> Neutral</Option>
+												<Option value={"Deductions"}> Deductions</Option>
+												<Option value={"Earnings"}> Earnings </Option>
+										    </Select>
 											<Checkbox className="margin-auto m-[5px]" defaultChecked={item.isActive} onChange={(e)=>{
 											return item.isActive = e.target.checked
-										}}>
+									    	}}>
 											isActive
 											</Checkbox>
 											<button className="m-[5px]" onClick={()=>handleFieldDelete(item.id)}> <i class="bi bi-trash"></i></button>

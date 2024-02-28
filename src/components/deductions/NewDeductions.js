@@ -75,9 +75,10 @@ const NewDeductions = ({ drawer }) => {
         //   console.log('deductionsData',deductionsData,'values',values)
         files.forEach((item)=>{
             const formData = new FormData();
+			 console.log('item', item)
             formData.append("files", item); 
             // Assuming 'file' is the file you want to upload
-            dispatch(uploadDeductionFile(formData));
+            // dispatch(uploadDeductionFile(formData));
         })
 		setLoader(true);
 		const resp = await dispatch(addDeductions(deductionsData));

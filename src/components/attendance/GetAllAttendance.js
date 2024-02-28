@@ -552,7 +552,7 @@ const processData = (data) => {
 				  	 Cancel
 				  </Button>	
 				   <Button key="customButton" type={isUpload? "primary":"default"} disabled={!isUpload} onClick={handleBulkupload}>
-					 Upload Button
+					 Upload Sheet
 				  </Button>
 				</div>
 			  );
@@ -1189,7 +1189,7 @@ const GetAllAttendance = (props) => {
 	const endDateObj = moment(enddate,'DD-MM-YYYY');
 	const newStartDate = startDateObj.format('DD/MM/YYYY');
 	const newEndDate = endDateObj.format('DD/MM/YYYY');
-	
+
     console.log('newStartDate',newStartDate,'newEndDate',newEndDate)
 	// calculateTotalAbsenties(newStartDate , newEndDate) 
 	calculateLateComingAndTotalAbsentiesTime(newStartDate,newEndDate)
