@@ -1,4 +1,4 @@
-import { Button, Card, Popover, Table } from "antd";
+import { Button, Card, Modal, Popover, Table } from "antd";
 import { Fragment, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
@@ -21,7 +21,7 @@ import axios from "axios";
 
 const CustomTable = ({ list }) => {
 	const [columnsToShow, setColumnsToShow] = useState([]);
-
+	const [deletePopup, setDeletePopup] = useState(false)
 	const columns = [
 		{
 			id: 1,
@@ -71,7 +71,7 @@ const CustomTable = ({ list }) => {
 					<div style={{display:"flex",float:'left'}}>
 						<ViewBtn path={`/admin/hr/staffs/${id}/`} />
 						<a>
-						<BtnDeleteSvg size={20} />
+						{/* <BtnDeleteSvg size={20} /> */}
 						</a>
 					</div>
 				</UserPrivateComponent>
@@ -88,7 +88,25 @@ const CustomTable = ({ list }) => {
 	};
 
 	const addKeys = (arr) => arr.map((i) => ({ ...i, key: i.id }));
-
+	const handleDeletePopup=()=>{
+		setDeletePopup(false)
+	}
+	// const deleteFooter = (
+    //     <div>
+    //          <Button key="customButton" type="default" onClick={()=> {setDeletePopup(false)}}>
+    //            Cancel
+    //       </Button>	
+    //        <Button key="customButton" 
+    //        type={"primary"} 
+    //        onClick={()=>{
+	// 		setDeletePopup(false)
+	// 		onDelete(seletedItemId)
+	// 	   }}
+    //        >
+    //         Delete
+    //       </Button>
+    //     </div>
+    //   );
 	return (
 		<div>
 			<div className='text-center my-2 flex justify-between'>
@@ -105,8 +123,18 @@ const CustomTable = ({ list }) => {
 						</CsvLinkBtn>
 					</div>
 				)}
+				        {/* <Modal
+							 className="Delete_modal"
+							title='Delete Confirmation'
+							open={deletePopup}
+							onCancel={handleDeletePopup}
+							footer={deleteFooter}>
+								<div> 
+									<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible Are you sure you want to delete ?</p>
+								</div>
+						</Modal> */}
 			</div>
-			{list && (
+			{/* {list && (
 				<div style={{ marginBottom: "30px" }}>
 					<ColVisibilityDropdown
 						options={columns}
@@ -114,7 +142,7 @@ const CustomTable = ({ list }) => {
 						columnsToShowHandler={columnsToShowHandler}
 					/>
 				</div>
-			)}
+			)} */}
 			<Table
 				loading={!list}
 				columns={columnsToShow}
@@ -179,8 +207,8 @@ const DetailDepartment = () => {
 							<div>
 								<div className='flex justify-between '>
 									<h3 className={"text-xl"}>
-									 {department.name}
-									</h3>
+									 {department.name} Department
+ 									</h3>
 									<UserPrivateComponent permission={"update-department"}>
 										<div className='flex justify-end'>
 											<DepartmentEditPopup data={department} />

@@ -1,4 +1,4 @@
-import { Button, Checkbox, Col, DatePicker, Form, Input, InputNumber, Row, Select, Tag, Typography } from "antd";
+import { Button, Checkbox, Col, DatePicker, Form, Input, InputNumber, Modal, Row, Select, Tag, Typography } from "antd";
 
 import dayjs from "dayjs";
 import React, { Fragment, useEffect, useRef, useState } from "react";
@@ -19,11 +19,12 @@ const CreateSalaryFields = ({ drawer }) => {
 	
 	const users = useSelector((state) => state.users?.list);
     const salaryFieldList =useSelector(state=> state.salaryField.list)
+	const [seletedId, setSeletedId] = useState(false)
 	//get id from JWT token in localstorage and decode it
 	const { TextArea } = Input;
 	const id = getUserFromToken();
 	const dispatch = useDispatch();
-
+	const [deletePopup, setDeletePopup] = useState(false)
 	const { Option } = Select;
 
     const [fieldsArray, setFieldsArray] =useState([{
@@ -81,6 +82,26 @@ const CreateSalaryFields = ({ drawer }) => {
     const handleFieldDelete=(id)=>{
         setFieldsArray(fieldsArray.filter(item=>item.id !==id))
     }
+	const handleDeletePopup=()=>{
+		setDeletePopup(false)
+	}
+
+	const deleteFooter = (
+        <div>
+             <Button key="customButton" type="default" onClick={()=> {setDeletePopup(false)}}>
+               Cancel
+          </Button>	
+           <Button key="customButton" 
+           type={"primary"} 
+           onClick={()=>{
+			setDeletePopup(false)
+			handleFieldDelete(seletedId)
+		   }}
+           >
+            Delete
+          </Button>
+        </div>
+      );
 	return (
 		<Fragment bordered={false}>
 			{/* {console.log('salaryFieldList',salaryFieldList,'fieldsArray',fieldsArray)} */}
@@ -137,9 +158,9 @@ const CreateSalaryFields = ({ drawer }) => {
 											return item.fieldName = e.target.value
 										}}/>
 										 <Select
-                                            defaultValue="Select Name"
-                                            placeholder='Select Name'
-                                            style={{ width: 150, marginRight: 16 }}
+                                            // defaultValue="Select Type"
+                                            placeholder='Select Type'
+                                            style={{ width: 150, marginRight: 16, color:'grey' }}
                                             onChange={(value)=> { 
 												return item.fieldType = value
 											}}
@@ -154,12 +175,19 @@ const CreateSalaryFields = ({ drawer }) => {
 									    	}}>
 											isActive
 											</Checkbox>
-											<button className="m-[5px]" onClick={()=>handleFieldDelete(item.id)}> <i class="bi bi-trash"></i></button>
+											<a className="m-[5px]" onClick={()=>{
+												setSeletedId(item.id)
+												setDeletePopup(true)
+											}}> 
+											<i class="bi bi-trash"></i>
+											</a>
+											
 										{index=== fieldsArray.length-1 && 
 											<Button 
 											onClick={()=>{
 												setFieldsArray([...fieldsArray, {id:item?.id + 1 , fieldName:"" , isActive:false , isNew:true}])
 											}} className="w-[50px] ant-btn ant-btn-primary ant-btn-md ant-btn-block absolute right-[0px]"> + </Button>}
+								         
 									</div>
 									) 
 									})}
@@ -184,6 +212,16 @@ const CreateSalaryFields = ({ drawer }) => {
 								</Form.Item>
 							
 						</Form>
+					                        	<Modal
+								 				className="Delete_modal"
+													title='Delete Confirmation'
+													open={deletePopup}
+													onCancel={handleDeletePopup}
+													footer={deleteFooter}>
+														<div> 
+															<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible Are you sure you want to delete ?</p>
+														</div>
+												</Modal>
 					</Col>
 				</Row>
 			</UserPrivateComponent>

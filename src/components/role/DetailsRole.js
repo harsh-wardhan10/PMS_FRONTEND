@@ -54,15 +54,14 @@ const DetailRole = () => {
 
 			<UserPrivateComponent permission={"readSingle-role"}>
 				<div className='mr-top'>
+					{/* {console.log('role',role)} */}
 					{role ? (
 						<Fragment key={role.id}>
 							<Card bordered={false}>
 								<div className='flex justify-between mb-5'>
-									<h5>
-										<i className='bi bi-person-lines-fill'></i>
-										<span className='mr-left'>
-											ID : {role.id} | {role.name}
-										</span>
+									<h5 className="text-[20px] font-bold">
+										{/* <i className='bi bi-person-lines-fill'></i> */}
+										 Role - {role.name}
 									</h5>
 									<div className='text-end'>
 										<UserPrivateComponent permission={"update-role"}>
@@ -94,18 +93,18 @@ const DetailRole = () => {
 												>
 											
 											</Popover> */}
-											<Popover content={<a onClick={onDelete}>
+											{/* <Popover content={<a onClick={onDelete}>
 														<Button  type='primary' danger>
 															Yes Please !
 														</Button>
 													</a>} title="Title" trigger="hover">
 											<DeleteOutlined />
-											</Popover>
+											</Popover> */}
 											
 										</UserPrivateComponent>
 									</div>
 								</div>
-								<CustomTable role={role?.rolePermission} />
+								<CustomTable role={role?.user} />
 							</Card>
 						</Fragment>
 					) : (

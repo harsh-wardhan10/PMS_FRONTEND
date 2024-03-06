@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { Button, Card, Popover, Table } from "antd";
+import { Button, Card, Modal, Popover, Table } from "antd";
 import { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
@@ -121,7 +121,26 @@ const DetailLeavePolicy = () => {
 	const { id } = useParams();
 	let navigate = useNavigate();
 	const { leavePolicy, loading } = useSelector((state) => state.leavePolicy);
-
+	const [deletePopup, setDeletePopup] = useState(false)
+	const handleDeletePopup=()=>{
+		setDeletePopup(false)
+	}
+	const deleteFooter = (
+        <div>
+             <Button key="customButton" type="default" onClick={()=> {setDeletePopup(false)}}>
+               Cancel
+          </Button>	
+           <Button key="customButton" 
+           type={"primary"} 
+           onClick={()=>{
+			setDeletePopup(false)
+			onDelete()
+		   }}
+           >
+            Delete
+          </Button>
+        </div>
+      );
 	//dispatch
 	const dispatch = useDispatch();
 
@@ -170,7 +189,7 @@ const DetailLeavePolicy = () => {
 										</UserPrivateComponent>
 										<UserPrivateComponent permission={"delete-leavePolicy"}>
 											{!loading ? (
-												<button className='ml-4 mr-2' onClick={onDelete}>
+												<button className='ml-4 mr-2' onClick={()=> {setDeletePopup(true)}}>
 													<BtnDeleteSvg size={30} />
 												</button>
 											) : (
@@ -178,6 +197,16 @@ const DetailLeavePolicy = () => {
 											)}
 										</UserPrivateComponent>
 									</div>
+									<Modal
+													className="Delete_modal"
+													title='Delete Confirmation'
+													open={deletePopup}
+													onCancel={handleDeletePopup}
+													footer={deleteFooter}>
+														<div> 
+															<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible Are you sure you want to delete ?</p>
+														</div>
+												</Modal>
 								</div>
 								<div className="grid grid-cols-3"> 
 								        <div> <p> <b> Sick Leaves:</b>{leavePolicy.sickLeaves}</p></div>

@@ -31,7 +31,8 @@ const ReviewReimbursementPopup = () => {
 			...data,
 			userId: userId,
 			status: status,
-            approveAmount:data?.amount
+            approveAmount:data?.amount,
+			acceptDate: moment(currentDate)
 		});
         // console.log('data',data)
 	}, [data]);
@@ -40,7 +41,7 @@ const ReviewReimbursementPopup = () => {
 		const FormData = {
             ...values,        
         };
-		// console.log('FormData' , FormData , moment(values.acceptDate),moment(currentDate))
+		console.log('FormData' , FormData )
 		const resp = await dispatch(
 			reviewReimbursementApplication({ id: id, values: FormData })
 		);
@@ -126,14 +127,6 @@ const ReviewReimbursementPopup = () => {
 								label='Amount'>
                                  {data?.amount}
 							</Form.Item>
-
-
-                            {/* <Form.Item
-								style={{ marginBottom: "10px" }}
-								label='Approval Name'
-								name='approveName'>
-								       <Input placeholder="Approval Name"/>
-							</Form.Item> */}
 							<Form.Item
 								style={{ marginBottom: "10px" }}
 								label='Comment'

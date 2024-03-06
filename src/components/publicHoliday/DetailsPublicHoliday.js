@@ -1,5 +1,5 @@
-import { Card } from "antd";
-import { Fragment, useEffect } from "react";
+import { Button, Card } from "antd";
+import { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import Loader from "../loader/loader";
@@ -16,6 +16,7 @@ import {
 } from "../../redux/rtk/features/publicHoliday/publicHolidaySlice";
 import PublicHolidayEdit from "../UI/PopUp/PublicHolidayEditPopup";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
+import Modal from "antd/lib/modal/Modal";
 
 const DetailPublicHoliday = () => {
 	const { id } = useParams();
@@ -23,7 +24,26 @@ const DetailPublicHoliday = () => {
 	const { publicHoliday, loading } = useSelector(
 		(state) => state.publicHoliday
 	);
-
+	const [deletePopup, setDeletePopup] = useState(false)
+	const handleDeletePopup=()=>{
+		setDeletePopup(false)
+	}
+	const deleteFooter = (
+        <div>
+             <Button key="customButton" type="default" onClick={()=> {setDeletePopup(false)}}>
+               Cancel
+          </Button>	
+           <Button key="customButton" 
+           type={"primary"} 
+           onClick={()=>{
+			setDeletePopup(false)
+			onDelete()
+		   }}
+           >
+            Delete
+          </Button>
+        </div>
+      );
 	//dispatch
 	const dispatch = useDispatch();
 
@@ -74,7 +94,7 @@ const DetailPublicHoliday = () => {
 											<div className='flex justify-end '>
 												<PublicHolidayEdit data={publicHoliday} />
 												{!loading ? (
-													<button className='ml-2' onClick={onDelete}>
+													<button className='ml-2' onClick={()=> {setDeletePopup(true)}}>
 														<BtnDeleteSvg size={20} />
 													</button>
 												) : (
@@ -82,6 +102,16 @@ const DetailPublicHoliday = () => {
 												)}
 											</div>
 										}>
+											  <Modal
+													className="Delete_modal"
+													title='Delete Confirmation'
+													open={deletePopup}
+													onCancel={handleDeletePopup}
+													footer={deleteFooter}>
+														<div> 
+															<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible Are you sure you want to delete ?</p>
+														</div>
+												</Modal>
 										<div className='flex justify-center'>
 											<ul className='list-inside list-none '>
 												<ListItem>

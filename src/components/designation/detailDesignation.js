@@ -7,6 +7,8 @@ import { toast } from "react-toastify";
 import {
 	clearDesignation,
 	deleteDesignation,
+	loadAllDesignationByEmployee,
+	loadAllEmployeeByDesignationId,
 	loadSingleDesignation,
 } from "../../redux/rtk/features/designation/designationSlice";
 import Loader from "../loader/loader";
@@ -22,12 +24,12 @@ const DetailDesignation = () => {
 	//dispatch
 	const dispatch = useDispatch();
 	const { designation, loading } = useSelector((state) => state.designations);
-
+    const employeeList = useSelector(state => state.designations.employeeList)
 	//Delete Supplier
 	const onDelete = () => {
 		try {
-			dispatch(deleteDesignation(id));
 
+			dispatch(deleteDesignation(id));
 			setVisible(false);
 			toast.warning(`Designation : ${designation.name} is removed `);
 			return navigate("/admin/designation");
@@ -45,6 +47,8 @@ const DetailDesignation = () => {
 
 	useEffect(() => {
 		dispatch(loadSingleDesignation(id));
+		dispatch(loadAllDesignationByEmployee())
+		// dispatch(loadAllEmployeeByDesignationId(id))
 		return () => {
 			dispatch(clearDesignation());
 		};
@@ -59,20 +63,17 @@ const DetailDesignation = () => {
 	return (
 		<div>
 			<PageTitle title=' Back ' subtitle=' ' />
-
+               {/* {console.log('employeeList',employeeList)} */}
 			<div className='mr-top'>
 				<UserPrivateComponent permission={"readSingle-designation"}>
 					{designation ? (
 						<Fragment key={designation.id}>
 							<Card bordered={false} style={{}}>
-								<div className='flex justify-between' style={{ padding: 0 }}>
+								<div className='flex justify-between items-center' style={{ padding: 0 ,marginBottom:"20px"}}>
 									<div className='w-50'>
-										<h5>
-											<i className='bi bi-person-lines-fill'></i>
-											<span className='mr-left text-xl'>
-												 {designation.name}
-											</span>
-										</h5>
+										<h2 className="text-[15px] font-bold">
+											Employee List
+										</h2>
 									</div>
 									<div className='text-end w-50'>
 										<UserPrivateComponent permission={"update-designation"}>
@@ -108,7 +109,7 @@ const DetailDesignation = () => {
 										</UserPrivateComponent>
 									</div>
 								</div>
-
+                                          {/* {console.log('designation',designation)} */}
 								<UserListCard list={designation.employee} loading={loading} />
 							</Card>
 						</Fragment>

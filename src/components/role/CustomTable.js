@@ -9,32 +9,34 @@ const CustomTable = ({ role }) => {
 	const [columnsToShow, setColumnsToShow] = useState([]);
 
 	const columns = [
-		{
-			id: 1,
-			title: "ID",
-			dataIndex: "id",
-			key: "id",
-		},
+
 		{
 			id: 2,
 			title: "Name",
-			dataIndex: "permission",
-			key: "permission",
-			render: ({ name } = {}) => name,
+			dataIndex: "userName",
+			key: "userName",
+			render: (userName, record) => `${record.firstName} ${record.lastName}`,
 		},
 		{
 			id: 3,
-			title: "Created At",
-			dataIndex: "createdAt",
-			key: "createdAt",
-			render: (createdAt) => dayjs(createdAt).format("DD/MM/YYYY"),
+			title: "Employee ID",
+			dataIndex: "employeeId",
+			key: "employeeId",
+			render: (employeeId) => `${employeeId}`,
 		},
 		{
 			id: 4,
-			title: "Updated At",
-			dataIndex: "updatedAt",
-			key: "updatedAt",
-			render: (updatedAt) => dayjs(updatedAt).format("DD/MM/YYYY"),
+			title: "Email Id",
+			dataIndex: "email",
+			key: "email",
+			render: (email) => `${email}`,
+		},
+		{
+			id: 4,
+			title: "Address",
+			dataIndex: "country",
+			key: "country",
+			render: (country , record) => `${record.country} ${record.state} ${record.city}` ,
 		},
 	];
 
@@ -70,7 +72,7 @@ const CustomTable = ({ role }) => {
 	return (
 		<Card className='card-body mb-3 '>
 			<div className='table-responsive'>
-				<h4 className='text-center mb-2 text-2xl'> Permissions</h4>
+				<h4 className='text-start mb-2 text-2xl'> Employee List</h4>
 
 				{keys && keys.length > 0 && (
 					<div className='text-start mb-1'>
@@ -79,7 +81,7 @@ const CustomTable = ({ role }) => {
 						</Button>
 					</div>
 				)}
-				{columns.length > 0 && (
+				{/* {columns.length > 0 && (
 					<div style={{ marginBottom: "30px" }}>
 						<ColVisibilityDropdown
 							options={columns}
@@ -87,9 +89,9 @@ const CustomTable = ({ role }) => {
 							columnsToShowHandler={columnsToShowHandler}
 						/>
 					</div>
-				)}
+				)} */}
 				<Table
-					rowSelection={columnsToShow.length > 0 && rowSelection}
+					// rowSelection={columnsToShow.length > 0 && rowSelection}
 					columns={columnsToShow}
 					dataSource={role}
 					pagination={{
@@ -97,7 +99,7 @@ const CustomTable = ({ role }) => {
 						showSizeChanger: true,
 						pageSizeOptions: ["10", "20", "50"],
 					}}
-					rowKey={(record) => record.id}
+					// rowKey={(record) => record.id}
 				/>
 				{/* <table className='table '>
 					<thead className='thead-dark'>

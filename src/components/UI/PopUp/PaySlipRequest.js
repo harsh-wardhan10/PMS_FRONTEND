@@ -11,13 +11,17 @@ import { addDeductions } from "../../../redux/rtk/features/deductions/deductionS
 import { loadAllShift } from "../../../redux/rtk/features/shift/shiftSlice";
 import { loadAllStaff } from "../../../redux/rtk/features/user/userSlice";
 import UserPrivateComponent from "../../PrivateRoutes/UserPrivateComponent";
+import { generatePayslipRequest, loadAllPayslipRequest, payslipDate } from "../../../redux/rtk/features/payslip/paySlipSlice";
+import moment from "moment";
 
 
 
-const PaySlipRequest = ({ drawer }) => {
+const PaySlipRequest = ({ drawer , isModalVisible, setIsModalVisible }) => {
 	const [loader, setLoader] = useState(false);
 	
 	const users = useSelector((state) => state.users?.list);
+
+    const [selectedMonth, setSelectedMonth] =useState()
 
 	const { TextArea } = Input;
 	const id = getUserFromToken();
@@ -26,17 +30,33 @@ const PaySlipRequest = ({ drawer }) => {
 	const { Title } = Typography;
 	const [form] = Form.useForm();
 
+    const handleDateChange=(value)=>{
+
+        //   console.log('value',value,dayjs(value))
+          const year = value.year(); 
+          const month = value.month() + 1;
+          setSelectedMonth(value)
+		  dispatch(payslipDate({year:year,month:month}))
+    }
+    const disabledDate = (current) => {
+        // Disable months beyond the previous month
+        return current && current > moment().endOf('month').subtract(1, 'months');
+      };
 	const onFinish = async (values) => {
-		const deductionsData = {
+		const payslipData = {
 			...values,
-            date:dayjs(values.date),
+            monthYear:dayjs(selectedMonth),
 			userId: values.userId,
 		};
+        delete payslipData.date;
+        // console.log('payslipData',payslipData)
 		setLoader(true);
-		const resp = await dispatch(addDeductions(deductionsData));
+        setIsModalVisible(false)
+		const resp = await dispatch(generatePayslipRequest(payslipData));
 		if (resp.payload.message === "success") {
 			setLoader(false);
 			form.resetFields();
+			dispatch(loadAllPayslipRequest());
 		} else {
 			setLoader(false);
 		}
@@ -109,7 +129,7 @@ const PaySlipRequest = ({ drawer }) => {
 											message: "Please input date!",
 										},
 									]}>
-									<DatePicker picker="month"  defaultValue={''} onChange={''} disabledDate={''}/>
+									<DatePicker picker="month"  defaultValue={''} onChange={handleDateChange} disabledDate={disabledDate}/>
 								</Form.Item>
 								<Form.Item
 									style={{ marginBottom: "20px" }}
@@ -122,7 +142,7 @@ const PaySlipRequest = ({ drawer }) => {
 										},
 									]}>
 										    <TextArea
-												placeholder="Deductions Reason"
+												placeholder="Payslip Comment"
 												autoSize={{
 												minRows: 3,
 												maxRows: 5,

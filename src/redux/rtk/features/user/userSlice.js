@@ -156,7 +156,7 @@ export const updateUser = createAsyncThunk(
 				message: "success",
 			};
 		} catch (error) {
-			console.log(error.message);
+			console.log('error.message',error.message);
 			toast.error("Error in updating user information");
 			return {
 				message: "error",

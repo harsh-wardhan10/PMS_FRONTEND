@@ -4,7 +4,7 @@ import getPermissions from "../../utils/getPermissions";
 const UserPrivateComponent = ({ permission, children }) => {
 	const permissions = getPermissions();
 
-	// console.log(permission, "permissions", permissions.includes(permission));
+	// console.log("permissions",permissions);
 
 	if (permissions?.includes(permission)) {
 		return <>

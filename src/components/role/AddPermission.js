@@ -41,14 +41,7 @@ const extractedValues = permissionNames
     const parts = item.name.split("-");
     return parts[1];
   })
-//   .filter(value => {
-//     if (!uniqueValues.has(value)) {
-//       uniqueValues.add(value);
-//       return true;
-//     }
-//     return false;
-//   });
-	//   console.log('extractedValues',extractedValues)
+
 	const permissionElements = permissionNames.map((item) => (
 		<Fragment key={item.id}>
 			<Checkbox
@@ -72,7 +65,7 @@ const extractedValues = permissionNames
 	for (let i = 0; i < permissionElements.length; i += 5) {
 		rows.push(
 			<div className="flex items-center permission_div_wrapper p-[5px]"> 
-	         {extractedValues[i]}
+	         <div className="w-[12%] capitalize font-bold"> {extractedValues[i]}</div>
 			 <div
 			 	key={i}
 				className='flex justify-between m-4 border-2 border-indigo-100 px-4 py-3 w-[100%]'>
@@ -107,7 +100,7 @@ const AddPermission = () => {
 
 		loadPermission().then((d) => {
 			setPermissions(d);
-			console.log('d',d)
+			// console.log('d',d)
 			const permissions = d.reduce((acc, item) => {
 				acc[item.id] = rolePermissions.some((i) => i.permission_id === item.id);
 				return acc;

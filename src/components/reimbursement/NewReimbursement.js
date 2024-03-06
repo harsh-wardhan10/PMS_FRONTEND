@@ -77,6 +77,7 @@ const NewReimbursement = ({ drawer }) => {
     //   console.log('reimbursementData',reimbursementData,'values',values)
 
             files.forEach((item)=>{
+				// console.log('item',item)
                 const formData = new FormData();
                 formData.append("files", item); 
                 // Assuming 'file' is the file you want to upload

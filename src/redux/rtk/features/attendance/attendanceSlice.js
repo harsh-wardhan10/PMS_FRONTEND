@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { toast } from "react-toastify";
-
+import pako from 'pako'; 
 const initialState = {
 	list: [],
 	clockIn: null,
@@ -96,18 +96,19 @@ export const addManualAttendance = createAsyncThunk(
 export const addBulkAttendance = createAsyncThunk(
 	"attendance/createbulkAttendance",
 	async (values) => {
-	
 		try {
-
+			const compressedData = pako.gzip(JSON.stringify(values));;
+			// console.log('compressedData',compressedData)
 			const { data } = await axios({
 				method: "post",
 				headers: {
-					Accept: "application/json",
-					"Content-Type": "application/json;charset=UTF-8",
-				},
+					"Content-Type": "application/json",
+					"Accept-Encoding": "gzip, deflate, br",
+				  },
+				  decompress: true,
 				url: `attendance/createbulkAttendance?query=bulkpunch`,
 				data: {
-					data:values,
+					data:compressedData,
 				},
 			});
 			toast.success("Bulk Attendance Added");
@@ -131,16 +132,18 @@ export const addoverwriteAttendance = createAsyncThunk(
 	async (values) => {
 	
 		try {
-
+			const compressedData = pako.gzip(JSON.stringify(values));;
 			const { data } = await axios({
 				method: "post",
 				headers: {
 					Accept: "application/json",
 					"Content-Type": "application/json;charset=UTF-8",
+					"Accept-Encoding": "gzip, deflate, br",
 				},
+				decompress: true,
 				url: `attendance/overwritebulkAttendance?query=bulkpunch`,
 				data: {
-					data:values,
+					data:compressedData,
 				},
 			});
 			toast.success("Bulk Attendance Added");

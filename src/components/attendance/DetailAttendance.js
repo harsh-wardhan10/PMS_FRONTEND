@@ -242,7 +242,7 @@ const DetailAttendance = () => {
 	
 		    const filteredData = singleData.state?.filter((item) => {
 				
-			const itemDate = moment(item.date, 'MM/DD/YY');
+			const itemDate = moment(item.date, 'DD/MM/YY');
 			const startDateObj = moment(newStartDate, 'DD/MM/YYYY');
 			const endDateObj = moment(newEndDate, 'DD/MM/YYYY');
 			return (
@@ -256,7 +256,7 @@ const DetailAttendance = () => {
 	  },300);
 	  useEffect(() => {
 		const filteredData = singleData.state.filter((item) => {
-		  const itemDate = moment(item.date, 'MM/DD/YY');
+		  const itemDate = moment(item.date, 'DD/MM/YY');
 		  const startDateObj = moment(startdate, 'DD/MM/YYYY');
 		  const endDateObj = moment(enddate, 'DD/MM/YYYY');
 		  return itemDate.isSameOrAfter(startDateObj) && itemDate.isSameOrBefore(endDateObj);

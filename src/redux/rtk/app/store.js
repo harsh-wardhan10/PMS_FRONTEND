@@ -33,6 +33,8 @@ import uploadReimbursementAttachmentSlice from '../features/uploadReimbusementFi
 import uploadDeductionAttachmentSlice from '../features/uploadDeductionFiles/uploadDeductionFiles'
 import TaxlistSlice from '../features/tax/taxSlice'
 import salaryFieldSlice from "../features/salary/salaryFieldSlice";
+import paySlipSlice from "../features/payslip/paySlipSlice";
+import uploadSettingAttachmentSlice from '../features/settings/settingSlice'
 
 const reduxLogger = require("redux-logger");
 
@@ -73,7 +75,9 @@ const store = configureStore({
 		attachment:uploadAttachmentSlice,
 		uploadReimbursementAttachmentSlice:uploadReimbursementAttachmentSlice,
 		uploadDeductionAttachmentSlice:uploadDeductionAttachmentSlice,
-		salaryField:salaryFieldSlice
+		uploadSettingAttachmentSlice:uploadSettingAttachmentSlice,
+		salaryField:salaryFieldSlice,
+		payslipRequest: paySlipSlice
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({

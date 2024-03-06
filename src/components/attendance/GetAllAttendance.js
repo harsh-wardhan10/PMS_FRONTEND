@@ -19,6 +19,7 @@ import { loadAttendanceList, setAttendanceList } from "../../redux/rtk/features/
 import moment from 'moment';
 import { loadAllPublicHoliday } from "../../redux/rtk/features/publicHoliday/publicHolidaySlice";
 import _debounce from 'lodash/debounce';
+import { isUndefined } from "lodash";
 
 function CustomTable({ list, total, status, setStatus, loading , refresh , setrefresh, setSummaryData , summaryData ,startdate ,enddate}) {
 	const [columnsToShow, setColumnsToShow] = useState([]);
@@ -113,7 +114,7 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 			dataIndex: `totalHalfDays`,
 			key: "totalHalfDays",
 			render: (totalHalfDays) => `${totalHalfDays}`
-				// dayjs(street).format("DD-MM-YYYY, h:mm A") || "NONE",
+				// dayjs(street).format("MM-DD-YYYY, h:mm A") || "NONE",
 		},
 		{
 			id: 8,
@@ -121,7 +122,7 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 			dataIndex: `totalLongBreaks`,
 			key: "totalLongBreaks",
 			render: (totalLongBreaks) => `${totalLongBreaks}`
-				// dayjs(street).format("DD-MM-YYYY, h:mm A") || "NONE",
+				// dayjs(street).format("MM-DD-YYYY, h:mm A") || "NONE",
 		},
 		{
 			id: 9,
@@ -129,7 +130,7 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 			dataIndex: `totalLateComings`,
 			key: "totalLateComings",
 			render: (totalLateComings) => `${totalLateComings}`
-				// dayjs(street).format("DD-MM-YYYY, h:mm A") || "NONE",
+				// dayjs(street).format("MM-DD-YYYY, h:mm A") || "NONE",
 		},
 		{
 			id: 10,
@@ -260,8 +261,7 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 			dateNF: 'YYYY-MM-DD',
 			cellDates: true,
 		  });
-
-		  setarrayData(jsonData)
+			setarrayData(jsonData)
 		};
 	
 		reader.readAsBinaryString(file);
@@ -277,8 +277,9 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 
 	function formatDate(dateString) {
 		// Split the date string by '/' to get day, month, and year
+		// console.log('dateString',dateString)
 		const [day, month, year] = dateString.split('/');
-	  
+	      
 		// Add leading zeros to day and month if necessary
 		const formattedDay = day.padStart(2, '0');
 		const formattedMonth = month.padStart(2, '0');
@@ -303,7 +304,7 @@ const processData = (data) => {
         // Iterate over the keys of the item
         Object.keys(item).forEach(key => {
             // Check if the key is neither 'Date' nor 'Status'
-            if (key.toLowerCase() !== 'date' && key.toLowerCase() !== 'status') {
+            if (key.toLowerCase() !== 'date' && key.toLowerCase() !== 'status' && item[key ]!== ' ') {
                 const email = key.trim(); // Trim the key to remove leading and trailing whitespaces
                 const newObj = createNewObject(item, key, email);
                 newData.push(newObj);
@@ -314,12 +315,13 @@ const processData = (data) => {
     return newData;
 };
 	const processedData = processData(arrayData);
+	//    console.log('arrayData',arrayData)
 	    //  const CleanData=  rejectUncompleteEntry(processedData)
-	    //  console.log('CleanData',CleanData)
+	    //  console.log('processedData',processedData)
 	     const getAllDatesData = getAllDates(processedData)
 		 const CleanData=  rejectUncompleteEntry(getAllDatesData)
 
-		// console.log('CleanData',CleanData)
+		// // console.log('CleanData',CleanData)
 		if(overwriteData){
 			const bulkUploadResult= dispatch(addoverwriteAttendance(CleanData))
 		    setSummaryData(bulkUploadResult)
@@ -354,6 +356,7 @@ const processData = (data) => {
 	  }, {});
   
 	  // Filter out unwanted entries and store both filtered and excluded data
+    //   console.log('groupedData',groupedData)
 	  const { filteredData, excludedData } = Object.values(groupedData)?.reduce(
 		(result, dateGroup) => {
 		  Object.values(dateGroup).forEach((emailGroup) => {
@@ -392,12 +395,16 @@ const processData = (data) => {
 
   const getAllDates=(data)=>{
     let rejectedDateEntries=[]
+
 	function standardizeDateFormat(item) {
+		
 		let itemDate = moment(item.date, "MM-DD-YYYY").format("MM-DD-YYYY")
+		
 	if(moment(itemDate, 'MM-DD-YYYY', true).isValid()){
 		const [month, day, year] = item.date?.split('/');
 		return `${month.padStart(2, '0')}/${day.padStart(2, '0')}/${year}`;
-	  }
+	
+	}
 	  else {
 		rejectedDateEntries.push(item)
 	  } 
@@ -424,6 +431,7 @@ const processData = (data) => {
 		allDates.push(getFormattedDate(currentDate));
 		currentDate.setDate(currentDate.getDate() + 1);
 	}
+
 	
 	// Group the data by emailId
 	const groupedData = {};
@@ -433,15 +441,15 @@ const processData = (data) => {
 		}
 		groupedData[item.emailId].push(standardizeDateFormat(item));
 	});
-	
+	// console.log('allDates',allDates, 'data',data , 'groupedData',groupedData)
 	// Create the result array with "Absent" entries for missing dates
-
 	const result = [];
 	for (const emailId in groupedData) {
 		const emailDates = groupedData[emailId];
+		// console.log('emailDates',emailDates, 'emailId',emailId, 'allDates', allDates)
 		// console.log('emailDates',emailDates,'allDates',allDates,groupedData ,'groupedData',groupedData[emailId])
 		const missingDates = allDates.filter(date => !emailDates.includes(date));
-		
+		// console.log('missingDates',missingDates )
 		missingDates.forEach(date => {
 			result.push({
 				date,
@@ -619,7 +627,7 @@ const processData = (data) => {
 										</Checkbox>
 									</Form.Item>
 									</Form>
-					<Tag color="rgb(229, 246, 253)" style={{padding:'5px', marginBottom:'5px',marginTop:'5px'}} ><p className="text-[13px] text-[#014361]"><i class="bi bi-info-circle text-[#0288d1] text-[15px] mr-[3px]" ></i>  Date should be in DD-MM-YYYY </p></Tag>
+					<Tag color="rgb(229, 246, 253)" style={{padding:'5px', marginBottom:'5px',marginTop:'5px'}} ><p className="text-[13px] text-[#014361]"><i class="bi bi-info-circle text-[#0288d1] text-[15px] mr-[3px]" ></i>  Date should be in MM-DD-YYYY </p></Tag>
 					<Tag color="#fdeded" style={{padding:'5px', marginBottom:'5px',marginTop:'5px'}} >
 					<p className="text-[13px] text-[#5f2120]">
 				    <i class="bi bi-info-circle text-[#d32f2f] text-[15px] mr-[8px]" ></i> 
@@ -1062,21 +1070,26 @@ const GetAllAttendance = (props) => {
 					i=i+1
 				}
 
-			    // console.log('data[0]?.shift?.breakTimeCheckbox',data[0]?.shift?.breakTimeCheckbox , 'breakDuration',breakDuration,'shiftbreakTime',shiftbreakTime)
-				if((data[0]?.shift?.breakTimeCheckbox && (breakDuration > shiftbreakTime))){
-					totalHalfDays +=1
-				 }
-				
-				// Compare total time worked with total shift work minutes
-				else if ((totalTimeWorked < totalShiftworkMinutes) && !ishalfday ) {
-					// If yes, increment totalHalfDays
-					totalHalfDays += 1;
-				}
+						// console.log('updatedEntries[index]',updatedEntries[index], 'breakDuration',breakDuration,'shiftbreakTime',shiftbreakTime)
+						// console.log('totalTimeWorked',totalTimeWorked,'totalShiftworkMinutes',totalShiftworkMinutes)	
+							
+			      	 if(updatedEntries[index] !==undefined){
+						if((data[0]?.shift?.breakTimeCheckbox && (breakDuration > shiftbreakTime))){
+											totalHalfDays +=1
+								}
 
-			//   console.log('totalTimeWorked',totalTimeWorked,'totalShiftworkMinutes',totalShiftworkMinutes,entriesForDate)
+								// Compare total time worked with total shift work minutes
+						
+							else if ((totalTimeWorked < totalShiftworkMinutes) && !ishalfday ) {
+									// If yes, increment totalHalfDays
+										totalHalfDays += 1;
+										// console.log('updatedEntries[index] -2',updatedEntries[index]?.emailId)
+							} 
+					 }
+						
 			});
 			
-		  
+		//    console.log('allDates',allDates)
 			allDates.forEach(date => {
 				const entriesForDate = data.filter(item => moment(item.date, 'MM/DD/YY').format('MM/DD/YY') === moment(date, 'MM/DD/YY').format('MM/DD/YY'));
 				let breakDuration=0
@@ -1124,7 +1137,8 @@ const GetAllAttendance = (props) => {
 				// console.log('breakDuration',breakDuration,entriesForDate,'loopLength',loopLength)
 				const shiftbreakTime = parseInt(data[0]?.shift?.breakTime);
 				const shiftbreakTimeMinutes = shiftbreakTime
-			    // console.log('shiftbreakTimeMinutes',shiftbreakTimeMinutes)
+
+			    console.log('updatedEntries[index]',updatedEntries[index],'shiftbreakTimeMinutes',shiftbreakTimeMinutes,'breakDuration',breakDuration)
 	
 				 if (breakDuration > shiftbreakTimeMinutes) {
 				   // If break time exceeds the threshold, increment totalLongBreaks
@@ -1150,7 +1164,9 @@ const GetAllAttendance = (props) => {
 			const formatedStarttime = moment(shiftStartTime,'h:mm:ss A');
 			const formatedStartWithGrace = formatedStarttime.clone().add('minute',parseInt(graceTime))
 			const logTime = moment(inEntry.log, 'h:mm:ss A');
-			// console.log('logTimelogTime',logTime,'formatedStartWithGrace',formatedStartWithGrace)
+			
+			// console.log('logTimelogTime',logTime,'formatedStartWithGrace',formatedStartWithGrace ,'inEntry',inEntry)
+			
 			if (logTime.isAfter(formatedStartWithGrace)) {
 				 // If yes, increment totalLateComings
 				 totalLateComings += 1;
@@ -1185,12 +1201,12 @@ const GetAllAttendance = (props) => {
   };
   useEffect(()=>{
 
-	const startDateObj = moment(startdate, 'DD-MM-YYYY');
-	const endDateObj = moment(enddate,'DD-MM-YYYY');
+	const startDateObj = moment(startdate, 'MM-DD-YYYY');
+	const endDateObj = moment(enddate,'MM-DD-YYYY');
 	const newStartDate = startDateObj.format('DD/MM/YYYY');
 	const newEndDate = endDateObj.format('DD/MM/YYYY');
 
-    console.log('newStartDate',newStartDate,'newEndDate',newEndDate)
+    // console.log('newStartDate',newStartDate,'newEndDate',newEndDate)
 	// calculateTotalAbsenties(newStartDate , newEndDate) 
 	calculateLateComingAndTotalAbsentiesTime(newStartDate,newEndDate)
 
@@ -1199,8 +1215,8 @@ const GetAllAttendance = (props) => {
 
 	const onCalendarChange = _debounce((dates) => {
 		if (dates) {
-			const startDateObj = moment(dates[0], 'DD-MM-YYYY');
-			const endDateObj = moment(dates[1],'DD-MM-YYYY');
+			const startDateObj = moment(dates[0], 'MM-DD-YYYY');
+			const endDateObj = moment(dates[1],'MM-DD-YYYY');
 			const newStartDate = startDateObj.format('DD/MM/YYYY');
 			const newEndDate = endDateObj.format('DD/MM/YYYY');
 			// calculateTotalAbsenties(newStartDate,newEndDate) 
@@ -1240,7 +1256,7 @@ const GetAllAttendance = (props) => {
 							moment(startdate, 'DD/MM/YYYY'),
 							moment(enddate, 'DD/MM/YYYY'),
 						]}
-						format="DD-MM-YYYY"
+						format="MM-DD-YYYY"
 						className="range-picker mr-3"
 						style={{ maxWidth: '400px' }}
 						/>

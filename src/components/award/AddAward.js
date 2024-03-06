@@ -15,6 +15,7 @@ import {
 import { addAward } from "../../redux/rtk/features/award/awardSlice";
 import PageTitle from "../page-header/PageHeader";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
+import GetAllAward from "./GetAllAward";
 
 const AddAward = ({ drawer }) => {
 	const { list, loading } = useSelector((state) => state.award);
@@ -124,6 +125,9 @@ const AddAward = ({ drawer }) => {
 				</Row>
 			</UserPrivateComponent>
 			<hr />
+			<UserPrivateComponent permission={"readAll-shift"}>
+				<GetAllAward/>
+			</UserPrivateComponent>
 		</Fragment>
 	);
 };

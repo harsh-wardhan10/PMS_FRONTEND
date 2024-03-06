@@ -7,10 +7,14 @@ import UserPrivateComponent from "../../PrivateRoutes/UserPrivateComponent";
 const UserListCard = ({ list, loading }) => {
 	const columns = [
 		{
-			title: "ID",
-			dataIndex: "id",
-			key: "id",
-			render: (id) => <Link to={`/admin/hr/staffs/${id}`}>{id}</Link>,
+			title: "Employee ID",
+			dataIndex: "employeeId",
+			key: "employeeId",
+			render: (employeeId, record) => {
+
+				return <Link to={`/admin/hr/staffs/${record.id}`}>{employeeId}</Link>	
+
+			},
 		},
 		{
 			title: "Employee Name",
@@ -35,15 +39,16 @@ const UserListCard = ({ list, loading }) => {
 
 	return (
 		<Row>
+			 {/* {console.log('list',list)} */}
 			<Col span={24}>
 				<Card
 					className='header-solid h-full'
 					bordered={false}
-					title={[
-						<h5 className='font-semibold m-0 text-center'>
-							Staffs Information
-						</h5>,
-					]}
+					// title={[
+					// 	<h5 className='font-semibold m-0 text-center'>
+					// 		Employee List
+					// 	</h5>,
+					// ]}
 					bodyStyle={{ padding: "0" }}>
 					<div className='col-info'>
 						<Table

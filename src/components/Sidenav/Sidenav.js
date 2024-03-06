@@ -156,15 +156,15 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 					key: "calculatePayroll",
 					icon: <FileDoneOutlined />,
 				},
-				hasPermission("readAll-payroll") && {
-					label: (
-						<NavLink to='/admin/payroll/list'>
-							<span>Payslip List</span>
-						</NavLink>
-					),
-					key: "payslipList",
-					icon: <FileOutlined />,
-				},
+				// hasPermission("readAll-payroll") && {
+				// 	label: (
+				// 		<NavLink to='/admin/payroll/list'>
+				// 			<span>Payslip List</span>
+				// 		</NavLink>
+				// 	),
+				// 	key: "payslipList",
+				// 	icon: <FileOutlined />,
+				// },
 			],
 		},
 
@@ -438,77 +438,77 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 			],
 		},
 
-		(hasPermission("readAll-account") ||
-			hasPermission("readAll-transaction") ||
-			hasPermission("create-transaction")) && {
-			label: "ACCOUNTS",
-			key: "accounts",
-			icon: <WalletOutlined />,
-			children: [
-				hasPermission("readAll-account") && {
-					label: (
-						<NavLink to='/admin/account/'>
-							<span>Account</span>
-						</NavLink>
-					),
-					key: "accountList",
-					icon: <UnorderedListOutlined />,
-				},
-				hasPermission("create-transaction") && {
-					label: (
-						<NavLink to='/admin/transaction/create'>
-							<span>New Transaction</span>
-						</NavLink>
-					),
-					key: "newTransaction",
-					icon: <CheckOutlined />,
-				},
-				hasPermission("readAll-transaction") && {
-					label: (
-						<NavLink to='/admin/transaction/'>
-							<span>Transaction List</span>
-						</NavLink>
-					),
-					key: "transactionList",
-					icon: <UnorderedListOutlined />,
-				},
-			],
-		},
+		// (hasPermission("readAll-account") ||
+		// 	hasPermission("readAll-transaction") ||
+		// 	hasPermission("create-transaction")) && {
+		// 	label: "ACCOUNTS",
+		// 	key: "accounts",
+		// 	icon: <WalletOutlined />,
+		// 	children: [
+		// 		hasPermission("readAll-account") && {
+		// 			label: (
+		// 				<NavLink to='/admin/account/'>
+		// 					<span>Account</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "accountList",
+		// 			icon: <UnorderedListOutlined />,
+		// 		},
+		// 		hasPermission("create-transaction") && {
+		// 			label: (
+		// 				<NavLink to='/admin/transaction/create'>
+		// 					<span>New Transaction</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "newTransaction",
+		// 			icon: <CheckOutlined />,
+		// 		},
+		// 		hasPermission("readAll-transaction") && {
+		// 			label: (
+		// 				<NavLink to='/admin/transaction/'>
+		// 					<span>Transaction List</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "transactionList",
+		// 			icon: <UnorderedListOutlined />,
+		// 		},
+		// 	],
+		// },
 
-		hasPermission("readAll-account") && {
-			label: "FINANCE REPORT",
-			key: "report",
-			icon: <FlagOutlined />,
-			children: [
-				hasPermission("readAll-account") && {
-					label: (
-						<NavLink to='/admin/account/trial-balance'>
-							<span>Trial Balance</span>
-						</NavLink>
-					),
-					key: "trialBalance",
-					icon: <FileDoneOutlined />,
-				},
-				hasPermission("readAll-account") && {
-					label: (
-						<NavLink to='/admin/account/balance-sheet'>
-							<span>Balance Sheet</span>
-						</NavLink>
-					),
-					key: "balanceSheet",
-					icon: <FileOutlined />,
-				},
-				hasPermission("readAll-account") && {
-					label: (
-						<NavLink to='/admin/account/income'>
-							<span>Income Statement</span>
-						</NavLink>
-					),
-					key: "incomeStatement",
-					icon: <FileSyncOutlined />,
-				},
-			],
-		},
+		// hasPermission("readAll-account") && {
+		// 	label: "FINANCE REPORT",
+		// 	key: "report",
+		// 	icon: <FlagOutlined />,
+		// 	children: [
+		// 		hasPermission("readAll-account") && {
+		// 			label: (
+		// 				<NavLink to='/admin/account/trial-balance'>
+		// 					<span>Trial Balance</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "trialBalance",
+		// 			icon: <FileDoneOutlined />,
+		// 		},
+		// 		hasPermission("readAll-account") && {
+		// 			label: (
+		// 				<NavLink to='/admin/account/balance-sheet'>
+		// 					<span>Balance Sheet</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "balanceSheet",
+		// 			icon: <FileOutlined />,
+		// 		},
+		// 		hasPermission("readAll-account") && {
+		// 			label: (
+		// 				<NavLink to='/admin/account/income'>
+		// 					<span>Income Statement</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "incomeStatement",
+		// 			icon: <FileSyncOutlined />,
+		// 		},
+		// 	],
+		// },
 
 		(hasPermission("crate-award") || hasPermission("readAll-award")) && {
 			label: "AWARDS",
@@ -527,8 +527,8 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 
 				hasPermission("readAll-award") && {
 					label: (
-						<NavLink to='/admin/award'>
-							<span>Award List</span>
+						<NavLink to='/admin/award/assign'>
+							<span>Assign Award</span>
 						</NavLink>
 					),
 					key: "award",
@@ -537,74 +537,74 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 			],
 		},
 
-		(hasPermission("create-project") ||
-			hasPermission("readAll-project") ||
-			hasPermission("create-projectTeam") ||
-			hasPermission("create-milestone") ||
-			hasPermission("readAll-priority") ||
-			hasPermission("create-task-Status")) && {
-			label: "PROJECT",
-			key: "project",
-			icon: <SettingOutlined />,
-			children: [
-				hasPermission("create-project") && {
-					label: (
-						<NavLink to='/admin/project/new'>
-							<span>Add Project</span>
-						</NavLink>
-					),
-					key: "project",
-					icon: <SettingOutlined />,
-				},
-				hasPermission("readAll-project") && {
-					label: (
-						<NavLink to='/admin/project'>
-							<span>All Project</span>
-						</NavLink>
-					),
-					key: "allProject",
-					icon: <SettingOutlined />,
-				},
-				hasPermission("create-projectTeam") && {
-					label: (
-						<NavLink to='/admin/team'>
-							<span>Team</span>
-						</NavLink>
-					),
-					key: "team",
-					icon: <SettingOutlined />,
-				},
-				(hasPermission("create-priority") ||
-					hasPermission("readAll-priority")) && {
-					label: (
-						<NavLink to='/admin/task-priority'>
-							<span>Task Priority</span>
-						</NavLink>
-					),
-					key: "taskPriority",
-					icon: <SettingOutlined />,
-				},
-				hasPermission("create-milestone") && {
-					label: (
-						<NavLink to='/admin/milestone'>
-							<span>Add Milestone</span>
-						</NavLink>
-					),
-					key: "milestone",
-					icon: <SettingOutlined />,
-				},
+		// (hasPermission("create-project") ||
+		// 	hasPermission("readAll-project") ||
+		// 	hasPermission("create-projectTeam") ||
+		// 	hasPermission("create-milestone") ||
+		// 	hasPermission("readAll-priority") ||
+		// 	hasPermission("create-task-Status")) && {
+		// 	label: "PROJECT",
+		// 	key: "project",
+		// 	icon: <SettingOutlined />,
+		// 	children: [
+		// 		hasPermission("create-project") && {
+		// 			label: (
+		// 				<NavLink to='/admin/project/new'>
+		// 					<span>Add Project</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "project",
+		// 			icon: <SettingOutlined />,
+		// 		},
+		// 		hasPermission("readAll-project") && {
+		// 			label: (
+		// 				<NavLink to='/admin/project'>
+		// 					<span>All Project</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "allProject",
+		// 			icon: <SettingOutlined />,
+		// 		},
+		// 		hasPermission("create-projectTeam") && {
+		// 			label: (
+		// 				<NavLink to='/admin/team'>
+		// 					<span>Team</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "team",
+		// 			icon: <SettingOutlined />,
+		// 		},
+		// 		(hasPermission("create-priority") ||
+		// 			hasPermission("readAll-priority")) && {
+		// 			label: (
+		// 				<NavLink to='/admin/task-priority'>
+		// 					<span>Task Priority</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "taskPriority",
+		// 			icon: <SettingOutlined />,
+		// 		},
+		// 		hasPermission("create-milestone") && {
+		// 			label: (
+		// 				<NavLink to='/admin/milestone'>
+		// 					<span>Add Milestone</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "milestone",
+		// 			icon: <SettingOutlined />,
+		// 		},
 
-				hasPermission("create-taskStatus") && {
-					label: (
-						<NavLink to='/admin/task-status'>
-							<span>Add Task Status</span>
-						</NavLink>
-					),
-					key: "taskStatus",
-					icon: <SettingOutlined />,
-				},
-			],
-		},
+		// 		hasPermission("create-taskStatus") && {
+		// 			label: (
+		// 				<NavLink to='/admin/task-status'>
+		// 					<span>Add Task Status</span>
+		// 				</NavLink>
+		// 			),
+		// 			key: "taskStatus",
+		// 			icon: <SettingOutlined />,
+		// 		},
+		// 	],
+		// },
 
 		hasPermission("readAll-setting") && {
 			label: "SETTINGS",

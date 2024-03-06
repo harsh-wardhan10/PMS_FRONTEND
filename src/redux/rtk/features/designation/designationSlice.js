@@ -8,6 +8,7 @@ const initialState = {
 	designation: [],
 	error: "",
 	loading: false,
+	employeeList:[]
 };
 
 // ADD_DESIGNATION
@@ -104,6 +105,31 @@ export const loadAllDesignationByEmployee = createAsyncThunk(
 	}
 );
 
+export const loadAllEmployeeByDesignationId = createAsyncThunk(
+	"designation/loadAllEmployeeByDesignationId",
+	async (value) => {
+		// console.log('value', value)
+		try {
+			const { data } = await axios({
+				method: "post",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json;charset=UTF-8",
+				},
+				url: `designation/getEmployeeByDesignationId`,
+				data: {id:value}
+			});
+			// toast.success("designation Added");
+			return {
+				data,
+				message: "success",
+			};
+		} catch (error) {
+			console.log(error.message);
+		}
+	}
+);
+
 const designationSlice = createSlice({
 	name: "designation",
 	initialState,
@@ -175,6 +201,21 @@ const designationSlice = createSlice({
 			state.loading = false;
 			state.error = action.payload.message;
 		});
+				// 3) ====== builders for loadAllEmployeeByDesignationId ======
+
+				builder.addCase(loadAllEmployeeByDesignationId.pending, (state) => {
+					state.loading = true;
+				});
+		
+				builder.addCase(loadAllEmployeeByDesignationId.fulfilled, (state, action) => {
+					state.loading = false;
+					state.employeeList = action.payload.data;
+				});
+		
+				builder.addCase(loadAllEmployeeByDesignationId.rejected, (state, action) => {
+					state.loading = false;
+					state.error = action.payload.message;
+				});
 
 		// 4) ====== builders for deleteDesignation ======
 

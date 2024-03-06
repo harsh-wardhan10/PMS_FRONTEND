@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { Button, Card, Popover, Table } from "antd";
+import { Button, Card, Modal, Popover, Table } from "antd";
 import { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
@@ -20,6 +20,7 @@ import {
 import AwardEditPopup from "../UI/PopUp/AwardEditPopup";
 import BtnLoader from "../loader/BtnLoader";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
+import AssignAwardPopup from "../UI/PopUp/AssignAwardPopup";
 
 //PopUp
 
@@ -97,7 +98,7 @@ const CustomTable = ({ list }) => {
 					</div>
 				)}
 			</div>
-			{list && (
+			{/* {list && (
 				<div style={{ marginBottom: "30px" }}>
 					<ColVisibilityDropdown
 						options={columns}
@@ -105,7 +106,9 @@ const CustomTable = ({ list }) => {
 						columnsToShowHandler={columnsToShowHandler}
 					/>
 				</div>
-			)}
+			)} */}
+		
+			
 			<Table
 				loading={!list}
 				columns={columnsToShow}
@@ -124,7 +127,7 @@ const DetailAward = () => {
 
 	//dispatch
 	const dispatch = useDispatch();
-
+	const [deletePopup, setDeletePopup] = useState(false)
 	//Delete Supplier
 	const onDelete = async () => {
 		try {
@@ -140,13 +143,30 @@ const DetailAward = () => {
 	useEffect(() => {
 		dispatch(loadSingleAward(id));
 	}, []);
-
+	const handleDeletePopup=()=>{
+		setDeletePopup(false)
+	}
 	const isLogged = Boolean(localStorage.getItem("isLogged"));
 
 	if (!isLogged) {
 		return <Navigate to={"/admin/auth/login"} replace={true} />;
 	}
-
+	const deleteFooter = (
+        <div>
+             <Button key="customButton" type="default" onClick={()=> {setDeletePopup(false)}}>
+               Cancel
+          </Button>	
+           <Button key="customButton" 
+           type={"primary"} 
+           onClick={()=>{
+			setDeletePopup(false)
+			onDelete()
+		   }}
+           >
+            Delete
+          </Button>
+        </div>
+      );
 	return (
 		<div>
 			<PageTitle title=' Back  ' />
@@ -158,18 +178,28 @@ const DetailAward = () => {
 							<div>
 								<div className='flex justify-between '>
 									<h3 className={"text-xl"}>
-										ID : {award.id} | {award.name}
+										 {award.name}
 									</h3>
 									<div className='flex justify-end'>
 										<AwardEditPopup data={award} />
 										{!loading ? (
-											<button className='ml-4 mr-2' onClick={onDelete}>
+											<button className='ml-4 mr-2' onClick={()=>{setDeletePopup(true)}}>
 												<BtnDeleteSvg size={30} />
 											</button>
 										) : (
 											<BtnLoader />
 										)}
 									</div>
+									<Modal
+										className="Delete_modal"
+										title='Delete Confirmation'
+										open={deletePopup}
+										onCancel={handleDeletePopup}
+										footer={deleteFooter}>
+											<div> 
+												<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible Are you sure you want to delete ?</p>
+											</div>
+									</Modal>
 								</div>
 								<CustomTable list={award?.awardHistory} />
 							</div>

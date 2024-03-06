@@ -93,6 +93,7 @@ import GetAllTaxes from "./components/Tax/GetAllTaxes.js";
 import CreateSalaryFields from "./components/salary/CreateSalaryFields.js";
 import SalarySheetHistory from "./components/salary/SalarySheetHistory.js";
 import SalarySheet from "./components/salary/SalarySheet.js";
+import AssignAward from "./components/award/AssignAward.js";
 
 function App() {
 	return (
@@ -484,8 +485,9 @@ function App() {
 						<Route element={<UserPrivateRoute permission={"readAll-award"} />}>
 							<Route path='/admin/award/:id' element={<DetailAward />} />
 							<Route path='/admin/award' exact element={<GetAllAward />} />
-						</Route>
-
+							<Route path='/admin/award/assign' exact element={<AssignAward />} />
+						 </Route>
+						
 						{/* === === === Leave Policy Routes === === === */}
 						<Route
 							element={<UserPrivateRoute permission={"readAll-leavePolicy"} />}>

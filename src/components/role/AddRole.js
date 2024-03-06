@@ -1,4 +1,4 @@
-import { Button, Card, Col, Form, Input, Row, Table, Typography } from "antd";
+import { Button, Card, Col, Form, Input, Modal, Row, Table, Typography } from "antd";
 
 import dayjs from "dayjs";
 import React, { Fragment, useEffect, useState } from "react";
@@ -12,9 +12,16 @@ import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { CsvLinkBtn } from "../UI/CsvLinkBtn";
 import BtnDeleteSvg from "../UI/Button/btnDeleteSvg";
 import axios from "axios";
+import DeleteItemPopup from "../UI/PopUp/DeleteItemPopup";
 
 function CustomTable({ list ,onDelete}) {
 	const [columnsToShow, setColumnsToShow] = useState([]);
+
+	const [deletePopup, setDeletePopup] = useState(false)
+    const [seletedItemId, setSelectedId] = useState()
+	const handleDeletePopup=()=>{
+		setDeletePopup(false)
+	}
     const navigate = useNavigate()
 	const columns = [
 		{
@@ -46,10 +53,14 @@ function CustomTable({ list ,onDelete}) {
 				<div style={{display:'flex',float:"left"}}>
 					<UserPrivateComponent permission={"readSingle-role"}>
 						<ViewBtn path={`/admin/role/${id}/`} />
-						<button onClick={()=>onDelete(id)}>
+						<button onClick={()=>{
+							setDeletePopup(true)
+							setSelectedId(id)
+							}}>
 							<BtnDeleteSvg size={20} />
 						</button>
 					</UserPrivateComponent>
+					
 				</div>
 			),
 		},
@@ -65,7 +76,22 @@ function CustomTable({ list ,onDelete}) {
 	
 
 	const addKeys = (arr) => arr.map((i) => ({ ...i, key: i.id }));
-
+	const deleteFooter = (
+        <div>
+             <Button key="customButton" type="default" onClick={()=> {setDeletePopup(false)}}>
+               Cancel
+          </Button>	
+           <Button key="customButton" 
+           type={"primary"} 
+           onClick={()=>{
+			setDeletePopup(false)
+			onDelete(seletedItemId)
+		   }}
+           >
+            Delete
+          </Button>
+        </div>
+      );
 	return (
 		<Card>
 			<div className='text-center my-2 flex justify-between'>
@@ -83,7 +109,7 @@ function CustomTable({ list ,onDelete}) {
 					</div>
 				)}
 			</div>
-
+		
 			{list && (
 				<div style={{ marginBottom: "30px" }}>
 					<ColVisibilityDropdown
@@ -93,7 +119,16 @@ function CustomTable({ list ,onDelete}) {
 					/>
 				</div>
 			)}
-
+	                         <Modal
+							 className="Delete_modal"
+							title='Delete Confirmation'
+							open={deletePopup}
+							onCancel={handleDeletePopup}
+							footer={deleteFooter}>
+								<div> 
+									<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible Are you sure you want to delete ?</p>
+								</div>
+						</Modal>
 			<Table
 				scroll={{ x: true }}
 				loading={!list}

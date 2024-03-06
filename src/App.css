@@ -547,3 +547,69 @@ body {
 .permission_div_wrapper:hover{
 	background-color:rgb(229, 246, 253) ;
 }
+.CompanyDetail{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background-color: #043470;
+	padding:35px 65px;
+
+}
+.CompanyDetail h1{
+	color:#fff;
+	font-weight:bold;
+	font-size: 23px;
+}
+.CompanyDetail h4{
+	color:#fff;
+	font-size: 19px;
+	text-align: left;
+}
+.CompanyDetail p{
+	color:#fff;
+	font-weight: 300;
+	font-size: 11px;
+	text-align: left;
+}
+.payslip_table{
+	width:80%;
+	margin:auto;
+    margin-top:20px
+}
+.payslip_table_last{
+	border:1px solid black;
+	margin-top:40px;
+	border-top: 0px;
+    border-left: 0px;
+    border-right: 0px;
+	width:100%;
+}
+.payslip_table_tr{
+	/* border:1px solid black; */
+}
+.payslip_table_td{
+	text-align:left; 
+	padding:10px;
+	border:1px solid black;
+    align-self: center; 
+	align-content: center;
+    align-items: center;
+}
+.Table_footer{
+	width:80%;
+	height: 200px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin:auto;
+	margin-top:40px;
+	margin-bottom:30px;
+}
+.Pdf_container_div{
+	overflow: visible;
+}
+.Delete_modal .ant-modal-title{
+	color:red;
+	font-weight:500;
+	font-size:17px;
+}

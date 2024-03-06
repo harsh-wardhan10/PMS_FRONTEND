@@ -13,6 +13,7 @@ const initialState = {
     getinitialSalaryHistoryRecordstate:[],
 	salarySheetHistory:[],
 	SalaryHistoryRecordId:[],
+	salaryHistoryRecordUser:[],
 	salaryFileLocation:null
 };
 export const addBulkSalaryFields = createAsyncThunk(
@@ -51,7 +52,7 @@ export const addBulkSalaryFields = createAsyncThunk(
 export const updateSalaryFields = createAsyncThunk(
 	"salaryField/updateSalaryFieldRecord",
 	async (values) => {
-	
+
 		try {
 
 			const { data } = await axios({
@@ -65,15 +66,12 @@ export const updateSalaryFields = createAsyncThunk(
 					data:values,
 				},
 			});
-			// toast.success("Bulk Salary Field Added");
 			return {
 				data,
 				message: "success",
 			};
 		} catch (error) {
-			// toast.error("Salary Field Entries Error");
-			// toast.error("Error in adding Bulk Attendance try again");
-			// console.log(error);
+
 			return {
 				message: error.response.data.message,
 				data: error.response.data.results
@@ -357,6 +355,36 @@ export const getSalaryHistoryRecordById = createAsyncThunk(
 		}
 	}
 );
+export const getSalaryHistoryRecordByUserId = createAsyncThunk(
+	"salary/getSalaryHistoryRecordByUserId",
+	async (values) => {
+		try {
+
+			const { data } = await axios({
+				method: "post",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json;charset=UTF-8",
+				},
+				url: `salary/getSalaryHistoryRecordByUserId`,
+				data: {
+					data:values,
+				},
+			});
+			// toast.success("Bulk Salary list Added");
+			return {
+				data,
+				message: "success",
+			};
+		} catch (error) {
+			// toast.error("Error in Bulk Salary list");
+			return {
+				message: error.response.data.message,
+				data: error.response.data.results
+			};
+		}
+	}
+);
 export const uploadSalarySheetFile = createAsyncThunk(
 	"salary-files/uploadSalarySheetFile",
 	async (formData) => {
@@ -489,6 +517,23 @@ const salaryFieldSlice = createSlice({
 					state.loading = false;
 					state.error = action.payload.message;
 				});	
+
+				     // 7) ====== builders for getSalaryHistoryRecordByUserId ======	
+
+					 builder.addCase(getSalaryHistoryRecordByUserId.pending, (state) => {
+						state.loading = true;
+					});
+	
+					builder.addCase(getSalaryHistoryRecordByUserId.fulfilled, (state, action) => {
+						state.loading = false;
+						// console.log('action.payload',action.payload)
+						state.salaryHistoryRecordUser = action.payload.data.salaryHistoryRecords;
+					});
+	
+					builder.addCase(getSalaryHistoryRecordByUserId.rejected, (state, action) => {
+						state.loading = false;
+						state.error = action.payload.message;
+					});	
 				
 				
 	},

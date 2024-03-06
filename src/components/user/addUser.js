@@ -691,7 +691,61 @@ const AddUser = () => {
 								</Form.Item>
 							</Col>
 						</Row>
-
+						<Row>
+						<Col span={12} className='gutter-row'>
+								<h2 className='text-center text-xl mt-3 mb-3 txt-color'>
+				                          Bank Detail Information
+								</h2>
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='Bank Name'
+									name='bankName'
+									rules={[
+										{
+											required: true,
+											message: "Please input Bank Name",
+										},
+									]}>
+									<Input style={{ width: "100%" }} />
+								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='IFSC Code'
+									name='IFSCcode'
+									rules={[
+										{
+											required: true,
+											message: "Please input ISFC code",
+										},
+									]}>
+									<Input style={{ width: "100%" }} />
+								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='Account Number'
+									name='accountNumber'
+									rules={[
+										{
+											required: true,
+											message: "Please input Account Number",
+										},
+									]}>
+									<Input style={{ width: "100%" }} />
+								</Form.Item>
+								<Form.Item
+									style={{ marginBottom: "10px" }}
+									label='ISIN/Swift'
+									name='ISIN_Swift'
+									rules={[
+										{
+											required: false,
+											message: "Please input ISIN/Swift",
+										},
+									]}>
+									<Input style={{ width: "100%" }} />
+								</Form.Item>
+							</Col>
+						</Row>
 						<h2 className='text-center text-xl mt-3 mb-5 txt-color'>
 							Education Information
 						</h2>

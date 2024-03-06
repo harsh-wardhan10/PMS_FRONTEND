@@ -97,8 +97,8 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
                         //  console.log('item', item)
                         if(item.status==='ACCEPTED' && (acceptDateMonth === oneMonthAgoMonth && acceptDateYear === oneMonthAgoYear)){
                           return `<div key={index}>
-                                    <span>Amount: ${item.approveAmount}</span>
-                                    <span>Date: ${dayjs(item.acceptDate).format('YYYY-MM-DD')}</span>
+                                    <span> ${dayjs(item.acceptDate).format('DD/MM/YYYY')} -</span>
+                                    <span> ₹ ${item.approveAmount}</span>
                                    </div>`
                             // `Amount ${item.approveAmount} on ${dayjs(item.acceptDate)}`;
                         }
@@ -129,8 +129,8 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
                   // console.log('item', item)
                  if(item.status==='ACCEPTED' && (acceptDateMonth === oneMonthAgoMonth && acceptDateYear === oneMonthAgoYear)){
                    return `<div key={index}>
-                            <span>Amount: ${item.approveAmount}</span>
-                            <span>Date: ${dayjs(item.date).format('YYYY-MM-DD')}</span>
+                            <span>${dayjs(item.date).format('DD/MM/YYYY')} -</span>
+                            <span>   ₹ ${item.approveAmount}</span>
                           </div>`
                 //  `Amount ${item.approveAmount} on ${dayjs(item.date)}`;
                  }
@@ -149,7 +149,7 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
 
               const keys = Object.keys(list[0])
               const filteredKeys = keys.filter(key => key !== 'id');
-
+              
               let columnstwo = filteredKeys.map(key => {
 
                  if(key ==='userName'){
@@ -469,61 +469,61 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
             csvData.push(rowData);
         });
 
-          
-      console.log('csvData',csvData)    // Create a new workbook
+       //   Protected CSV File    
+    //   console.log('csvData',csvData)    // Create a new workbook
 
-    // Create a new workbook
-    const workbook = new ExcelJS.Workbook();
+    // // Create a new workbook
+    // const workbook = new ExcelJS.Workbook();
     
-    // Add a worksheet
-    const sheet = workbook.addWorksheet('Sheet1');
+    // // Add a worksheet
+    // const sheet = workbook.addWorksheet('Sheet1');
 
-    // Add headers from the first row of csvData
-    if (csvData.length > 0) {
-      const headers = csvData[0];
-      sheet.addRow(headers);
-    }
+    // // Add headers from the first row of csvData
+    // if (csvData.length > 0) {
+    //   const headers = csvData[0];
+    //   sheet.addRow(headers);
+    // }
 
-    // Add rows from csvData
-    csvData.slice(1).forEach((rowData) => {
-      sheet.addRow(rowData);
-    });
+    // // Add rows from csvData
+    // csvData.slice(1).forEach((rowData) => {
+    //   sheet.addRow(rowData);
+    // });
 
-    // Protect specific columns
-    const protectedColumns = ['Month', 'Year', 'Reimbursement', 'Deductions'];
-    protectedColumns.forEach((columnName) => {
-      const columnIndex = csvData[0].indexOf(columnName);
-      if (columnIndex !== -1) {
-        sheet.getColumn(columnIndex + 1).eachCell((cell, rowNumber) => {
-          // Skip the header row
-          if (rowNumber !== 1) {
-            cell.protection = {
-              locked: true,
-              lockText:true
-            };
-          }
-        });
-      }
-    });
+    // // Protect specific columns
+    // const protectedColumns = ['Month', 'Year', 'Reimbursement', 'Deductions'];
+    // protectedColumns.forEach((columnName) => {
+    //   const columnIndex = csvData[0].indexOf(columnName);
+    //   if (columnIndex !== -1) {
+    //     sheet.getColumn(columnIndex + 1).eachCell((cell, rowNumber) => {
+    //       // Skip the header row
+    //       if (rowNumber !== 1) {
+    //         cell.protection = {
+    //           locked: true,
+    //           lockText:true
+    //         };
+    //       }
+    //     });
+    //   }
+    // });
 
-    // Write the workbook to a buffer
-    workbook.xlsx.writeBuffer()
-      .then((buffer) => {
-        // Create a blob from the buffer
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    // // Write the workbook to a buffer
+    // workbook.xlsx.writeBuffer()
+    //   .then((buffer) => {
+    //     // Create a blob from the buffer
+    //     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         
-        // Create a download link
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'protected_columns.xlsx';
+    //     // Create a download link
+    //     const url = window.URL.createObjectURL(blob);
+    //     const a = document.createElement('a');
+    //     a.href = url;
+    //     a.download = 'protected_columns.xlsx';
         
-        // Trigger a click event to start the download
-        a.click();
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
+    //     // Trigger a click event to start the download
+    //     a.click();
+    //   })
+    //   .catch((error) => {
+    //     console.error('Error:', error);
+    //   });
         
         const config = {
             fields: columnNames.map(column => {
@@ -1165,7 +1165,7 @@ const SalaryList = (props) => {
     const oneMonthAgoYear = oneMonthAgo.year(); // Year
     
     const [currentMonth, setcurrentMonth] =useState(oneMonthAgoMonth+1)
-    const [currentYear , setcurrentYear] = useState(oneMonthAgoYear)
+    const [currentYear, setcurrentYear] = useState(oneMonthAgoYear)
 	useEffect(() => {
 
 		dispatch(loadAllStaff({ status: true }));

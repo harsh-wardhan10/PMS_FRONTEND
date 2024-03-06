@@ -10,11 +10,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { loadAllAward } from "../../redux/rtk/features/award/awardSlice";
 import PageTitle from "../page-header/PageHeader";
 import Loader from "../loader/loader";
+import AssignAwardPopup from "../UI/PopUp/AssignAwardPopup";
+import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
 
 function GetAllAward() {
 	const [columnsToShow, setColumnsToShow] = useState([]);
 	const { list, loading } = useSelector((state) => state.award);
-
+    const users = useSelector((state) => state.users?.list)
 	const columns = [
 		{
 			id: 1,
@@ -60,6 +62,7 @@ function GetAllAward() {
 
 	useEffect(() => {
 		dispatch(loadAllAward());
+		dispatch(loadAllStaff({ status: true }));
 	}, []);
 
 	const columnsToShowHandler = (val) => {
@@ -70,7 +73,7 @@ function GetAllAward() {
 
 	return (
 		<>
-			<PageTitle title='Back' />
+			{/* <PageTitle title='Back' /> */}
 			{!loading ? (
 				<Card className='mt-5'>
 					<div className='text-center my-2 flex justify-between'>
@@ -90,17 +93,6 @@ function GetAllAward() {
 							</div>
 						)}
 					</div>
-
-					{list && (
-						<div style={{ marginBottom: "30px" }}>
-							<ColVisibilityDropdown
-								options={columns}
-								columns={columns}
-								columnsToShowHandler={columnsToShowHandler}
-							/>
-						</div>
-					)}
-
 					<Table
 						scroll={{ x: true }}
 						loading={!list || loading}

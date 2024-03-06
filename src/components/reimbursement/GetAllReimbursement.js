@@ -1,6 +1,6 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useState } from "react";
-import { Segmented, Table, Tag } from "antd";
+import { DatePicker, Segmented, Select, Table, Tag } from "antd";
 import { useEffect } from "react";
 import { CSVLink } from "react-csv";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,6 +18,7 @@ import BtnViewSvg from "../UI/Button/btnViewSvg";
 import ViewBtn from "../Buttons/ViewBtn";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { loadAllReimbursementApplication, loadReimbursementByStatus } from "../../redux/rtk/features/reimbursement/reimbursement";
+import moment from "moment";
 
 function CustomTable({ list }) {
 	const dispatch = useDispatch();
@@ -56,9 +57,9 @@ function CustomTable({ list }) {
 		{
 			id: 5,
 			title: "Reimbursement Date",
-			dataIndex: "date",
-			key: "date",
-			render: (date) => dayjs(date).format("DD-MM-YYYY"),
+			dataIndex: "applyDate",
+			key: "applyDate",
+			render: (applyDate) => dayjs(applyDate).format("DD-MM-YYYY"),
 		},
 
 		{
@@ -117,7 +118,7 @@ function CustomTable({ list }) {
 		<div className='ant-card p-4 rounded mt-5'>
 			<div className='flex my-2 justify-between'>
 				<div className='w-50'>
-					<h4 className='text-2xl mb-2'> Leave Applications</h4>
+					<h4 className='text-2xl mb-2'> Reimbursement Applications</h4>
 				</div>
 				{list && (
 					<div className='flex justify-end mr-4'>
@@ -171,7 +172,7 @@ function CustomTable({ list }) {
 					</div>
 				)}
 			</div>
-			{list && (
+			{/* {list && (
 				<div style={{ marginBottom: "30px" }}>
 					<ColVisibilityDropdown
 						options={columns}
@@ -179,9 +180,9 @@ function CustomTable({ list }) {
 						columnsToShowHandler={columnsToShowHandler}
 					/>
 				</div>
-			)}
+			)} */}
 			<Table
-				className='text-center'
+				className='text-center mt-[65px]'
 				scroll={{ x: true }}
 				loading={!list}
 				pagination={{
@@ -199,7 +200,7 @@ function CustomTable({ list }) {
 		</div>
 	);
 }
-
+const { Option } = Select;
 const GetAllReimbursement = (props) => {
 	const dispatch = useDispatch();
 	const list = useSelector((state) => state.reimbursement.list);
@@ -210,16 +211,66 @@ const GetAllReimbursement = (props) => {
 
 	}, []);
 
-	// useEffect(() => {
-	//   deleteHandler(list, deletedId);
-	// }, [deletedId, list]);
 
+	const uniqueNamesWithIds = Array.from(
+		list.reduce((map, item) => {
+			const userId = item.userId;
+			if (!map.has(userId)) {
+				map.set(userId, {
+					userId,
+					name: `${item?.user?.firstName} ${item?.user?.lastName}`
+				});
+			}
+			return map;
+		}, new Map()).values()
+	);
+
+  const [userId , setuserId] =useState()
+  const [filterData, setfilterData] =useState(list)
+
+  const handleSelectChange = (value) => {
+	setuserId(value);
+	if(value==='selectName'){
+		setfilterData([])
+	}
+	setfilterData(list.filter(item => item.userId === value))
+};
+const handlemonthchange=(value)=>{
+	const year = value.year(); 
+	const month = value.month() + 1;
+	// setcurrentMonth(month)
+	// setcurrentYear(year)
+ }
+ const disabledDate = (current) => {
+	// Disable months beyond the previous month
+	return current && current > moment().endOf('month').subtract(1, 'months');
+  };
+const oneMonthAgo = moment().subtract(1, 'months');
 	return (
 		<UserPrivateComponent permission={"readAll-leaveApplication"}>
 			  {/* {console.log('list',list)} */}
+			      <div className="absolute  z-[999] top-[157px] left-[258px]"> 
+				    <Select
+                            defaultValue="Select Name"
+							placeholder='Select Name'
+                            style={{ width: 200, marginRight: 16 }}
+                            onChange={handleSelectChange}
+                            value={userId}
+                        >
+                            <Option value="selectName">Select All</Option>
+                             {uniqueNamesWithIds.map((item)=>{
+								return  <Option value={item.userId}>{item?.name}</Option>
+							 })}
+                          </Select>
+                </div>
+				<div className="absolute z-[999] top-[157px] left-[453px]"> 
+				      <div className="w-[100%] ml-[15px]"> 
+                          <DatePicker picker="month"  defaultValue={oneMonthAgo} onChange={handlemonthchange} disabledDate={disabledDate}/>
+                      </div>
+                </div>
 			<div className='card card-custom'>
 				<div className='card-body'>
-					<CustomTable list={list} />
+					<CustomTable list={filterData.length > 0 ? filterData :list} />
 				</div>
 			</div>
 		</UserPrivateComponent>
