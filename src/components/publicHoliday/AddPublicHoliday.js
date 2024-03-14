@@ -137,6 +137,7 @@ const AddPublicHoliday = ({ drawer }) => {
 	const onFinish = async (values) => {
        
 		setLoader(true);
+        //   console.log('values',values)
 		const resp = await dispatch(addSinglePublicHoliday(values));
 
 		if (resp.payload.message === "success") {

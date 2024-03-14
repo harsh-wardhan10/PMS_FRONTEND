@@ -558,23 +558,23 @@ body {
 .CompanyDetail h1{
 	color:#fff;
 	font-weight:bold;
-	font-size: 23px;
+	font-size: 35px;
 }
 .CompanyDetail h4{
 	color:#fff;
-	font-size: 19px;
+	font-size: 40px;
 	text-align: left;
 }
 .CompanyDetail p{
 	color:#fff;
 	font-weight: 300;
-	font-size: 11px;
+	font-size: 27px;
 	text-align: left;
 }
 .payslip_table{
-	width:80%;
+	width:95%;
 	margin:auto;
-    margin-top:20px
+    margin-top:45px
 }
 .payslip_table_last{
 	border:1px solid black;
@@ -594,9 +594,11 @@ body {
     align-self: center; 
 	align-content: center;
     align-items: center;
+	font-size:27px;
+	padding:10px;
 }
 .Table_footer{
-	width:80%;
+	width:95%;
 	height: 200px;
 	display: flex;
 	align-items: center;
@@ -612,4 +614,33 @@ body {
 	color:red;
 	font-weight:500;
 	font-size:17px;
+}
+/* .Table_footer{
+	width:70%;
+	margin: auto;
+} */
+.Table_footer_div, .Table_footer_div_two{
+	position: relative;
+	font-size: 27px;
+}
+
+.Table_footer_div::after{
+    content: '';
+    position: absolute;
+    top: 45px;
+    left: 82px;
+    width: 180px;
+    height: 1px;
+    background-color: #000;
+    color: #000;
+}
+.Table_footer_div_two::after{
+    content: '';
+    position: absolute;
+    top: 45px;
+    left: 112px;
+    width: 180px;
+    height: 1px;
+    background-color: #000;
+    color: #000;
 }

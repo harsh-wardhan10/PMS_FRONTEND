@@ -1,4 +1,4 @@
-import { Button, Card, Col, Form, Input, Row, Select, Tag, Typography } from "antd";
+import { Button, Card, Col, Form, Input, InputNumber, Row, Select, Tag, Typography } from "antd";
 import { toast } from "react-toastify";
 import getSetting from "../../api/getSettings";
 
@@ -12,6 +12,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { uploadCompanyFile } from "../../redux/rtk/features/settings/settingSlice";
 import { useDispatch } from "react-redux";
 //Update Invoice API REQ
+import currencyCodes from 'currency-codes';
 
 const updateInvoice = async (values) => {
 	try {
@@ -68,6 +69,7 @@ const AddDetails = () => {
     };
 
 
+	
 	const onFinish = async (values) => {
 		try{
 		
@@ -77,16 +79,16 @@ const AddDetails = () => {
 		const seletedStatearr=allStates.filter(item => item.isoCode ===seletedState)
         const seletedStatefinal= seletedStatearr[0]?.name
 
-		const seletedcityarr=allCities.filter(item => item.isoCode ===seletedCity)
+		const seletedcityarr=allCities.filter(item => item.name ===seletedCity)
         const seletedCityfinal= seletedcityarr[0]?.name
 
-		const data={
-			 ...values,
-			 location: `${selectedCountryfinal} , ${seletedStatefinal},${seletedCityfinal}`,
-			 attachment:`${values.company_name}_${selectedFile.name}`
-		}
-	
 
+              if(selectedFile){
+					const data={
+						...values,
+						location: `${selectedCountryfinal} , ${seletedStatefinal},${seletedCityfinal}`,
+						attachment:`${values.company_name}_${selectedFile.name}`
+					}
 				const selectedFileName = selectedFile.name; // Get the current file name
 
 				// Modify the file name
@@ -99,15 +101,32 @@ const AddDetails = () => {
 			});
 				const formData = new FormData();
 				formData.append("files", modifiedFile); 
-			
-				dispatch(uploadCompanyFile(formData))
-			     const resp = await updateInvoice(data);
-			if (resp === "success") {
-				toast.success("Invoice Updated Successfully");
-				setInitValues({});
-				setLoader(false);
-				form.resetFields();
-			}
+			//   console.log('data',data)
+							dispatch(uploadCompanyFile(formData))
+						     const resp = await updateInvoice(data);
+						if (resp === "success") {
+							toast.success("Invoice Updated Successfully");
+							setInitValues({});
+							setLoader(false);
+							form.resetFields();
+						}
+			  }
+			  else{
+				const data={
+					...values,
+					location: `${selectedCountryfinal} , ${seletedStatefinal},${seletedCityfinal}`,
+					attachment:''
+				}
+		//   console.log('data',data)
+							     const resp = await updateInvoice(data);
+							if (resp === "success") {
+								toast.success("Invoice Updated Successfully");
+								setInitValues({});
+								setLoader(false);
+								form.resetFields();
+							}
+			  }
+		
 		} catch (error) {
 			console.log(error.message);
 		}
@@ -128,9 +147,9 @@ const onSearch = (value) => {
 	const filterOption = (input, option) =>
 	(option?.label ?? '').toLowerCase().includes(input.toLowerCase());
   
-	const onClickLoading = () => {
-		setLoader(true);
-	};
+	// const onClickLoading = () => {
+	// 	setLoader(true);
+	// };
 	useEffect(() => {
 		getSetting().then((data) => setInitValues(data.result));
 		setAllcountries(Country.getAllCountries())
@@ -194,7 +213,8 @@ const onSearch = (value) => {
 												required: true,
 												message: "Please input Tagline!",
 											},
-										]}>
+										]}
+										autoComplete={false} >
 										<Input />
 									</Form.Item>
 
@@ -204,7 +224,7 @@ const onSearch = (value) => {
 										name='location'
 										rules={[
 											{
-												required: false,
+												required: true,
 												message: "Please input location!",
 											},
 										]}>
@@ -212,12 +232,16 @@ const onSearch = (value) => {
 										<Select
 										    showSearch
                                             // defaultValue="Select Country"
+											autoComplete={false} 
                                             placeholder='Select Country'
                                             style={{ width: 200, marginRight: 16 }}
                                             onChange={(value)=>{
 												setSelectedCountry(value)
 												setallStates(State.getStatesOfCountry(value))
-											    setstatecheck(true)
+												if(State.getStatesOfCountry(value).length>0){
+													setstatecheck(true)
+												}
+											  
 											}}
 												
                                             value={seletedCountry}
@@ -230,12 +254,15 @@ const onSearch = (value) => {
 										  {stateCheck &&  <Select
 										    showSearch
                                             // defaultValue="Select State"
+											autoComplete={false} 
                                             placeholder='Select State'
                                             style={{ width: 200, marginRight: 16 }}
                                             onChange={(value)=>{
 												setseletedState(value)
 										        setallCities(City.getCitiesOfState(seletedCountry, value))
-												setcityCheck(true)
+												if(City.getCitiesOfState(seletedCountry, value).length>0){
+													setcityCheck(true)
+												}
 											}}
                                             value={seletedState}
 											onSearch={onSearch}
@@ -249,6 +276,7 @@ const onSearch = (value) => {
 										  <Select
 										    showSearch
                                             // defaultValue="Select State"
+											autoComplete={false} 
                                             placeholder='Select City'
                                             style={{ width: 200, marginRight: 16 }}
                                             onChange={(value)=>{setseletedCity(value)}}
@@ -257,13 +285,11 @@ const onSearch = (value) => {
                                            >
 											{/* {console.log('allCities',allCities)} */}
 										 	{allCities ? allCities?.map((item)=>{
-													return  <Option  value={item.isoCode}>{item?.name}</Option>
+													return  <Option  value={item.name}>{item?.name}</Option>
 												}) :null}
                                           </Select> }
 											</div>	
-											<div> 
-									  
-											</div>
+								
 									</Form.Item>
 									<Form.Item
 												style={{ marginBottom: "10px" }}
@@ -300,10 +326,49 @@ const onSearch = (value) => {
 												required: true,
 												message: "Please input Email Address!",
 											},
+											{
+												type: 'email',
+												message: 'Please enter a valid email address!',
+											  },
 										]}>
-										<Input />
+										<Input type="email"/>
 									</Form.Item>
-
+									<Form.Item
+										style={{ marginBottom: "10px" }}
+										label='Tax Number'
+										name='taxNumber'
+										rules={[
+											{
+												required: true,
+												message: "Please input Tax Number!",
+											},
+										]}>
+										<InputNumber style={{width:"100%"}}/>
+							     	</Form.Item>
+									 <Form.Item
+										style={{ marginBottom: "10px" }}
+										label='Select Currency'
+										name='currency'
+										rules={[
+											{
+												required: true,
+												message: "Please input Tax Number!",
+											},
+										]}>
+									 <Select
+										    showSearch
+                                            defaultValue="Select Currency"
+                                            placeholder='Select Currency'
+                                            style={{ width: 200, marginRight: 16 }}
+                                            onChange={(value)=>{}}
+											onSearch={onSearch}
+                                           >
+										 	{currencyCodes?.data?.map((currency)=>{
+													return  <Option  value={currency.code}>{currency.currency} - {currency.code}</Option>
+												})}
+												{/* {console.log('currencyCodes',currencyCodes)} */}
+                                          </Select>
+                                       </Form.Item>
 									<Form.Item
 										style={{ marginBottom: "10px" }}
 										label='Website'
@@ -313,6 +378,7 @@ const onSearch = (value) => {
 												required: true,
 												message: "Please input Website!",
 											},
+										
 										]}>
 										<Input />
 									</Form.Item>
@@ -363,7 +429,8 @@ const onSearch = (value) => {
 											shape='round'
 											size='large'
 											loading={loader}
-											onClick={onClickLoading}>
+											// onClick={onClickLoading}
+											>
 											Update Details
 										</Button>
 									</Form.Item>

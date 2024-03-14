@@ -39,7 +39,7 @@ const DeleteItemPopup = ({deletePopup, setDeletePopup, isDeleteValue, seisDelete
 				onOk={handleOk}
 				onCancel={handleCancel}>
                      <div> 
-                         <p> “This will permanently delete the selected option .This action is irreversible Are you sure you want to delete ?“</p>
+                         <p> “This will permanently delete the selected option .This action is irreversible. Are you sure you want to delete ?“</p>
                           <button onClick={()=>seisDeleteValue(false)}> Cancel</button>
                           <button onClick={()=>{
                             seisDeleteValue(true)

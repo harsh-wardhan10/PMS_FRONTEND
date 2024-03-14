@@ -155,7 +155,7 @@ const AddLeavePolicy = ({ drawer }) => {
 		};
 	
 		// setLoader(true);
-		// console.log('FormData',FormData)
+		console.log('FormData',FormData)
 		const resp = await dispatch(addSingleLeavePolicy(FormData));
 
 		if (resp.payload.message === "success") {

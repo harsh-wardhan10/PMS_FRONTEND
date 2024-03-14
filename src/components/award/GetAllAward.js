@@ -10,7 +10,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { loadAllAward } from "../../redux/rtk/features/award/awardSlice";
 import PageTitle from "../page-header/PageHeader";
 import Loader from "../loader/loader";
-import AssignAwardPopup from "../UI/PopUp/AssignAwardPopup";
 import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
 
 function GetAllAward() {

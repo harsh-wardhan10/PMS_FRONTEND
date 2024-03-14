@@ -22,6 +22,7 @@ const PublicHolidayEdit = ({ data }) => {
 
 	const onFinish = async (values) => {
 		setLoader(true);
+		// console.log('values',values)
 		const resp = await dispatch(updatePublicHoliday({ id, values }));
 
 		if (resp.payload.message === "success") {

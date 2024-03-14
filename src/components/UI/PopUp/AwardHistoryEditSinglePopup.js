@@ -1,6 +1,6 @@
 import { Button, DatePicker, Form, Input, Modal, Select } from "antd";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -8,12 +8,14 @@ import { loadSingleStaff } from "../../../redux/rtk/features/user/userSlice";
 import BtnEditSvg from "../Button/btnEditSvg";
 import { updateAwardHistory } from "../../../redux/rtk/features/awardHistory/awardHistorySlice";
 import moment from "moment";
+import { loadAllAward, loadSingleAward } from "../../../redux/rtk/features/award/awardSlice";
 
 const AwardHistoryEditSinglePopup = ({ data, setLoading }) => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [awardedDate, setawardedDate] = useState(
 		dayjs(data?.startDate).format("YYYY-MM-DD")
 	);
+	const { list, loading } = useSelector((state) => state.award);
 	const [, set] = useState(dayjs(data?.endDate).format("YYYY-MM-DD"));
 	const [loader, setLoader] = useState(false);
 	const [comment, setcomment] = useState("");
@@ -22,38 +24,47 @@ const AwardHistoryEditSinglePopup = ({ data, setLoading }) => {
 	const dispatch = useDispatch();
 	const designations = useSelector((state) => state.designations.list);
 	const [awardId, setawardId] = useState(data?.designation?.awardId);
+    let currentDesignation=list?.filter(item=> item.id === data?.awardId)
+
 
 	const [initialValues, setInitialValues] = useState({
-		awardId: data?.awardId || "",
-		awardedDate: dayjs(data?.startDate),
-		comment: data?.comment,
+		awardId: currentDesignation[0]?.name?currentDesignation[0]?.name:'',
+		awardedDate: data?.awardedDate? moment(data?.awardedDate):'',
+		comment: data?.comment?data?.comment:"",
 	});
+    useEffect(()=>{
+		dispatch(loadAllAward());
+	},[])
 
+
+	
 	const onFinish = async (values) => {
-		setLoading(true);
-		const id = data.id || "";
-		setLoader(true);
+		// setLoading(true);
+		const id = data.id
+		// setLoader(true);
+		// console.log('values', values)
 		const infodata = {
 			...values,
 			awardId: awardId,
-			comment: comment || "",
+			comment: values.comment || "",
 			awardedDate: awardedDate,
 		};
 
 		const resp = await dispatch(updateAwardHistory({ id, infodata }));
-
-		if (resp.message === "success") {
+          console.log('resp',resp)
+		if (resp.payload.message === "success") {
 			setLoader(false);
-			dispatch(loadSingleStaff(user_id.id));
+			setIsModalOpen(false);
+			// dispatch(loadSingleStaff(user_id.id));
 			setInitialValues({});
 			setawardId("");
 			setcomment("");
 			setawardedDate();
 			set();
-
-			setIsModalOpen(false);
+            dispatch(loadSingleAward(id));
+	
 			setLoading(false);
-			window.location.reload();
+			// window.location.reload();
 		} else {
 			setLoading(false);
 			setLoader(false);
@@ -83,8 +94,7 @@ const AwardHistoryEditSinglePopup = ({ data, setLoading }) => {
 		setawardedDate();
 		set();
 		setIsModalOpen(false);
-		setLoader(false);
-		setLoading(false);
+
 	};
 
 	return (
@@ -95,8 +105,9 @@ const AwardHistoryEditSinglePopup = ({ data, setLoading }) => {
 			<Modal
 				title={`Edit Designation ${data?.id}`}
 				open={isModalOpen}
-				onOk={handleOk}
-				onCancel={handleCancel}>
+				// onOk={handleOk}
+				onCancel={handleCancel}
+				footer={false}>
 				<Form
 					style={{ marginBottom: "100px" }}
 					eventKey='design-form'
@@ -114,7 +125,7 @@ const AwardHistoryEditSinglePopup = ({ data, setLoading }) => {
 					<div>
 						<Form.Item
 							style={{ marginBottom: "10px" }}
-							label='Designation'
+							label='Award Type'
 							name='awardId'
 							rules={[
 								{
@@ -122,10 +133,13 @@ const AwardHistoryEditSinglePopup = ({ data, setLoading }) => {
 									message: "Please input your Designation!",
 								},
 							]}>
+							
 							<Select
-								placeholder='Select Designation'
+							    defaultValue={initialValues?.awardId}
+								placeholder='Select Award Type'
+								allowClear
 								onChange={(value) => setawardId(value)}>
-								{designations?.map((item) => (
+								{list?.map((item) => (
 									<Select.Option key={item.id} value={item.id}>
 										{item.name || ""}
 									</Select.Option>
@@ -135,7 +149,7 @@ const AwardHistoryEditSinglePopup = ({ data, setLoading }) => {
 
 						<Form.Item
 							style={{ marginBottom: "10px" }}
-							label='Start Date'
+							label='Award Month'
 							name='awardedDate'
 							rules={[
 								{
@@ -143,10 +157,12 @@ const AwardHistoryEditSinglePopup = ({ data, setLoading }) => {
 									message: "Please input your start date!",
 								},
 							]}>
+                            {/* <DatePicker   defaultValue={oneMonthAgo} onChange={handlemonthchange} disabledDate={disabledDate}/> */}
 							<DatePicker
+							    picker="month"
 								name='awardedDate'
-								format='YYYY-MM-DD'
-								onChange={(date) => setawardedDate(moment(date).format("ddd, DD MMM YYYY HH:mm:ss [GMT]"))}
+								// format='YYYY-MM-DD'
+								onChange={(date) => setawardedDate(moment(date))}
 							/>
 						</Form.Item>
 

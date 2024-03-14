@@ -164,7 +164,34 @@ export const updateUser = createAsyncThunk(
 		}
 	}
 );
+export const updateUtilizeLeaveUser = createAsyncThunk(
+	"leave/updateUtilizeLeaveUser",
+	async ({ id,leaveType,initialState, values }) => {
+		try {
+			const { data } = await axios({
+				method: "put",
 
+				url: `user/updateLeaveStatus/${id}`,
+				data: {
+					...values,
+					leaveType,
+					initialState
+				},
+			});
+			toast.success("Leave Updated");
+			return {
+				data,
+				message: "success",
+			};
+		} catch (error) {
+			toast.error("Error in updating Leave try again");
+			console.log(error.message);
+			return {
+				message: "error",
+			};
+		}
+	}
+);
 const userSlice = createSlice({
 	name: "user",
 	initialState,

@@ -42,7 +42,7 @@ export const deleteAward = createAsyncThunk(
 	async (id) => {
 		try {
 			const resp = await axios({
-				method: "patch",
+				method: "delete",
 				headers: {
 					Accept: "application/json",
 					"Content-Type": "application/json;charset=UTF-8",

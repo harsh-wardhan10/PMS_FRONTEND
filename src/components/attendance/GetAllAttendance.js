@@ -1,6 +1,6 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Card, DatePicker, Segmented, Table, Tag ,Button, Modal, Checkbox, Form} from "antd";
+import { Card, DatePicker, Segmented, Table, Tag ,Button, Modal, Checkbox, Form, Tooltip} from "antd";
 import dayjs from "dayjs";
 import { useEffect, useRef, useState } from "react";
 import { CSVLink } from "react-csv";
@@ -39,7 +39,7 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 	const users = useSelector((state) => state.users?.list);
 	const publicHolidayList = useSelector((state) => state.publicHoliday);
 	const [sampleData, setSampleData] = useState([])
-  
+    const { attendanceList } = useSelector(state=> state.attendanceList)
 	const handleOk = () => {
 	  setIsModalOpen(false);
 	  setDropZone(false)
@@ -63,8 +63,206 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 			})
 		);
 	};
-	
-    
+
+	const handleToolTipContent =  (data, record) => {
+        // console.log('attendanceList',attendanceList)
+		// let tooltipContent = '';
+           if(data?.data?.length>0){
+			return data?.data?.map((item)=>{
+				const date = new Date(item.date);
+					const options = { day: '2-digit', month: 'short', year: 'numeric' };
+					const formattedDate = date.toLocaleDateString('en-US', options);
+				  return `<div key={index}>
+							<p> HalfDay On - ${formattedDate}</p>
+						 </div>`
+			}).join(' ')
+		   }
+	    else{
+			return "No HalfDays"
+		}
+     }
+	 const tooltipLongBreaks=(data, record)=> {
+		if(data?.data?.length>0){
+			return data?.data?.map((item)=>{
+				const date = new Date(item.date);
+					const options = { day: '2-digit', month: 'short', year: 'numeric' };
+					const formattedDate = date.toLocaleDateString('en-US', options);
+				  return `<div key={index}>
+							<p> Long Breaks On - ${formattedDate}</p>
+						 </div>`
+			}).join(' ')
+		   }
+	    else{
+			return "No Long Breaks"
+		}
+	 }
+	 const tooltipLateComings=(data, record)=>{
+		if(data?.data?.length>0){
+			return data?.data?.map((item)=>{
+				const date = new Date(item.date);
+					const options = { day: '2-digit', month: 'short', year: 'numeric' };
+					const formattedDate = date.toLocaleDateString('en-US', options);
+				  return `<div key={index}>
+							<p> Late Comings On - ${formattedDate}</p>
+						 </div>`
+			}).join(' ')
+		   }
+	    else{
+			return "No Late Comings"
+		}
+	 }
+    const tooltipAbsenties=(data, record)=>{
+		// console.log('data', data?.data[0])
+		if(data?.data[0]?.length>0){
+			return data?.data[0]?.map(item=>{
+			  if(item.date){
+					const date = new Date(item?.date);
+					const options = { day: '2-digit', month: 'short', year: 'numeric' };
+					const formattedDate = date.toLocaleDateString('en-US', options);
+					return `<div key={index}>
+					<p> Absent On - ${formattedDate}</p>
+					</div>`
+			  }	
+				else{
+					// return `Absent on -${item}`
+				}
+			  }).join(' ')
+		   }
+	    else{
+			return "No Absenties"
+		}
+	}
+	const tooltiptotalUnPaidleaves=(data, record)=>{
+		//  console.log('data', data)
+		if(data?.data?.length>0){
+			return data?.data?.map((item)=>{
+				const date = new Date(item.date);
+					const options = { day: '2-digit', month: 'short', year: 'numeric' };
+					const formattedDate = date.toLocaleDateString('en-US', options);
+					if(item.date){
+						return `<div key={index}>
+					            	<p> Unpaid Leaves On - ${formattedDate}</p>
+					           </div>`
+					}
+					else{
+						return `<div key={index}>
+						         <p> Unpaid Leaves On - ${item}</p>
+					          </div>`
+					}
+				  
+			}).join(' ')
+		   }
+	    else{
+			return "No UnPaid Leaves"
+		}
+	}
+  const tooltiptotalPaidleaves=(data, record)=>{
+	if(data?.data?.length>0){
+		return data?.data?.map((item)=>{
+			const date = new Date(item.date);
+				const options = { day: '2-digit', month: 'short', year: 'numeric' };
+				const formattedDate = date.toLocaleDateString('en-US', options);
+				if(item.date){
+					return `<div key={index}>
+								<p> Paid Leaves On - ${formattedDate}</p>
+						   </div>`
+				}
+				else{
+					return `<div key={index}>
+							 <p> Paid Leaves On - ${item}</p>
+						  </div>`
+				}
+			  
+		}).join(' ')
+	   }
+	else{
+		return "No Paid Leaves"
+	}
+  }
+  const tooltipCausalleaves=(data, record)=>{
+	if(data?.data?.length>0){
+		return data?.data?.map((item)=>{
+			if(item.date){
+			const date = new Date(item.date);
+				const options = { day: '2-digit', month: 'short', year: 'numeric' };
+				const formattedDate = date.toLocaleDateString('en-US', options);
+				if(item.date){
+					return `<div key={index}>
+								<p> Causal Leaves On - ${formattedDate}</p>
+						   </div>`
+				}
+				else{
+					return `<div key={index}>
+							 <p> Causal Leaves On - ${item}</p>
+						  </div>`
+				}
+			} else{
+				const date = new Date(item.acceptLeaveFrom);
+				const options = { day: '2-digit', month: 'short', year: 'numeric' };
+				const formattedDate = date.toLocaleDateString('en-US', options);
+				// console.log('formattedDate',formattedDate,'date',date)
+				if(item.acceptLeaveFrom){
+					return `<div key={index}>
+								<p> Causal Leaves On - ${formattedDate}</p>
+						   </div>`
+				}
+				else{
+					return `<div key={index}>
+							 <p> Causal Leaves On - ${item}</p>
+						  </div>`
+				}
+			}
+			  
+		}).join(' ')
+	   }
+	else{
+		return "No Causal Leaves"
+	}
+  }
+  const tooltipSickleaves=(data, record)=>{
+	//  console.log('data',data)
+	if(data?.data?.length>0){
+		return data?.data?.map((item)=>{
+			if(item.date){
+				const date = new Date(item.date);
+				const options = { day: '2-digit', month: 'short', year: 'numeric' };
+				const formattedDate = date.toLocaleDateString('en-US', options);
+				
+				if(item.date){
+					return `<div key={index}>
+								<p> Sick Leaves On - ${formattedDate}</p>
+						   </div>`
+				}
+				else{
+					return `<div key={index}>
+							 <p> Sick Leaves On - ${item}</p>
+						  </div>`
+				}
+			} 
+			else{
+				const date = new Date(item.acceptLeaveFrom);
+				const options = { day: '2-digit', month: 'short', year: 'numeric' };
+				const formattedDate = date.toLocaleDateString('en-US', options);
+				// console.log('formattedDate',formattedDate,'date',date)
+				if(item.acceptLeaveFrom){
+					return `<div key={index}>
+								<p> Sick Leaves On - ${formattedDate}</p>
+						   </div>`
+				}
+				else{
+					return `<div key={index}>
+							 <p> Sick Leaves On - ${item}</p>
+						  </div>`
+				}
+			}
+		
+		}).join(' ')
+	   }
+	else{
+		return "No Sick Leaves"
+	}
+  }
+
 	const columns = [
 		{
 			id: 10,
@@ -85,52 +283,110 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 			title: "Sick Leaves",
 			dataIndex: "totalSickLeaves",
 			key: "totalSickLeaves",
-			render: (totalSickLeaves) => `${totalSickLeaves}`,
+			render: (totalSickLeaves, record) => <Tooltip title={()=>{
+				const tooltipContent=tooltipSickleaves(totalSickLeaves, record)
+			        return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+			     }}>
+						 {totalSickLeaves.count}
+				  </Tooltip>,
+		},
+		{
+			id: 2,
+			title: "Causal Leaves",
+			dataIndex: "totalCausalLeaves",
+			key: "totalCausalLeaves",
+			render: (totalCausalLeaves, record) => <Tooltip title={()=>{
+				const tooltipContent=tooltipCausalleaves(totalCausalLeaves, record)
+			        return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+			     }}>
+						 {totalCausalLeaves.count}
+				  </Tooltip>,
 		},
 		{
 			id: 4,
 			title: "Paid Leaves",
 			dataIndex: "totalPaidLeaves",
 			key: "totalPaidLeaves",
-			render: (totalPaidLeaves) => `${totalPaidLeaves}`,
+			render: (totalPaidLeaves, record) => <Tooltip title={()=>{
+				const tooltipContent=tooltiptotalPaidleaves(totalPaidLeaves, record)
+			        return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+			     }}>
+						 {totalPaidLeaves.count}
+				  </Tooltip>
 		},
 		{
 			id: 5,
 			title: "UnPaid Leaves",
 			dataIndex: "totalUnPaidLeaves",
 			key: "totalUnPaidLeaves",
-			render: (totalUnPaidLeaves) => `${totalUnPaidLeaves}`,
+			render: (totalUnPaidLeaves,record) => <Tooltip title={()=>{
+				const tooltipContent=tooltiptotalUnPaidleaves(totalUnPaidLeaves, record)
+			        return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+			     }}>
+						 {totalUnPaidLeaves.count}
+				  </Tooltip>,
+		},
+		{
+			id: 5,
+			title: "UnInformed Leaves",
+			dataIndex: "totalUninformedLeaves",
+			key: "totalUninformedLeaves",
+			render: (totalUninformedLeaves,record) => <Tooltip title={()=>{
+				const tooltipContent=tooltiptotalUnPaidleaves(totalUninformedLeaves, record)
+			        return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+			     }}>
+						 {totalUninformedLeaves.count}
+				  </Tooltip>,
 		},
 		{
 			id: 6,
 			title: "Absentees",
 			dataIndex: "totalAbsenties",
 			key: "totalAbsenties",
-			render: (totalAbsenties) => `${totalAbsenties}`,
+			render: (totalAbsenties,record) => <Tooltip title={()=>{
+				const tooltipContent=tooltipAbsenties(totalAbsenties, record)
+			        return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+			     }}>
+						 {totalAbsenties.count}
+				  </Tooltip>,
 		},
 		{
 			id: 7,
 			title: "Half Days",
 			dataIndex: `totalHalfDays`,
 			key: "totalHalfDays",
-			render: (totalHalfDays) => `${totalHalfDays}`
-				// dayjs(street).format("MM-DD-YYYY, h:mm A") || "NONE",
+			render: (totalHalfDays , record) => 
+			  <Tooltip title={()=>{
+				const tooltipContent=handleToolTipContent(totalHalfDays, record)
+			        return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+			     }}>
+						 {totalHalfDays.count}
+				  </Tooltip>
 		},
 		{
 			id: 8,
 			title: "Long Breaks",
 			dataIndex: `totalLongBreaks`,
 			key: "totalLongBreaks",
-			render: (totalLongBreaks) => `${totalLongBreaks}`
-				// dayjs(street).format("MM-DD-YYYY, h:mm A") || "NONE",
+			render: (totalLongBreaks , record) =>  <Tooltip title={()=>{
+				const tooltipContent=tooltipLongBreaks(totalLongBreaks, record)
+			        return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+			     }}>
+						 {totalLongBreaks.count}
+				  </Tooltip>
+				
 		},
 		{
 			id: 9,
 			title: "Late Coming",
 			dataIndex: `totalLateComings`,
 			key: "totalLateComings",
-			render: (totalLateComings) => `${totalLateComings}`
-				// dayjs(street).format("MM-DD-YYYY, h:mm A") || "NONE",
+			render: (totalLateComings, record) =><Tooltip title={()=>{
+				const tooltipContent=tooltipLateComings(totalLateComings, record)
+			        return <span dangerouslySetInnerHTML={{ __html: tooltipContent }} />
+			     }}>
+						 {totalLateComings.count}
+				  </Tooltip>
 		},
 		{
 			id: 10,
@@ -585,7 +841,6 @@ const processData = (data) => {
 					>
 				    {dropZone ? <>
 						{dropZoneContent}
-					 
 					</>  : 
 					<div className="modal-content">
 					{/* File Input with Drag and Drop */}
@@ -600,7 +855,7 @@ const processData = (data) => {
 						className="drop-zone"
 						onDragOver={(e) => handleDragOver(e)}
 						onDrop={(e) => handleDrop(e)}
-					>
+					   >
 						Drag & Drop 
 					</div>
 					<button className="mt-[15px] ant-btn ant-btn-primary ant-btn-md ant-btn-block" onClick={() => fileInputRef.current.click()}> Or  Choose File</button>
@@ -725,7 +980,6 @@ const GetAllAttendance = (props) => {
 	
 		dispatch(loadAllbulkAttendance())
 		dispatch(loadAllPublicHoliday());
-
 		
 	}, [refresh , props.load]);
   
@@ -831,14 +1085,15 @@ const GetAllAttendance = (props) => {
 		const { emailId, data, leaveApplication } = entry;
 
 	    //    console.log('leaveApplication',leaveApplication,'data',data)
-		let totalAbsenties = 0;
-		let totalLateComings = 0;
-		let totalLongBreaks=0;
-		let totalHalfDays = 0;
-		let totalSickLeaves=0;
-		let totalCausalLeaves=0;
-		let totalPaidLeaves=0;
-		let totalUnPaidLeaves=0;
+		let totalAbsenties = { count:0 , data:[]};
+		let totalLateComings = { count:0 , data:[]};
+		let totalLongBreaks={ count:0 , data:[]};
+		let totalHalfDays = { count:0 , data:[]};
+		let totalSickLeaves={ count:0 , data:[]};
+		let totalCausalLeaves={ count:0 , data:[]};
+		let totalPaidLeaves={ count:0 , data:[]};
+		let totalUnPaidLeaves={ count:0 , data:[]};
+		let totalUninformedLeaves={ count:0 , data:[]}
 		let totalPaidLeavesX=0
 		// Create an array of all dates within the specified range, excluding Saturdays and Sundays
 		
@@ -905,13 +1160,16 @@ const GetAllAttendance = (props) => {
 	          
 		
 		  
-		   // Calculate totalUnpaidLeaves
-				allDates.forEach(date => {
-					const dateExists = data.some(item => item.date === date);
-					if (!dateExists) {
-						totalUnPaidLeaves+=1;
-					}
-				});
+		       // Calculate totalUnpaidLeaves
+			   allDates.forEach(date => {
+
+				const dateExists = data.some(item => item.date === date);
+
+				if (!dateExists) {
+					totalUnPaidLeaves.count += 1;
+					totalUnPaidLeaves.data?.push(date)
+				}
+			});
 				            
 				const remainingDates = allDates.filter(date => !data.some(item => item.date === date));
 				data.forEach(item => {
@@ -919,7 +1177,14 @@ const GetAllAttendance = (props) => {
 						// Date matches, check status
 						if (item.status ==='Uninformed' || item.status==='UnApproved leave' || item.status==='sickLeave(UnPaid)' || item.status==="causalLeave(UnPaid)") {
 							// Do something based on the status
-							totalUnPaidLeaves+=1;
+							if(item.leaveFor==='halfDay'){
+								totalUnPaidLeaves.count+=0.5;
+								totalUnPaidLeaves?.data?.push(item)
+							}
+							else{
+								totalUnPaidLeaves.count+=1
+								totalUnPaidLeaves?.data?.push(item)
+							}
 						}
 					}
 				});
@@ -929,8 +1194,15 @@ const GetAllAttendance = (props) => {
 					if (allDates.includes(item.date)) {
 						// Date matches, check status
 						if (item.status==='sickLeave(Paid)' || item.status==="causalLeave(Paid)") {
+							if(item.leaveFor==='halfDay'){
+								totalPaidLeaves.count+=0.5;
+								totalPaidLeaves?.data?.push(item)
+							}
+							else{
+								totalPaidLeaves.count+=1;
+								totalPaidLeaves?.data?.push(item)
+							}
 							// Do something based on the status
-							totalPaidLeaves+=1;
 						}
 					}
 				});
@@ -945,35 +1217,72 @@ const GetAllAttendance = (props) => {
 							currentDate.setHours(0, 0, 0, 0)
 							leaveFrom.setHours(0, 0, 0, 0);
 							leaveTo.setHours(0, 0, 0, 0);
-
-						if (currentDate >= leaveFrom && currentDate <= leaveTo && item.status === "ACCEPTED" && item.paidOrUnpaid==='Paid') {
-							totalPaidLeaves+=1;
-							totalPaidLeavesX+=1;
-						}
-						else if(currentDate >= leaveFrom && currentDate <= leaveTo && item.status === "ACCEPTED" && item.paidOrUnpaid==='UnPaid'){
-							totalUnPaidLeaves+=1
-						}
-
+								if(item.leaveFor==='halfDay'){
+								// console.log( item.leaveType,item.status,currentDate, leaveFrom)
+								 if (currentDate.getTime() === leaveFrom.getTime() && item.status === "ACCEPTED" && item.leaveType==='Paid') {
+										totalPaidLeaves.count+=.5
+										totalPaidLeaves?.data?.push(item)
+										totalPaidLeavesX+=.5;
+						    	}
+								else if(currentDate.getTime() === leaveFrom.getTime() && item.status === "ACCEPTED" && item.paidOrUnpaid==='UnPaid'){
+									totalUnPaidLeaves.count+=.5
+									totalUnPaidLeaves?.data?.push(item)
+						     	}
+								}
+							else{
+									if (currentDate >= leaveFrom && currentDate <= leaveTo && item.status === "ACCEPTED" && item.leaveType==='Paid') {
+										totalPaidLeaves.count+=1;
+										totalPaidLeaves?.data?.push(item)
+										totalPaidLeavesX+=1;
+									}
+									else if(currentDate >= leaveFrom && currentDate <= leaveTo && item.status === "ACCEPTED" && item.paidOrUnpaid==='UnPaid'){
+										totalUnPaidLeaves.count+=1
+										totalUnPaidLeaves?.data?.push(item)
+								}
+							}
 					});
 				});
                
-
-
              
-		    //  Calculate totalSickleaves
-			
-			
+		    //  Calculate totalSickleaves		
 			data.forEach(item => {
 				if (allDates.includes(item.date)) {
 					// Date matches, check status
 					if (item.status==='sickLeave(Paid)' || item.status==='sickLeave(UnPaid)') {
-						// Do something based on the status
-						totalSickLeaves+=1;
+						if(item.leaveFor==='halfDay'){
+							totalSickLeaves.count+=0.5;
+							totalSickLeaves?.data?.push(item)
+						}
+						else{
+							totalSickLeaves.count+=1
+							totalSickLeaves?.data?.push(item)
+						}
 					}
 				}
 			});
+			
 
-             //    console.log('leaveApplication',leaveApplication)
+
+          //  Calculate Uninformed		
+			data.forEach(item => {
+				if (allDates.includes(item.date)) {
+					// Date matches, check status
+					if (item.status==='Uninformed') {
+						// Do something based on the status
+						if(item.leaveFor==='halfDay'){
+							totalUninformedLeaves.count+=0.5;
+							totalUninformedLeaves?.data?.push(item)
+						}
+						// Do something based on the status
+						else{
+							totalUninformedLeaves.count+=1;
+							totalUninformedLeaves?.data?.push(item)
+						}
+					}
+				}
+			});
+			
+            //   console.log('remainingDates',remainingDates)
 			remainingDates.forEach(date => {
 				leaveApplication.forEach(item => {
 					const leaveFrom = new Date(item.acceptLeaveFrom);
@@ -983,11 +1292,71 @@ const GetAllAttendance = (props) => {
 						leaveFrom.setHours(0, 0, 0, 0);
 						leaveTo.setHours(0, 0, 0, 0);
 
-					if (currentDate >= leaveFrom && currentDate <= leaveTo && item.status === "ACCEPTED" && item.leaveType==='sickLeave') {
-						totalSickLeaves+=1;
-					}
+						if(item.leaveFor==='halfDay'){
+							// console.log( item.leaveType,item.status,currentDate, leaveFrom)
+							if (currentDate.getTime() === leaveFrom.getTime() && item.status === "ACCEPTED" && item.leaveType==='sickLeave') {
+								totalSickLeaves.count+=.5
+								totalSickLeaves?.data?.push(item)
+							}
+						}
+						else{
+							if (currentDate >= leaveFrom && currentDate <= leaveTo && item.status === "ACCEPTED" && item.leaveType==='sickLeave') {
+								totalSickLeaves.count+=1
+								totalSickLeaves?.data?.push(item)
+							}
+						}
 				});
 			});
+
+
+						//  Calculate totalCausalLeaves		
+						data.forEach(item => {
+							if (allDates.includes(item.date)) {
+								// Date matches, check status
+								if (item.status==='causalLeave(Paid)' || item.status==='causalLeave(UnPaid)') {
+									if(item.leaveFor==='halfDay'){
+										totalCausalLeaves.count+=0.5;
+										totalCausalLeaves?.data?.push(item)
+
+									}
+									// Do something based on the status
+									else{
+										totalCausalLeaves.count+=1;
+										totalCausalLeaves?.data?.push(item)
+									}
+								
+								}
+							}
+						});
+
+						remainingDates.forEach(date => {
+							leaveApplication.forEach(item => {
+								const leaveFrom = new Date(item.acceptLeaveFrom);
+								const leaveTo = new Date(item.acceptLeaveTo);
+								const currentDate = new Date(date);
+									currentDate.setHours(0, 0, 0, 0)
+									leaveFrom.setHours(0, 0, 0, 0);
+									leaveTo.setHours(0, 0, 0, 0);
+								
+									
+									if(item.leaveFor==='halfDay'){
+
+										if (currentDate.getTime() === leaveFrom.getTime() && item.status === "ACCEPTED" && item.leaveType==='causalLeave') {
+											totalCausalLeaves.count+=.5
+											totalCausalLeaves?.data?.push(item)
+										}								
+									} 
+									else {
+										if (currentDate >= leaveFrom && currentDate <= leaveTo && item.status === "ACCEPTED" && item.leaveType==='causalLeave') {
+											totalCausalLeaves.count+=1;
+											totalCausalLeaves?.data?.push(item)
+										}
+										
+									}
+										
+							
+							});
+						});
 
 
 			// Iterate over each date in alldates array
@@ -1073,18 +1442,25 @@ const GetAllAttendance = (props) => {
 						// console.log('updatedEntries[index]',updatedEntries[index], 'breakDuration',breakDuration,'shiftbreakTime',shiftbreakTime)
 						// console.log('totalTimeWorked',totalTimeWorked,'totalShiftworkMinutes',totalShiftworkMinutes)	
 							
-			      	 if(updatedEntries[index] !==undefined){
-						if((data[0]?.shift?.breakTimeCheckbox && (breakDuration > shiftbreakTime))){
-											totalHalfDays +=1
-								}
+			        	 if(updatedEntries[index] !==undefined){
+							  
+					    	if((data[0]?.shift?.breakTimeCheckbox && (breakDuration > shiftbreakTime))){
+
+											// totalHalfDays +=1
+											totalHalfDays.count+=1
+											totalHalfDays?.data?.push(updatedEntries[index])
+										
+										}
 
 								// Compare total time worked with total shift work minutes
 						
-							else if ((totalTimeWorked < totalShiftworkMinutes) && !ishalfday ) {
-									// If yes, increment totalHalfDays
-										totalHalfDays += 1;
+							   else if ((totalTimeWorked < totalShiftworkMinutes) && !ishalfday ) {
+								                  
+                   									totalHalfDays.count+=1
+												    totalHalfDays?.data?.push(updatedEntries[index])
+
 										// console.log('updatedEntries[index] -2',updatedEntries[index]?.emailId)
-							} 
+							      } 
 					 }
 						
 			});
@@ -1138,24 +1514,49 @@ const GetAllAttendance = (props) => {
 				const shiftbreakTime = parseInt(data[0]?.shift?.breakTime);
 				const shiftbreakTimeMinutes = shiftbreakTime
 
-			    console.log('updatedEntries[index]',updatedEntries[index],'shiftbreakTimeMinutes',shiftbreakTimeMinutes,'breakDuration',breakDuration)
+			    // console.log('updatedEntries[index]',updatedEntries[index],'shiftbreakTimeMinutes',shiftbreakTimeMinutes,'breakDuration',breakDuration)
 	
 				 if (breakDuration > shiftbreakTimeMinutes) {
 				   // If break time exceeds the threshold, increment totalLongBreaks
-				   totalLongBreaks += 1;
+				    totalLongBreaks.count += 1;
+					totalLongBreaks?.data?.push(updatedEntries[index])
 			   }
 			});
 		// Check each date in the range
 		// console.log('allDates',allDates)
 	
 		allDates.forEach(date => {
+
 			const inEntry = data.find(item =>
 				{  
                    return (moment(item.date, 'MM/DD/YY').isSame(date, 'day') && item.status === 'In')
 				}
-				
-			);
-		    // console.log('inEntry',inEntry, 'data',data,'allDates',allDates)
+			  );
+			  
+			  const notEntry = allDates.map(date => {
+				const item = data.find(item =>
+					moment(item.date, 'MM/DD/YY').isSame(date, 'day')
+				);
+			
+				if (item) {
+					if (item.status === 'Uninformed' || item.status === 'causalLeave(Paid)' || item.status === 'causalLeave(UnPaid)' || item.status === 'sickLeave(Paid)' || item.status === 'sickLeave(UnPaid)') {
+						return item;
+					} else {
+						return date; // Return the date when the status condition is not met
+					}
+				} else {
+					return date; // Return the date when no corresponding item is found
+				}
+			});
+			const notEntryFiltered = notEntry.filter(entry => {
+				if (entry instanceof Date) {
+					// If it's a date, check if it's not equal to the date in isEntry
+					return !inEntry || !moment(inEntry.date, 'MM/DD/YY').isSame(entry, 'day');
+				} else {
+					// If it's an item, check if its date is not equal to the date in isEntry
+					return !inEntry || !moment(inEntry.date, 'MM/DD/YY').isSame(moment(entry.date, 'MM/DD/YY'), 'day');
+				}
+			});
 	
 		  if (inEntry) {
 			const shiftStartTime = moment(inEntry.shift ? inEntry.shift.startTime: '').format('h:mm:ss A')
@@ -1169,16 +1570,18 @@ const GetAllAttendance = (props) => {
 			
 			if (logTime.isAfter(formatedStartWithGrace)) {
 				 // If yes, increment totalLateComings
-				 totalLateComings += 1;
+				 totalLateComings.count += 1;
+				 totalLateComings?.data?.push(inEntry)
 			}
 		  } else {
 			    // If no data for the date, increment totalAbsenties
-			    totalAbsenties += 1;
+				totalAbsenties.count += 1;
+				totalAbsenties?.data?.push(notEntryFiltered)
 		  }
 		})
-		totalUnPaidLeaves = totalUnPaidLeaves - totalPaidLeavesX
+			totalUnPaidLeaves.count = totalUnPaidLeaves.count - totalPaidLeavesX
 		// Return a new object with the existing properties, totalAbsenties, and totalLateComings
-		return { emailId, data, totalAbsenties, totalLateComings, totalSickLeaves, totalCausalLeaves, totalHalfDays , totalLongBreaks, totalPaidLeaves, totalUnPaidLeaves };
+		return { emailId, data, totalAbsenties, totalLateComings, totalSickLeaves, totalCausalLeaves,totalUninformedLeaves, totalHalfDays , totalLongBreaks, totalPaidLeaves, totalUnPaidLeaves };
 	  });
 	  
 	//   console.log('updatedAttendanceList',updatedAttendanceList);
@@ -1248,7 +1651,7 @@ const GetAllAttendance = (props) => {
 			<Card className='card card-custom mt-3 '>
 				<div className='card-body'>
 					<div className='flex justify-between'>
-						<TableHeraderh2>Attendance Summary</TableHeraderh2>
+					<TableHeraderh2>Attendance Summary</TableHeraderh2>
 						<div className='flex justify-end'>
 						<RangePicker
 						onChange={onCalendarChange}

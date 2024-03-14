@@ -33,6 +33,10 @@ const AddLeave = ({ drawer }) => {
 	const [files, setFiles] = useState([]);
 	const { list, loading } = useSelector((state) => state.attendance);
     const [showExceedsMsg, setshowExceedsMsg] =useState(false)
+	const [leaveFor, setLeaveFor] = useState(null);
+	const handleLeaveForChange = (value) => {
+		setLeaveFor(value);
+	};
 	const handleOnChange = (event) => {
 		let currentFilesArr=[]
 		const selectedFiles = event.target.files;
@@ -63,7 +67,7 @@ const AddLeave = ({ drawer }) => {
 		
 		
 	  };
-  
+
 	const handleRemoveFile = (fileIndex) => {
 	  // Remove the file at the specified index
 	  setFiles((prevFiles) => prevFiles.filter((file, index) => index !== fileIndex));
@@ -93,12 +97,14 @@ const AddLeave = ({ drawer }) => {
 		}
 	  };
 	const onFinish = async (values) => {
+
 		values.attachment=files.map(item => item.name)
+		// console.log('values', values)
 		const leaveData = {
 			...values,
 			userId: values.userId,
 			leaveFrom: dayjs(values.leaveFrom).format(),
-			leaveTo: dayjs(values.leaveTo).format(),
+			leaveTo: values.leaveTo ? dayjs(values.leaveTo).format():"",
 		};
 		
 		// console.log('files',files)   
@@ -223,6 +229,27 @@ const AddLeave = ({ drawer }) => {
 
 								<Form.Item
 									style={{ marginBottom: "10px" }}
+									label='Leave For'
+									name='leaveFor'
+									rules={[
+										{
+											required: true,
+											message: "Please input your shift!",
+										},
+									]}>
+									<Select
+										mode='single'
+										placeholder='Select leave for'
+										optionFilterProp='children'
+										onChange={handleLeaveForChange}>
+										<Select.Option value='fullDay'>Full Day</Select.Option>
+										<Select.Option value='halfDay'>Half Day</Select.Option>
+									</Select>
+								</Form.Item>
+                                 {/* {console.log('form',form.getFieldValue('leaveFor'))} */}
+							
+								<Form.Item
+									style={{ marginBottom: "10px" }}
 									label='Start Date'
 									name='leaveFrom'
 									rules={[
@@ -236,22 +263,25 @@ const AddLeave = ({ drawer }) => {
 									]}>
 									<DatePicker />
 								</Form.Item>
-
-								<Form.Item
-									style={{ marginBottom: "20px" }}
-									label='End Date'
-									name='leaveTo'
-									rules={[
-										{
+								{leaveFor !== 'halfDay' && (
+										<Form.Item
+										style={{ marginBottom: "20px" }}
+										label='End Date'
+										name='leaveTo'
+										rules={[
+											{
 											required: true,
 											message: "Please input your end date!",
-										},
-									 	 {
+											},
+											{
 											validator: validateDateRange,
-										  },
-									]}>
-									<DatePicker />
-								</Form.Item>
+											},
+										]}
+										>
+										<DatePicker />
+										</Form.Item>
+									)}
+							
 								<Form.Item
 									style={{ marginBottom: "20px" }}
 									label='Reason'

@@ -86,7 +86,12 @@ const DetailLeave = () => {
 										{dayjs(leave.leaveFrom).format("DD-MM-YYYY")}
 									</TextInside>
 								</ListItem>
-
+								<ListItem>
+									Leave For :{" "}
+									<TextInside>
+										{leave.leaveFor}
+									</TextInside>
+								</ListItem>
 								<ListItem>
 									Leave To :{" "}
 									<TextInside>

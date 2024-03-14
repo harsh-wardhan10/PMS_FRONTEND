@@ -1,5 +1,5 @@
 import { Button, Card, DatePicker, Form, Input, InputNumber, Modal, Radio, Select, Table, Tooltip } from "antd";
-import React, { useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { CsvLinkBtn } from "../UI/CsvLinkBtn";
 import { CSVLink } from "react-csv";
 import ColVisibilityDropdown from "../Shared/ColVisibilityDropdown";
@@ -86,18 +86,20 @@ function CustomTable({ list, loading , users}) {
 	  }
 
 	  const handlepaySlipSave=()=>{
+
 		const data={
 			selectedId:selectedId,
 			paySlipStatus:paySlipStatus,
 			rejectComment:rejectComment
 		}
+
         if(paySlipStatus==='ACCEPTED'){
-			downloadPaySlip()
+      			downloadPaySlip()
 			setpaySlipStatus('REJECTED')
-	  	}
-		
+	  	}     
+            //  console.log('data',data)
 		dispatch(getSalaryHistoryRecordByUserId({ userId: seletedUserId , month : paySlipMonth, year: paySlipYear }))
-        dispatch(updatePayslipRequest(data))
+		dispatch(updatePayslipRequest(data))
 		dispatch(loadAllBulkSalaryFields())
 		dispatch(loadAllPayslipRequest());
 		getSetting().then((data) => setCompanyDetail(data.result));
@@ -121,64 +123,32 @@ function CustomTable({ list, loading , users}) {
 			</Button> }
         </div>
       );
-
+	  
 
 	  const downloadPaySlip =()=>{
-       
-		setselectedUser(users.filter(item=> item.id===seletedUserId))
-        let userData= users.filter(item=> item.id===seletedUserId)
-        // console.log('salaryFieldList',salaryFieldList,'salaryHistoryRecordUser',salaryHistoryRecordUser,'comapanyDetail',comapanyDetail)
-		setearningsRecords(salaryHistoryRecordUser.filter(record => {
-			const correspondingField = salaryFieldList?.data?.find(field => {
-			  return field.fieldName === record.sfName && field.fieldType === 'Earnings';
-			});
-			return correspondingField;
-		  }))
-		  setNetEarnings(earningsRecords.reduce((accu , item)=>{
-              return accu + item.sfValue
-		  },0))
-		 
-		  setdeductionsRecords(salaryHistoryRecordUser.filter(record => {
-			const correspondingField = salaryFieldList?.data?.find(field => {
-			  return field.fieldName === record.sfName && field.fieldType === 'Deductions';
-			});
-			return correspondingField;
-		  }))
-		  setNetDeductions(deductionsRecords.reduce((accum, item)=>{
-             return accum + item.sfValue
-		  },0))
-		  setneutralRecords(salaryHistoryRecordUser.filter(record => {
-			const correspondingField = salaryFieldList?.data?.find(field => {
-			  return field.fieldName === record.sfName && field.fieldType === 'Neutral';
-			});
-			return correspondingField;
-		  }))
+		let userData= users.filter(item=> item.id===seletedUserId)
+		
+		    // console.log(neutralRecords, earningsRecords, deductionsRecords ,'deductionsRecords')
+			
 		  if (!pdfContainerRef.current) return;
-	    //  Use html2canvas to convert the table to a canvas
-	
 
-	
-	
 			setTimeout(() => {
 				html2canvas(pdfContainerRef.current, {
 				  x: 0,
 				  y: 0,
 				  width: pdfContainerRef.current.offsetWidth,
 				  // height: pdfContainerRef.current.offsetHeight,
-				  scale: 2,
+				  scale: 1,
 				//   useCORS: true,
 				}).then(canvas => {
 
 				  const imgData = canvas.toDataURL('image/png', 1.0);
 				  // Create a new jsPDF instance
-				  const customPageSize = [210, 297]; // Width and height in millimeters for A4 size
+				  const customPageSize = [210, 200]; // Width and height in millimeters for A4 size
 				  const pdf = new jsPDF('p', 'mm', customPageSize);
-				  
-						dispatch(updatePayslipRequestAttachment({attachment:`${userData[0].firstName}${userData[0].lastName}_${paySlipMonth}_${paySlipYear}_paySlip.pdf` , id:selectedId}))
-					
+
 						// Add the image (canvas) to the PDF
 					     	pdf.addImage(imgData, 'PNG', 10, 10, 180, 150);
-					
 				            // Dispatch the action to upload the PDF file
 	
 							const pdfDataURI = pdf.output('datauristring');
@@ -192,19 +162,17 @@ function CustomTable({ list, loading , users}) {
 							const pdfBlob = new Blob([byteArray], { type: 'application/pdf' });
 	
 							// Create a File object
-							const pdfFile = new File([pdfBlob], `${userData[0].firstName}${userData[0].lastName}_${paySlipMonth}_${paySlipYear}__paySlip.pdf`, { type: 'application/pdf' });
+							const pdfFile = new File([pdfBlob], `${userData[0].firstName}${userData[0].lastName}_${paySlipMonth}_${paySlipYear}_paySlip.pdf`, { type: 'application/pdf' });
 							 const formData = new FormData();
 						    // console.log('pdfFile',pdfFile)
-							formData.append('files', pdfFile,`${userData[0].firstName}${userData[0].lastName}_${paySlipMonth}_${paySlipYear}__paySlip.pdf`);
+							formData.append('files', pdfFile,`${userData[0].firstName}${userData[0].lastName}_${paySlipMonth}_${paySlipYear}_paySlip.pdf`);
+							dispatch(updatePayslipRequestAttachment({attachment:`${userData[0].firstName}${userData[0].lastName}_${paySlipMonth}_${paySlipYear}_paySlip.pdf` , id:selectedId}))
 							dispatch(uploadPayslipFile(formData));
 							dispatch(loadAllPayslipRequest())
 				
 						// Now you can use pdfFile as a File object
 
 				        pdf.save(`${userData[0].firstName}${userData[0].lastName}_${paySlipMonth}_${paySlipYear}_paySlip.pdf`);
-			
-
-
 
 				}).catch((err)=>{
                     console.log('err in pdf', err)
@@ -235,7 +203,7 @@ function CustomTable({ list, loading , users}) {
 
 			const handleDownload = async (attachment) => {
 				if (attachment) {
-
+                  console.log('AjayMeena_8_2022__paySlip.pdf',attachment)   
 				  const downloadUrl = `${process.env.REACT_APP_API}/utils/payslip/uploads/${attachment}`;
 
 				  try {
@@ -357,8 +325,38 @@ function CustomTable({ list, loading , users}) {
 
 	useEffect(() => {
 		setColumnsToShow(columns);
+
+		setselectedUser(users.filter(item=> item.id===seletedUserId))
+					
+		setearningsRecords(salaryHistoryRecordUser.filter(record => {
+				const correspondingField = salaryFieldList?.data?.find(field => {
+				return field.fieldName === record.sfName && field.fieldType === 'Earnings';
+			});
+			return correspondingField;
+		}))
+		setNetEarnings(earningsRecords.reduce((accu , item)=>{
+			return accu + item.sfValue
+		},0))
+		
+		setdeductionsRecords(salaryHistoryRecordUser.filter(record => {
+			const correspondingField = salaryFieldList?.data?.find(field => {
+				return field.fieldName === record.sfName && field.fieldType === 'Deductions';
+			});
+			return correspondingField;
+			}))
+
+		setNetDeductions(deductionsRecords.reduce((accum, item)=>{
+				return accum + item.sfValue
+		},0))
+
+		setneutralRecords(salaryHistoryRecordUser.filter(record => {
+			const correspondingField = salaryFieldList?.data?.find(field => {
+			return field.fieldName === record.sfName && field.fieldType === 'Neutral';
+			});
+			return correspondingField;
+		}))
 	    // console.log('users',users)
-	}, [monthYear]);
+	}, [monthYear, earningsRecords ,  neutralRecords , deductionsRecords , netDeductions, netEarnings]);
 
 	const columnsToShowHandler = (val) => {
 		setColumnsToShow(val);
@@ -387,6 +385,7 @@ function CustomTable({ list, loading , users}) {
                         onCancel={closeModal}
                         footer={customFooter}
                         className='w-[550px]'> 
+						
                      <Form
 						className='list-inside list-none border-2 border-inherit rounded px-5 py-5 m-5 mt-10'
 						form={form}
@@ -447,10 +446,9 @@ function CustomTable({ list, loading , users}) {
 											/>
 									</Form.Item> :null }
 						</Form>
-		        
-				     
+						{/* position: 'absolute', left: '-9999px'     */}
 			 </Modal>
-			 <div ref={pdfContainerRef} className="text-center Pdf_container_div" id="elementId" style={{ width: '100%',position: 'absolute', left: '-9999px' }}>
+			<div ref={pdfContainerRef} className="text-center Pdf_container_div" id="elementId" style={{ width: '100%',position: 'absolute', left: '-9999px' }}>
 			 {/* style={{ position: 'absolute', left: '-9999px' }} */}
 			 <div className="text-center mb-[55px]">
 			              <div className="CompanyDetail"> 
@@ -461,7 +459,8 @@ function CustomTable({ list, loading , users}) {
 									<p>  {comapanyDetail?.phone}   </p>
 								</div>
 						  </div> 
- 					 <table className="payslip_table" style={{width:"80%"}}>
+						  {/* {console.log('deductionsRecords',deductionsRecords ,'earningsRecords',earningsRecords , 'neutralRecords',neutralRecords)} */}
+ 					 <table className="payslip_table">
 			             <tbody>
 						     <tr className="payslip_table_tr"> 
 								<td className="payslip_table_td" style={{borderTop:'0px', borderLeft:"0px"}}> Employee Name :</td>
@@ -483,13 +482,14 @@ function CustomTable({ list, loading , users}) {
 						    </tr>
 						 </tbody>
 					      </table>
+
 						  <table className="payslip_table">
-						<thead>
+						{/* <thead>
 						<tr className="payslip_table_tr"> 
 							<th className="payslip_table_td" style={{ backgroundColor:'#043470', color:"#fff", border:"1px solid white",  width:"60%"}}> Neutral</th>
 							<th className="payslip_table_td"style={{ backgroundColor:'#043470', color:"#fff", border:"1px solid white", width:"60%"}} > value</th>
 						</tr>	
-						</thead>
+						</thead> */}
 						<tbody> 
 							{neutralRecords.map((item)=>{
                                 return(
@@ -500,8 +500,8 @@ function CustomTable({ list, loading , users}) {
 						           )
 							})}
 						</tbody>
-					</table>
-						<div className="flex items-center justify-between w-[80%] m-auto"> 
+					  </table>
+						<div className="flex items-center justify-between w-[95%] m-auto"> 
 						<table className="payslip_table mr-[10px]">
 							<thead>
 							<tr className="payslip_table_tr"> 
@@ -540,7 +540,8 @@ function CustomTable({ list, loading , users}) {
 									</tr>
 						           )
 							})}
-							 <tr className="payslip_table_tr">	    <td className="payslip_table_td" style={{ backgroundColor:'#043470', color:"#fff", border:"1px solid white" , width:"60%"}}> Total Deductions</td> 
+							 <tr className="payslip_table_tr">	   
+							            <td className="payslip_table_td" style={{ backgroundColor:'#043470', color:"#fff", border:"1px solid white" , width:"60%"}}> Total Deductions</td> 
 										<td className="payslip_table_td" style={{ backgroundColor:'#043470', color:"#fff", border:"1px solid white" , width:"60%"}}> {netDeductions}</td> 
 										</tr>
 						</tbody>
@@ -548,21 +549,21 @@ function CustomTable({ list, loading , users}) {
 				
 							</div>  
 
-							<div className="m-auto w-[80%]"> 
+							<div className="m-auto w-[95%]"> 
 							<table className="payslip_table_last  ">
 										<thead>
 										<tr className="payslip_table_tr"> 
-											<th className="payslip_table_td" style={{ backgroundColor:'#01264F', color:"#fff", border:"1px solid white", width:"60%" }}> Net Salary Pay</th>
+											<th className="payslip_table_td" style={{ backgroundColor:'#01264F', color:"#fff", border:"1px solid white", width:"60%" }}> Payable Month Salary</th>
 											<th className="payslip_table_td" style={{ backgroundColor:'#01264F', color:"#fff", border:"1px solid white" ,width:"60%"}}> {neutralRecords?.filter(item => item.sfName==="Payable Monthly Salary")[0]?.sfValue}</th>
 										</tr>	
 										</thead>
 				          	</table>
 					</div>
 					<div className="Table_footer"> 
-                         <div>
+                         <div className="Table_footer_div">
                             Date :							
 						 </div>
-						 <div> 
+						 <div className="Table_footer_div_two mr-[187px]"> 
 							Signature:
 						 </div>
 					</div>

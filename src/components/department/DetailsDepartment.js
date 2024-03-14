@@ -130,7 +130,7 @@ const CustomTable = ({ list }) => {
 							onCancel={handleDeletePopup}
 							footer={deleteFooter}>
 								<div> 
-									<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible Are you sure you want to delete ?</p>
+									<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible .Are you sure you want to delete ?</p>
 								</div>
 						</Modal> */}
 			</div>
@@ -157,7 +157,7 @@ const CustomTable = ({ list }) => {
 const DetailDepartment = () => {
 	const { id } = useParams();
 	let navigate = useNavigate();
-
+	const [deletePopup, setDeletePopup] = useState(false)
 	//dispatch
 	const dispatch = useDispatch();
 	const [department, setDepartment] = useState(null);
@@ -195,7 +195,27 @@ const DetailDepartment = () => {
 	if (!isLogged) {
 		return <Navigate to={"/admin/auth/login"} replace={true} />;
 	}
+	
+	const handleDeletePopup=()=>{
+		setDeletePopup(false)
+	}
 
+	const deleteFooter = (
+        <div>
+             <Button key="customButton" type="default" onClick={()=> {setDeletePopup(false)}}>
+               Cancel
+          </Button>	
+           <Button key="customButton" 
+           type={"primary"} 
+           onClick={()=>{
+			setDeletePopup(false)
+			onDelete()
+		   }}
+           >
+            Delete
+          </Button>
+        </div>
+      );
 	return (
 		<div>
 			<PageTitle title=' Back  ' />
@@ -229,17 +249,23 @@ const DetailDepartment = () => {
 													<BtnDeleteSvg size={30} />
 												</button>
 											</Popover> */}
-											<Popover content={<a onClick={onDelete}>
-														<Button  type='primary' danger>
-															Yes Please !
-														</Button>
-													</a>} title="Title" trigger="hover">
-													<button >
+								
+											   <button onClick={()=>{setDeletePopup(true)}}>
 													<BtnDeleteSvg size={30} />
 												</button>
-											</Popover>
+										
 										</div>
 									</UserPrivateComponent>
+									<Modal
+										className="Delete_modal"
+										title='Delete Confirmation'
+										open={deletePopup}
+										onCancel={handleDeletePopup}
+										footer={deleteFooter}>
+											<div> 
+												<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible. Are you sure you want to delete ?</p>
+											</div>
+									</Modal>
 								</div>
 								<CustomTable list={department.user} />
 							</div>

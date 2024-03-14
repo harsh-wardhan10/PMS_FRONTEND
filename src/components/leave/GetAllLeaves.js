@@ -18,6 +18,7 @@ import BtnViewSvg from "../UI/Button/btnViewSvg";
 import ViewBtn from "../Buttons/ViewBtn";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { List } from "antd/lib/form/Form";
+import moment from "moment";
 
 function CustomTable({ list, total }) {
 	const dispatch = useDispatch();
@@ -48,6 +49,14 @@ function CustomTable({ list, total }) {
 
 		},
 		{
+			id: 3,
+			title: "Leave For",
+			dataIndex: "leaveFor",
+			key: "leaveFor",
+			render: (leaveFor, record) => `${leaveFor}`,
+
+		},
+		{
 			id: 4,
 			title: "Leave From",
 			dataIndex: "leaveFrom",
@@ -59,7 +68,15 @@ function CustomTable({ list, total }) {
 			title: "Leave To",
 			dataIndex: "leaveTo",
 			key: "leaveTo",
-			render: (leaveTo) => dayjs(leaveTo).format("DD-MM-YYYY"),
+			render: (leaveTo) => {
+              if(moment(leaveTo, true).isValid()){
+				return dayjs(leaveTo).format("DD-MM-YYYY")
+			  }
+			else{
+				return '-'
+			}
+
+			},
 		},
 		{
 			id: 6,
@@ -67,10 +84,11 @@ function CustomTable({ list, total }) {
 			dataIndex: "leaveDuration",
 			key: "leaveDuration",
 			render: (leaveDuration) => {
-				if (leaveDuration > 1) {
+				if (leaveDuration >= 1) {
 					return <span>{leaveDuration} days</span>;
 				} else {
-					return <span>{leaveDuration} day</span>;
+
+					return <span> 0.5 day</span>;
 				}
 			},
 		},
@@ -271,7 +289,7 @@ const GetAllLeaves = (props) => {
 							 })}
                           </Select>
 				</div>
-		      
+		   			   {/* {console.log('list',list)} */}
 			</div>
 					<CustomTable list={filterData.length>0 ?filterData:list} total={total} />
 				</div>

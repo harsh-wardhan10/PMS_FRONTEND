@@ -61,7 +61,7 @@ const AnnouncementDelete = ({ id }) => {
 				onCancel={handleDeletePopup}
 				footer={deleteFooter}>
 					<div> 
-						<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible Are you sure you want to delete ?</p>
+						<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible.Are you sure you want to delete ?</p>
 					</div>
 			</Modal>
 		</>

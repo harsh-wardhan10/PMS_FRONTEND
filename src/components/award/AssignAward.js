@@ -18,11 +18,13 @@ import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import GetAllAward from "./GetAllAward";
 import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
 import moment from "moment";
-import { addAwardHistory } from "../../redux/rtk/features/awardHistory/awardHistorySlice";
+import { addAwardHistory, loadAllAwardHistory } from "../../redux/rtk/features/awardHistory/awardHistorySlice";
 import TextArea from "antd/lib/input/TextArea";
+import GetAllAssignAward from "./GetAllAssignAward";
 
 const AssignAward = ({ drawer }) => {
 	const { list, loading } = useSelector((state) => state.award);
+    
 	const [loader, setLoader] = useState(false);
     const users = useSelector((state) => state.users?.list)
 	const [form] = Form.useForm();
@@ -31,12 +33,14 @@ const AssignAward = ({ drawer }) => {
 	useEffect(() => {
 		dispatch(loadAllAward());
         dispatch(loadAllStaff({ status: true }));
+        dispatch(loadAllAwardHistory()) 
+        form.setFieldsValue({ awardedDate: oneMonthAgo });
 	}, []);
     const handlemonthchange=(value)=>{
 
         const year = value.year(); 
         const month = value.month() + 1;
-
+		form.setFieldsValue({ awardedDate: value });
         // setcurrentMonth(month)
         // setcurrentYear(year)
      }
@@ -44,16 +48,16 @@ const AssignAward = ({ drawer }) => {
 
 	const onFinish = async (values) => {
         console.log("values", values)
-	// 	setLoader(true);
-	// 	const resp = await dispatch(addAwardHistory(values));
+		setLoader(true);
+		const resp = await dispatch(addAwardHistory(values));
 
-	// 	if (resp.payload.message === "success") {
-	// 		setLoader(false);
-	// 		form.resetFields();
-	// 		dispatch(loadAllAward());
-	// 	} else {
-	// 		setLoader(false);
-	// 	}
+		if (resp.payload.message === "success") {
+			setLoader(false);
+			form.resetFields();
+            dispatch(loadAllAwardHistory())
+		} else {
+			setLoader(false);
+		}
 	};
 
 	const onFinishFailed = (errorInfo) => {
@@ -188,9 +192,10 @@ const AssignAward = ({ drawer }) => {
 				</Row>
 			</UserPrivateComponent>
 			<hr />
-			{/* <UserPrivateComponent permission={"readAll-shift"}>
-				<GetAllAward/>
-			</UserPrivateComponent> */}
+			<UserPrivateComponent permission={"readAll-shift"}>
+                {users.length>0 && list.length>0 && <GetAllAssignAward users={users} awardlist={list}/> }
+				
+			</UserPrivateComponent>
 		</Fragment>
 	);
 };

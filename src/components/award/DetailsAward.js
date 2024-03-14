@@ -20,13 +20,43 @@ import {
 import AwardEditPopup from "../UI/PopUp/AwardEditPopup";
 import BtnLoader from "../loader/BtnLoader";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
-import AssignAwardPopup from "../UI/PopUp/AssignAwardPopup";
+import moment from "moment";
+import AwardHistoryEditSinglePopup from "../UI/PopUp/AwardHistoryEditSinglePopup";
 
 //PopUp
 
 const CustomTable = ({ list }) => {
 	const [columnsToShow, setColumnsToShow] = useState([]);
-
+	const getMonthName=(currentCSVMonth)=>{
+		switch(currentCSVMonth){
+		  case 0:
+			return 'January'
+		  case 1:
+			return "february"
+		  case 2:
+			return "March"
+		  case 3:
+			return "April"
+		  case 4:
+			return "May"
+		  case 5:
+			return "June"    
+			case 6:
+			  return 'July'
+			case 7:
+			  return "August"
+			case 8:
+			  return "September"
+			case 9:
+			  return "October"
+			case 10:
+			  return "November"
+			case 11:
+			  return "December"  
+			default:
+			  return "NAN"   
+		  }
+	  }
 	const columns = [
 		{
 			id: 1,
@@ -45,10 +75,10 @@ const CustomTable = ({ list }) => {
 
 		{
 			id: 6,
-			title: "Awarded Date",
+			title: "Awarded Month",
 			dataIndex: "awardedDate",
 			key: "awardedDate",
-			render: (awardedDate) => dayjs(awardedDate).format("DD/MM/YYYY"),
+			render: (awardedDate) => `${getMonthName(moment(awardedDate).month())} ${moment(awardedDate).year()}` ,
 		},
 
 		{
@@ -63,9 +93,10 @@ const CustomTable = ({ list }) => {
 			title: "Action",
 			dataIndex: "id",
 			key: "action",
-			render: (id) => (
+			render: (id , record) => (
 				<UserPrivateComponent permission={"readSingle-user"}>
-					<ViewBtn path={`/admin/hr/staffs/${id}/`} />
+					{/* <ViewBtn path={`/admin/hr/staffs/${id}/`} /> */}
+					<AwardHistoryEditSinglePopup data={record}/>
 				</UserPrivateComponent>
 			),
 		},
@@ -88,7 +119,7 @@ const CustomTable = ({ list }) => {
 					Employee List
 				</h5>
 
-				{list && (
+				{/* {list && (
 					<div>
 						<CsvLinkBtn>
 							<CSVLink data={list} filename='user_award'>
@@ -96,7 +127,7 @@ const CustomTable = ({ list }) => {
 							</CSVLink>
 						</CsvLinkBtn>
 					</div>
-				)}
+				)} */}
 			</div>
 			{/* {list && (
 				<div style={{ marginBottom: "30px" }}>
@@ -177,11 +208,11 @@ const DetailAward = () => {
 						<Fragment key={award.id}>
 							<div>
 								<div className='flex justify-between '>
-									<h3 className={"text-xl"}>
-										 {award.name}
+									<h3 className="text-xl font-bold">
+										Award Type-  {award.name}
 									</h3>
 									<div className='flex justify-end'>
-										<AwardEditPopup data={award} />
+										{/* <AwardEditPopup data={award} /> */}
 										{!loading ? (
 											<button className='ml-4 mr-2' onClick={()=>{setDeletePopup(true)}}>
 												<BtnDeleteSvg size={30} />
@@ -197,7 +228,7 @@ const DetailAward = () => {
 										onCancel={handleDeletePopup}
 										footer={deleteFooter}>
 											<div> 
-												<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible Are you sure you want to delete ?</p>
+												<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible. Are you sure you want to delete ?</p>
 											</div>
 									</Modal>
 								</div>

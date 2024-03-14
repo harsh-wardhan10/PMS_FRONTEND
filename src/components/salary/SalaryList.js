@@ -30,7 +30,7 @@ import dayjs from "dayjs";
 import ExcelJS from 'exceljs';
 
 
-function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) {
+function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList,currentMonth,currentYear }) {
 
 	  const dispatch = useDispatch();
     const navigate = useNavigate()
@@ -78,7 +78,7 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
      useEffect(()=>{
         dispatch(loadAllReimbursementApplication())
         dispatch(loadAllDeductionsApplication())
-     },[])
+     },[currentMonth , currentYear])
 
       const handleToolTipContent =  (Reimbursement, record) => {
         
@@ -776,7 +776,7 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
                      const SalarySheetLocation=dispatch(uploadSalarySheetFile(formData))
 
                        SalarySheetLocation.then((res)=>{
-                        console.log('res', res)
+                           // console.log('res', res)
                            setsamplefileDownload(true)
 
                            const salarysheetResponse= dispatch(createSalarySheetHistory({sheetName ,overwriteData,salaryFileLocation:res.payload.data.location}))
@@ -794,8 +794,9 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
                                 return acc;
                             }, { successCount: 0, failureCount: 0 });
 
-                              dispatch(updateSalarySheetHistory({success:result.successCount , failure:result.failureCount , totalCounts:result.successCount +result.failureCount , salarySheetHistoryId:salarySheetHistoryId ,newFieldsAdded:filteredExtraFields ,existingFieldRemoved:activeFields}))
-                           })
+                              dispatch(updateSalarySheetHistory({success:result.successCount , failure:result.failureCount , totalCounts:result.successCount + result.failureCount , salarySheetHistoryId:salarySheetHistoryId ,newFieldsAdded:filteredExtraFields ,existingFieldRemoved:activeFields}))
+                          
+                            })
 
                           }).catch((err)=>{
                               console.log('Error in salarysheet history', err)
@@ -831,6 +832,7 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
            onClick={()=>{
             setIsModalOpen(false)
             setsamplefileDownload(false)
+            setDropZone(false)
             setshowFooter(false)}
           }
            >
@@ -951,24 +953,46 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
 
   const handledownloadcsv = () => {
     // Extract all keys from the list objects
-    const keys = list.reduce((allKeys, obj) => {
-        Object.keys(obj).forEach(key => {
-            if (!allKeys.includes(key)) {
-                allKeys.push(key);
+
+      // console.log('list',list, 'employeeList',employeeList,'salaryFieldList',salaryFieldList)
+      
+        const keys = list.reduce((allKeys, obj) => {
+          Object.keys(obj).forEach(key => {
+              if (!allKeys.includes(key)) {
+                  allKeys.push(key);
+              }
+          });
+          return allKeys;
+      }, []);
+      
+      // Rename 'userName' to 'User Name' if it exists in keys
+      const csvData = list.map(item => {
+        const rowData = {};
+    
+        // Set User Name using firstName and lastName from employeeList
+        const employee = employeeList.find(emp => emp.id === item.id);
+        if (employee) {
+            rowData['User Name'] = `${employee.firstName} ${employee.lastName}`;
+            rowData['Employee Id'] = employee.employeeId;
+            rowData['Email Id'] = employee.email;
+            rowData['Month'] = currentMonth
+            rowData['Year'] = currentYear
+        }
+    
+        // Populate other columns
+        keys.forEach(key => {
+            if (key !== 'id' && key !== 'userName') {
+                rowData[key] = item[key] || 0;
             }
         });
-        return allKeys;
-    }, []);
-
-    const csvData = list.map(item => {
-        const rowData = {};
-        keys.forEach(key => {
-            rowData[key] = item[key] || 0;
-        });
+    
         return rowData;
     });
-
-    setCSVlist(csvData);
+    
+    // Update the keys array to place 'User Name' followed by 'EmployeeId' and 'EmailId'
+    const newKeys = ['User Name', ...keys.filter(key => key !== 'id' && key !== 'userName'), 'EmployeeId', 'EmailId'];
+    
+    setCSVlist(csvData, newKeys);
 };
 	return (
 		<div className='ant-card p-4 rounded mt-5'>
@@ -986,7 +1010,7 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList }) 
                     className='btn btn-dark btn-sm'
                     style={{ marginTop: "5px" }}
                     filename='Salary_sheet'>
-                    Download CSV
+                    Prepare Salary 
                   </CSVLink>
                 </CsvLinkBtn>
               </div>
@@ -1160,18 +1184,14 @@ const SalaryList = (props) => {
     const [newData, setNewData] = useState([])
     const users = useSelector((state) => state.users?.list);
     const oneMonthAgo = moment().subtract(1, 'months');
-    const  { initialSalaryHistoryRecord }=useSelector(state=> state.salaryField) 
+
     const oneMonthAgoMonth = oneMonthAgo.month(); // Month (0-indexed)
     const oneMonthAgoYear = oneMonthAgo.year(); // Year
-    
+  
     const [currentMonth, setcurrentMonth] =useState(oneMonthAgoMonth+1)
     const [currentYear, setcurrentYear] = useState(oneMonthAgoYear)
-	useEffect(() => {
-
-		dispatch(loadAllStaff({ status: true }));
-    dispatch(getinitialSalaryHistoryRecord({ month:oneMonthAgoMonth, year:oneMonthAgoYear }))
-
-	}, []);
+    const [userId , setuserId] =useState()
+    const [filterData, setfilterData] =useState()
 
 
   // Memoize the mapped data
@@ -1200,6 +1220,18 @@ const SalaryList = (props) => {
       return null; // or an empty array if preferred
   }, [users,currentMonth,currentYear]); 
 
+	useEffect(() => {
+
+		dispatch(loadAllStaff({ status: true }));
+    dispatch(getinitialSalaryHistoryRecord({ month:oneMonthAgoMonth, year:oneMonthAgoYear }))
+   
+	}, [currentMonth,currentYear]);
+
+   useMemo(()=> {
+
+    setfilterData(memoizedData)
+
+   },[memoizedData])
 
   const uniqueNamesWithIds = Array.from(
 		users.reduce((map, item) => {
@@ -1214,8 +1246,7 @@ const SalaryList = (props) => {
 		}, new Map()).values()
 	);
 
-  const [userId , setuserId] =useState()
-  const [filterData, setfilterData] =useState(memoizedData)
+
 
   const handleSelectChange = (value) => {
 
@@ -1246,10 +1277,13 @@ const SalaryList = (props) => {
                               })}
                                           </Select>
                         </div>
-                        {/* {console.log('filterData',filterData)} */}
-           {/* {console.log('currentMonth',currentMonth,'oneMonthAgoMonth',oneMonthAgoMonth ,oneMonthAgoYear)} */}
-          {newData ? <CustomTable list={filterData.length > 0 ? filterData :memoizedData} employeeList={users} setcurrentMonth={setcurrentMonth} setcurrentYear={setcurrentYear}/> : null}
-          {/* {console.log('memoizedData',memoizedData)} */}
+                 {/* {console.log('salaryFieldList',salaryFieldList)} */}
+          {newData ? <CustomTable list={filterData?.length > 0 ? filterData :memoizedData} employeeList={users} 
+                                  setcurrentMonth={setcurrentMonth} 
+                                  setcurrentYear={setcurrentYear} currentMonth={currentMonth} 
+                                  currentYear={currentYear}
+                                 /> : null}
+          {/* {console.log('memoizedData',memoizedData,'filterData',filterData)} */}
 				</div>
 			</div>
 		</UserPrivateComponent>

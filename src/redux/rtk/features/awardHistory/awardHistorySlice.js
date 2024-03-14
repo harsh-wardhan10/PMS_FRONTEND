@@ -94,14 +94,14 @@ export const loadAllAwardHistory = createAsyncThunk(
 
 export const updateAwardHistory = createAsyncThunk(
 	"award/updateAwardHistory",
-	async ({ id, values }) => {
+	async ({ id, infodata }) => {
 		try {
 			const { data } = await axios({
-				method: "put",
+				method: "post",
 
 				url: `awardHistory/${id}`,
 				data: {
-					...values,
+					...infodata,
 				},
 			});
 			toast.success("AwardHistory Updated");
