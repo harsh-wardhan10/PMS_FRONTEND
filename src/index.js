@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 // import store from "./redux/root";
 import store from "./redux/rtk/app/store";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
+import ErrorBoundaryUI from "./ErrorBoundaryUI";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 //Setting AXIOS and token
@@ -19,10 +20,15 @@ const accessToken = localStorage.getItem("access-token");
 
 axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
+
 root.render(
+
   <Provider store={store}>
-    <App />
-  </Provider>
+      <ErrorBoundaryUI>
+         <App />
+    </ErrorBoundaryUI>
+  </Provider>   
+
 );
 
 // If you want to start measuring performance in your app, pass a function

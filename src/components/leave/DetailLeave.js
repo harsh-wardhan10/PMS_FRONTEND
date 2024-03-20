@@ -1,7 +1,7 @@
 import { Card } from "antd";
 import Loader from "../loader/loader";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
 	clearLeaveApplication,
 	loadSingelLeaveApplication,
@@ -19,13 +19,19 @@ const DetailLeave = () => {
 	const leave = useSelector((state) => state.leave.leave);
 	const dispatch = useDispatch();
 	const users = useSelector((state) => state.users?.list);
+	const [loading, setloading] =useState(false)
 	useEffect(() => {
 		dispatch(loadSingelLeaveApplication(id));
 		dispatch(loadAllStaff({ status: true }));
 		return () => {
 			dispatch(clearLeaveApplication());
 		};
-	}, []);
+	}, [loading]);
+
+	const handleLoading=()=>{
+		setloading(!loading)
+	}
+
 	const handleDownload = async (attachment) => {
 		if (attachment) {
 		  const downloadUrl = `${process.env.REACT_APP_API}/utils/leaves/uploads/${attachment}`;
@@ -201,17 +207,17 @@ const DetailLeave = () => {
 					<UserPrivateComponent permission={"update-leaveApplication"}>
 						{leave?.status === "PENDING" && (
 							<div className='flex justify-center items-center'>
-								<ReviewLeavePopup />
+								<ReviewLeavePopup handleLoading={handleLoading}/>
 							</div>
 						)}
 						{leave?.status === "REJECTED" && (
 							<div className='flex justify-center items-center'>
-								<ReviewLeavePopup />
+								<ReviewLeavePopup handleLoading={handleLoading}/>
 							</div>
 						)}
 						{leave?.status === "ACCEPTED" && (
 							<div className='flex justify-center items-center'>
-								<ReviewLeavePopup />
+								<ReviewLeavePopup handleLoading={handleLoading}/>
 							</div>
 						)}
 					</UserPrivateComponent>

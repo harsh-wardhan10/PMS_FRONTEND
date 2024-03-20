@@ -97,6 +97,7 @@ export const addBulkAttendance = createAsyncThunk(
 	"attendance/createbulkAttendance",
 	async (values) => {
 		try {
+			//  console.log('values',values)
 			const compressedData = pako.gzip(JSON.stringify(values));;
 			// console.log('compressedData',compressedData)
 			const { data } = await axios({
@@ -132,6 +133,7 @@ export const addoverwriteAttendance = createAsyncThunk(
 	async (values) => {
 	
 		try {
+			// console.log('values',values)
 			const compressedData = pako.gzip(JSON.stringify(values));;
 			const { data } = await axios({
 				method: "post",
@@ -308,8 +310,8 @@ export const loadAttendanceByUserId = createAsyncThunk(
 export const updateBulkAttendance = createAsyncThunk(
 	"attendance/updatebulkAttendance",
 	async (values) => {
-	
 		try {
+			console.log('values',values)
 
 			const { data } = await axios({
 				method: "post",

@@ -112,13 +112,13 @@ function App() {
 			/>
 			<BrowserRouter>
 				{/* <TestComp/> */}
+				
 				<Main>
 					<Routes>
 						<Route path='/' element={<WelcomePage />} />
 						<Route path='/admin/dashboard' element={<Dashboard />}></Route>
 						<Route path='/admin' element={<Dashboard />} />
 						<Route path='*' element={<Page404 />} />
-
 						<Route path='/admin/auth/login' exact element={<Login />} />
 						<Route path='/admin/auth/logout' exact element={<Logout />} />
 						{/*         <Route path='/auth/register' exact element={<Register />} /> */}
@@ -663,6 +663,7 @@ function App() {
 						{/* <Route path="/admin/task/:id" element={<DetailTask />} />  */}
 					</Routes>
 				</Main>
+			
 			</BrowserRouter>
 		</div>
 	);

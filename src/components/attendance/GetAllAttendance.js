@@ -20,6 +20,7 @@ import moment from 'moment';
 import { loadAllPublicHoliday } from "../../redux/rtk/features/publicHoliday/publicHolidaySlice";
 import _debounce from 'lodash/debounce';
 import { isUndefined } from "lodash";
+import PrepareSalary from "../UI/PopUp/PrepareSalary";
 
 function CustomTable({ list, total, status, setStatus, loading , refresh , setrefresh, setSummaryData , summaryData ,startdate ,enddate}) {
 	const [columnsToShow, setColumnsToShow] = useState([]);
@@ -28,11 +29,13 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
     const [arrayData, setarrayData] = useState([])
 	const navigate =useNavigate()
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isModalOpenTwo, setisModalOpenTwo] = useState(false)
 	const [dropZoneContent, setDropZoneContent] = useState('');
 	const [dropZone, setDropZone] = useState(false);
 	const [isUpload, setisUpload]=  useState(false)
 	const [excludedDataEntries, setExcludedDataEntries] =useState()
 	const [overwriteData, setoverwriteData] =useState(false)
+	const [inValidEntries, setinValidEntries] = useState()
 	const showModal = () => {
 	  setIsModalOpen(true);
 	};
@@ -51,6 +54,12 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 	  setDropZoneContent('')
 	  setIsSecondModalVisible(false);
 	};
+	const handleCancelTwo=()=>{
+		setisModalOpenTwo(false)
+		setDropZone(false)
+		setDropZoneContent('')
+		setIsSecondModalVisible(false);
+	}
 	const [file, setFile] = useState(null);
 	const onChange = (value) => {
 		setStatus(value);
@@ -528,25 +537,35 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
     //  console.log('arrayData', arrayData)
   
 	},[arrayData])
+
   const handleBulkupload= ()=>{
 
 
-	function formatDate(dateString) {
+	function formatDate(item,dateString) {
 		// Split the date string by '/' to get day, month, and year
 		// console.log('dateString',dateString)
-		const [day, month, year] = dateString.split('/');
+		const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{2}$/;
+		if(dateRegex.test(dateString)){
+			const [day, month, year] = dateString.split('/');
 	      
-		// Add leading zeros to day and month if necessary
-		const formattedDay = day.padStart(2, '0');
-		const formattedMonth = month.padStart(2, '0');
-	  
-		// Return the formatted date string
-		return `${formattedDay}/${formattedMonth}/${year}`;
+			// Add leading zeros to day and month if necessary
+			const formattedDay = day.padStart(2, '0');
+			const formattedMonth = month.padStart(2, '0');
+		  
+			// Return the formatted date string
+			return `${formattedDay}/${formattedMonth}/${year}`;
+		}
+		else{
+			inValidEntries?.push(item)
+			// setinValidEntries()
+			setisModalOpenTwo(true)
+		}
+		
 	  }
 	  
 	const createNewObject = (item, key, email) => {
     const newObj = {
-        date: formatDate(item.Date),
+        date: formatDate(item, item.Date),
         status: item.Status,
         log: item[key],
         emailId: email,
@@ -556,6 +575,7 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 
 const processData = (data) => {
     const newData = [];
+	// console.log('data',data)
     data.forEach(item => {
         // Iterate over the keys of the item
         Object.keys(item).forEach(key => {
@@ -570,27 +590,60 @@ const processData = (data) => {
 
     return newData;
 };
-	const processedData = processData(arrayData);
-	//    console.log('arrayData',arrayData)
-	    //  const CleanData=  rejectUncompleteEntry(processedData)
-	    //  console.log('processedData',processedData)
-	     const getAllDatesData = getAllDates(processedData)
-		 const CleanData=  rejectUncompleteEntry(getAllDatesData)
+const checkCleanData=(processedData)=>{
 
-		// // console.log('CleanData',CleanData)
-		if(overwriteData){
-			const bulkUploadResult= dispatch(addoverwriteAttendance(CleanData))
-		    setSummaryData(bulkUploadResult)
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{2}$/;
+	const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] (AM|PM)$/;
+     console.log('processedData',processedData)
+			// Function to validate each object in the array
+			const validateData = (data) => {
+				// console.log('data', data,dateRegex.test(data.date))
+			return (
+				(data.emailId === '' || emailRegex.test(data.emailId)) &&
+				(data.status === 'In' || data.status === 'Out' || data.status === '') &&
+				(data.log === '' || timeRegex.test(data.log))
+			);
+			};
+
+			// Validate each object in the array
+			const isValid = processedData.every((data) => validateData(data));
+			const invalidEntries = setinValidEntries(processedData.filter((data) => !validateData(data)));
+            // console.log('invalidEntries',invalidEntries)
+			// Check if all objects are valid
+			if (isValid) {
+				 return true
+			} else {
+				 return false
+			}
+}
+	const processedData = processData(arrayData);
+	    //    console.log('arrayData',arrayData)
+	     const isValidData =  checkCleanData(processedData)
+	    //  console.log('processedData',processedData)
+		if(isValidData){
+			const getAllDatesData = getAllDates(processedData)
+			const CleanData=  rejectUncompleteEntry(getAllDatesData)
+   
+		   // // console.log('CleanData',CleanData)
+		   if(overwriteData){
+			   const bulkUploadResult= dispatch(addoverwriteAttendance(CleanData))
+			   setSummaryData(bulkUploadResult)
+		   }
+		   else{
+   
+			   const bulkUploadResult=  dispatch(addBulkAttendance(CleanData))
+			   setSummaryData(bulkUploadResult)
+		   
+		   }
+   
+		 handleCancel()
+		 handleOpenSecondModal()
 		}
 		else{
-
-			const bulkUploadResult=  dispatch(addBulkAttendance(CleanData))
-			setSummaryData(bulkUploadResult)
-		
+			setisModalOpenTwo(true)
 		}
-
-	  handleCancel()
-	  handleOpenSecondModal()	
+	    	
    }
 
    const rejectUncompleteEntry = (processedData) => {
@@ -834,6 +887,17 @@ const processData = (data) => {
 		    	 </CsvLinkBtn>
 				   <div className="absolute w-[145px]"> {dropZoneContent}</div>
 					</div>
+					<Modal 
+					open={isModalOpenTwo} 
+					onCancel={handleCancelTwo}
+					onOk={handleCancelTwo}
+					className='w-[750px]'
+					>
+						 <h2 className="text-[17px]"> Some Entries are Invalid , Please enter all entries in valid date, status and time format</h2>
+						 {inValidEntries?.length>0 && inValidEntries?.map((item)=>{
+							return <> <p className="text-red-500 font-bold text-[15px]"> Invalid Data Entry for Date -{item.date} , log-{item.log} , status-{item.status} and email-{item.emailId}</p>  </>
+						 })}
+					</Modal>
 		         <Modal title="Choose Or Drag drop file to upload" open={isModalOpen} 
 			     	onCancel={handleCancel}
 					 footer={customFooter}
@@ -923,14 +987,16 @@ const processData = (data) => {
 			)}
            
 			{list && (
-				<div style={{ marginBottom: "30px" }}>
+				<div style={{ marginBottom: "30px" }} className="flex items-center justify-between">
 					<ColVisibilityDropdown
 						options={columns}
 						columns={columns}
 						columnsToShowHandler={columnsToShowHandler}
 					/>
+					<PrepareSalary/>
 				</div>
 			)}
+			
 			<Table
 				scroll={{ x: true }}
 				loading={loading}

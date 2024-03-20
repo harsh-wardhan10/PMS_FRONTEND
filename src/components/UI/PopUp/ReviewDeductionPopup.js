@@ -39,7 +39,7 @@ const ReviewDeductionPopup = () => {
 			...values,
             date:values.date
 		};
-		// console.log('FormData',FormData)
+		console.log('FormData',FormData)
 		const resp = await dispatch(
 			reviewDeductionsApplication({ id: id, values: FormData })
 		);

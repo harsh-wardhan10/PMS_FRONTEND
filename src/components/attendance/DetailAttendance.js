@@ -122,7 +122,28 @@ const DetailAttendance = () => {
 			// Dispatch action to delete selected items
 		  };
 		
-		
+		const getStatusLegend=(status)=>{
+             switch(status){
+                  case "Uninformed":
+					return "text-red-600"
+			      case "Weekend":
+					return "text-green-600"
+				  case "UnApproved leave":
+					return "text-red-600"	
+				  case "Public Holiday":
+					return "text-blue-100"
+				  case "sickLeave(Paid)":
+				    return "text-fuchsia-800"		
+				  case 	"sickLeave(UnPaid)":
+					return "text-fuchsia-800"
+				  case 	"causalLeave(Paid)":
+					return "text-yellow-400"
+				  case 	"causalLeave(UnPaid)" :
+					return "text-yellow-400"
+				  default:
+					return <p> {status} </p> 	
+			 }
+		}
 		const columns = [
 		   {
 				title: "Date",
@@ -135,7 +156,12 @@ const DetailAttendance = () => {
 				title: "Status",
 				dataIndex: "status",
 				key: "status",
-				render: (status) => `${status}`,
+				render: (status) => { 
+					   const htmlContent = `<p class=${getStatusLegend(status)}> ${status} </p>`
+						
+					   return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+
+				},
 			},
 			{
 				

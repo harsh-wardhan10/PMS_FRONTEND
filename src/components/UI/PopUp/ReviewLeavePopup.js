@@ -14,7 +14,7 @@ import moment from "moment";
 import { loadAllbulkAttendance, updateBulkAttendance } from "../../../redux/rtk/features/attendance/attendanceSlice";
 import { loadAllStaff, updateUtilizeLeaveUser } from "../../../redux/rtk/features/user/userSlice";
 
-const ReviewLeavePopup = () => {
+const ReviewLeavePopup = ({ handleLoading }) => {
 	const { id } = useParams("id");
 	const dispatch = useDispatch();
 	const [form] = Form.useForm();
@@ -29,6 +29,7 @@ const ReviewLeavePopup = () => {
     const [userData, setuserData] = useState()
 	const { Option } = Select;
     const users = useSelector((state) => state.users?.list)
+	const [loadingStatus, setloading] = useState(false)
 	useEffect(() => {
 		setInitialValues({
 			...data,
@@ -41,6 +42,7 @@ const ReviewLeavePopup = () => {
 		setinitialState(data.status)
 		dispatch(loadAllbulkAttendance())
 		dispatch(loadAllStaff({ status: true }));
+		// console.log('status',status)
 	}, [data]);
 
 		useMemo(()=>{
@@ -64,7 +66,7 @@ const ReviewLeavePopup = () => {
 		// 	  setextraLeaves(extraLeaves)
 		// 	}   
 		//   }
-          console.log('dfbdbbd')
+     
 		},[users])
 
 	const onFinish = async (values) => {
@@ -73,7 +75,7 @@ const ReviewLeavePopup = () => {
 		};
 		
 		   // console.log('data',data)
-		   // console.log('FormData',FormData, data.leaveType)
+		//    console.log('FormData',FormData, data.leaveType)
 		   dispatch(updateUtilizeLeaveUser({id:data.userId, leaveType:data.leaveType ,initialState:initialState, values }))
 
 		   const resp = await dispatch(reviewLeaveApplication({ id: id, values: FormData }));
@@ -154,7 +156,7 @@ const ReviewLeavePopup = () => {
 	};
 	const onClose = () => {
 		setOpen(false);
-		setStatus(null);
+		handleLoading()
 	};
 
 	return (
@@ -253,7 +255,7 @@ const ReviewLeavePopup = () => {
 									onChange={(e) => setStatus(e.target.value)}>
 
 										<Radio.Button value='REJECTED'>REJECTED</Radio.Button>
-										<Radio.Button value='ACCEPTED' >ACCEPTED</Radio.Button>
+										<Radio.Button value='ACCEPTED'>ACCEPTED</Radio.Button>
 
 								</Radio.Group>
 							</Form.Item>
@@ -265,7 +267,7 @@ const ReviewLeavePopup = () => {
 									rules={[
 										{
 											required: true,
-											message: "Please input your shift!",
+											message: "Please select Leave Type!",
 										},
 									]}
 									>

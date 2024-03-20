@@ -28,6 +28,7 @@ import { useNavigate } from "react-router-dom";
 import SalarySheetHistory from "./SalarySheetHistory";
 import dayjs from "dayjs";
 import ExcelJS from 'exceljs';
+import PrepareSalary from "../UI/PopUp/PrepareSalary";
 
 
 function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList,currentMonth,currentYear }) {
@@ -1004,15 +1005,18 @@ function CustomTable({ list , setcurrentYear , setcurrentMonth, employeeList,cur
 				{list && (
             <div className='flex justify-end mr-4'>
               <div className='mt-0.5'>
-                <CsvLinkBtn onClick={handledownloadcsv}>
+              {/* onClick={handledownloadcsv} */}
+              {/* <PrepareSalary/>  */}
+                {/* <CsvLinkBtn onClick={handledownloadcsv}>
                   <CSVLink
                     data={CSVlist}
                     className='btn btn-dark btn-sm'
                     style={{ marginTop: "5px" }}
                     filename='Salary_sheet'>
-                    Prepare Salary 
+                      Prepare Salary 
+                   
                   </CSVLink>
-                </CsvLinkBtn>
+                </CsvLinkBtn> */}
               </div>
             </div>
 				)}
@@ -1208,9 +1212,6 @@ const SalaryList = (props) => {
                   if(history.month ===currentMonth && history.year ===currentYear) {
                         newObj[history.sfName] = history.sfValue;
                   }
-                  // else{
-                  //   newObj[history.sfName] = 0
-                  // }
               });
 
               // Return the new object for this user

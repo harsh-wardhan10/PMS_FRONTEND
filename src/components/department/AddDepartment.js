@@ -107,6 +107,7 @@ const AddDepartment = ({ drawer }) => {
 	const { Title } = Typography;
 
 	const onFinish = async (values) => {
+		// console.log('values', values)
 		setLoader(true);
 		const resp = await addDepartment(values);
 

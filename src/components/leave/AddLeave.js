@@ -10,7 +10,7 @@ import {
 	loadAllShift,
 	loadSingleShift,
 } from "../../redux/rtk/features/shift/shiftSlice";
-import { addLeaveApplication } from "../../redux/rtk/features/leave/leaveSlice";
+import { addLeaveApplication, loadAllLeaveApplication } from "../../redux/rtk/features/leave/leaveSlice";
 import getUserFromToken from "../../utils/getUserFromToken";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
@@ -107,7 +107,7 @@ const AddLeave = ({ drawer }) => {
 			leaveTo: values.leaveTo ? dayjs(values.leaveTo).format():"",
 		};
 		
-		// console.log('files',files)   
+		// // console.log('files',files)   
 		files.forEach((item)=>{
 			const formData = new FormData();
 			formData.append("files", item); 
@@ -115,10 +115,11 @@ const AddLeave = ({ drawer }) => {
 			dispatch(uploadAttachmentFile(formData));
 		})
    
-		setLoader(true);
-		
+		// setLoader(true);
+		// console.log('leaveData',leaveData)
 		const resp = await dispatch(addLeaveApplication(leaveData));
 		if (resp.payload.message === "success") {
+			dispatch(loadAllLeaveApplication())
 			setLoader(false);
 			form.resetFields();
 			dispatch(loadAllShift());
