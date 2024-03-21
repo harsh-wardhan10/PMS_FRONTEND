@@ -644,3 +644,44 @@ body {
     background-color: #000;
     color: #000;
 }
+.notification_readed , .notification_unreaded{
+	padding:15px;
+	border-top: 1px solid lightgrey;
+	border-bottom: 1px solid lightgrey;
+	cursor: pointer;
+}
+.notification_readed{
+	/* background: #efefef; */
+	border-left:none;
+}
+.notification_unreaded{
+	/* background-color: #efefef; */
+	border-left:3px solid #08c;
+}
+.notification_unreaded:hover{
+	background-color: #fff;
+}
+.ant-popover-inner-content{
+	padding:0px !important;
+}
+.ant-popover-title{
+ font-size:19px !important;
+ font-weight:600 !important;	
+}
+.Notification_content_wrapper{
+	height: 50vh;
+	overflow-y: scroll;
+}
+.Notification_content_wrapper::-webkit-scrollbar {
+	width: 10px;
+  }
+.Notification_content_wrapper::-webkit-scrollbar-track {
+	box-shadow: inset 0 0 5px lightgrey; 
+	border-radius: 5px;
+}
+.Notification_content_wrapper::-webkit-scrollbar-thumb {
+	background: #efefef; 
+	border-radius: 10px;
+}
+  
+

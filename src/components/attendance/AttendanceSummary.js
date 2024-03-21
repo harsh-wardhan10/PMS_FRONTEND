@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Modal } from 'antd';
 
 const AttendanceSummary = ({ visible, onClose , summaryData,refresh,excludedDataEntries }) => {
@@ -16,10 +16,12 @@ const AttendanceSummary = ({ visible, onClose , summaryData,refresh,excludedData
   const handleattendanceSummaryList=()=>{
       setAttendanceSummaryList(true)
   }
+
   useEffect(()=>{
 
     summaryData?.then((res)=>{
       // console.log('res',res)
+
      errorData.push({
           message:res.payload.message,
           data:res.payload.data,
@@ -29,7 +31,7 @@ const AttendanceSummary = ({ visible, onClose , summaryData,refresh,excludedData
         if(item.success){
             setSuccessCount(successCount=> successCount+1)
         }
-        else{
+        else {
             setErrorCount(errorCount=>errorCount+1) 
         }})
     })?.catch((error)=>{
@@ -37,12 +39,14 @@ const AttendanceSummary = ({ visible, onClose , summaryData,refresh,excludedData
     })
  
      
-  } ,[summaryData,errorData , refresh])
+  } ,[summaryData,errorData,refresh])
   return (
     <Modal
       title={<h1 className='text-[20px] font-bold'>Summary of Attendance Upload</h1>}
       visible={visible}
-      onCancel={onClose}
+      onCancel={()=>{  
+        onClose()
+       }}
       footer={null}  // If you don't want a footer
       className='w-[550px]'
       cancelText="Close"

@@ -1,13 +1,16 @@
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { DarkModeSwitch } from "react-toggle-dark-mode";
 
-import { Button, Col, Dropdown, Menu, Row } from "antd";
+import { Badge, Button, Col, Dropdown, Menu, Popover, Row } from "antd";
 
-import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
+import { LogoutOutlined, UserOutlined ,BellOutlined} from "@ant-design/icons";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "./Header.module.css";
+import { useDispatch } from "react-redux";
+import { getNotificationList, updateNotifications } from "../../redux/rtk/features/notifications/notificationSlice";
+import { useSelector } from "react-redux";
 
 const toggler = [
 	<svg
@@ -21,11 +24,32 @@ const toggler = [
 ];
 
 function Header({ onPress, collapsed, handleCollapsed }) {
+	
+
+	const dispatch = useDispatch()
+	const [notificationCount, setnotificationCount] = useState(0)
+	const notificationList = useSelector(state=> state.notificationSlice.list)
+	const [loading, setLoading] = useState(false)
+	useEffect(()=>{
+		
+		dispatch(getNotificationList())
+		
+	},[loading])
+	useMemo(()=>{
+		let count=0
+		notificationList?.forEach(item => {
+			if(item.isRead=== false){
+				count++
+			}
+		})
+		setnotificationCount(count)
+	},[notificationList])
+
 	useEffect(() => window.scrollTo(0, 0));
 
 	const isLogged = localStorage.getItem("isLogged");
 	const user = localStorage.getItem("user");
-
+   
 	const items = [
 		{
 			key: "1",
@@ -58,14 +82,26 @@ function Header({ onPress, collapsed, handleCollapsed }) {
 	const toggleDarkMode = (checked) => {
 		setDarkMode(checked);
 	};
-
+   const navigate = useNavigate()
 	useEffect(() => {
 		if (isDarkMode) document.body.className = "dark-theme";
 		if (!isDarkMode) document.body.className = "light-theme";
-	}, [isDarkMode]);
+	}, [isDarkMode,loading]);
 
+		const content = (
+			<div className="Notification_content_wrapper">
+				{notificationList?.map(item=> {
+						return <p onClick={()=>{ 
+								navigate(`${item.url}`)
+								dispatch(updateNotifications({id:item.id}))
+								setLoading(!loading)
+						}} className={item.isRead ? "notification_readed":"notification_unreaded"}> Pending - {item.notificationReason}</p>
+				})}
+			</div>
+		);
 	return (
 		<>
+			{console.log('notificationList',notificationList)}
 			<Row gutter={[24, 0]}>
 				<Col span={24} md={4}>
 					<div className={styles.sidebarTogglerPC}>
@@ -79,7 +115,12 @@ function Header({ onPress, collapsed, handleCollapsed }) {
 							)}
 					</div>
 				</Col>
-				<Col span={24} md={20} className={styles.headerControl}>
+				<Col span={24} md={20} className={`${styles.headerControl} notifications_wrapper`}>
+					    <Popover content={content} placement="bottomRight" title="Notifications" style={{width:'450px'}}>
+							<Badge count={notificationCount}>
+								<BellOutlined style={{ fontSize: '23px', color: '#08c' }}/>
+							</Badge>
+						</Popover>
 					<DarkModeSwitch
 						style={{ margin: "1rem" }}
 						checked={isDarkMode}
@@ -98,7 +139,7 @@ function Header({ onPress, collapsed, handleCollapsed }) {
               </span>
             </Typography.Title>
           )} */}
-
+          
 					{!isLogged && (
 						<Link to='/admin/auth/login' className='btn-sign-in text-dark'>
 							<span></span>

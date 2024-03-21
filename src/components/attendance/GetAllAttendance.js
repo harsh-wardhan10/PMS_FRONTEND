@@ -35,7 +35,7 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 	const [isUpload, setisUpload]=  useState(false)
 	const [excludedDataEntries, setExcludedDataEntries] =useState()
 	const [overwriteData, setoverwriteData] =useState(false)
-	const [inValidEntries, setinValidEntries] = useState()
+	const [inValidEntries, setinValidEntries] = useState([])
 	const showModal = () => {
 	  setIsModalOpen(true);
 	};
@@ -542,27 +542,23 @@ function CustomTable({ list, total, status, setStatus, loading , refresh , setre
 
 
 	function formatDate(item,dateString) {
-		// Split the date string by '/' to get day, month, and year
-		// console.log('dateString',dateString)
-		const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{2}$/;
-		if(dateRegex.test(dateString)){
+
+			// Split the date string by '/' to get day, month, and year
+			// console.log('dateString',dateString)
 			const [day, month, year] = dateString.split('/');
 	      
 			// Add leading zeros to day and month if necessary
+			if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
 			const formattedDay = day.padStart(2, '0');
 			const formattedMonth = month.padStart(2, '0');
 		  
 			// Return the formatted date string
 			return `${formattedDay}/${formattedMonth}/${year}`;
-		}
-		else{
-			inValidEntries?.push(item)
-			// setinValidEntries()
-			setisModalOpenTwo(true)
-		}
-		
-	  }
-	  
+			}
+			else{
+				return dateString;
+			}
+	}
 	const createNewObject = (item, key, email) => {
     const newObj = {
         date: formatDate(item, item.Date),
@@ -595,14 +591,15 @@ const checkCleanData=(processedData)=>{
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])\/\d{2}$/;
 	const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] (AM|PM)$/;
-     console.log('processedData',processedData)
+    		 console.log('processedData',processedData)
 			// Function to validate each object in the array
 			const validateData = (data) => {
 				// console.log('data', data,dateRegex.test(data.date))
 			return (
 				(data.emailId === '' || emailRegex.test(data.emailId)) &&
 				(data.status === 'In' || data.status === 'Out' || data.status === '') &&
-				(data.log === '' || timeRegex.test(data.log))
+				(data.log === '' || timeRegex.test(data.log))&&
+				(data.date==='' || dateRegex.test(data.date))
 			);
 			};
 
@@ -631,10 +628,8 @@ const checkCleanData=(processedData)=>{
 			   setSummaryData(bulkUploadResult)
 		   }
 		   else{
-   
 			   const bulkUploadResult=  dispatch(addBulkAttendance(CleanData))
 			   setSummaryData(bulkUploadResult)
-		   
 		   }
    
 		 handleCancel()
@@ -887,16 +882,20 @@ const checkCleanData=(processedData)=>{
 		    	 </CsvLinkBtn>
 				   <div className="absolute w-[145px]"> {dropZoneContent}</div>
 					</div>
+					{/* isModalOpenTwo */}
 					<Modal 
 					open={isModalOpenTwo} 
 					onCancel={handleCancelTwo}
 					onOk={handleCancelTwo}
 					className='w-[750px]'
 					>
-						 <h2 className="text-[17px]"> Some Entries are Invalid , Please enter all entries in valid date, status and time format</h2>
-						 {inValidEntries?.length>0 && inValidEntries?.map((item)=>{
-							return <> <p className="text-red-500 font-bold text-[15px]"> Invalid Data Entry for Date -{item.date} , log-{item.log} , status-{item.status} and email-{item.emailId}</p>  </>
-						 })}
+					   {/* {console.log('inValidEntries',inValidEntries)} */}
+						 <h2 className="text-[17px]"> Error in Some Files </h2>
+						   <hr className="mt-[10px] mb-[20px]" style={{border:"2px solid lightgrey"}}/>
+						    <p className="mt-[10px] mb-[10px]"> Some Entries are Invalid , Please enter all entries in valid date, status and time format</p>
+						   {inValidEntries?.length>0 && inValidEntries?.map((item , index)=>{
+						    	return <> <p className="text-red-500 font-bold text-[15px]"> {index+1}) Invalid data Entry for Date -{item.date} , Log-{item.log} , Status-{item.status} and Email-{item.emailId}</p>  </>
+						   })}
 					</Modal>
 		         <Modal title="Choose Or Drag drop file to upload" open={isModalOpen} 
 			     	onCancel={handleCancel}
@@ -949,9 +948,9 @@ const checkCleanData=(processedData)=>{
 					<Tag color="rgb(229, 246, 253)" style={{padding:'5px', marginBottom:'5px',marginTop:'5px'}} ><p className="text-[13px] text-[#014361]"><i class="bi bi-info-circle text-[#0288d1] text-[15px] mr-[3px]" ></i>  Date should be in MM-DD-YYYY </p></Tag>
 					<Tag color="#fdeded" style={{padding:'5px', marginBottom:'5px',marginTop:'5px'}} >
 					<p className="text-[13px] text-[#5f2120]">
-				    <i class="bi bi-info-circle text-[#d32f2f] text-[15px] mr-[8px]" ></i> 
-					In case of any date being left unentered between the earliest date in the sheet and the latest date <br/>in the sheet, the system will automatically classify it as follows:
-					<br/><br/>
+				   		 <i class="bi bi-info-circle text-[#d32f2f] text-[15px] mr-[8px]" ></i> 
+							In case of any date being left unentered between the earliest date in the sheet and the latest date <br/>in the sheet, the system will automatically classify it as follows:
+						<br/><br/>
 					<ul>
 						 <li>-If the date corresponds to a holiday listed in the system, it will be marked as a "Holiday." </li>
 						 <li>-If the date corresponds to a weekly off day as per the shift schedule, it will be marked as a "Weekly Off." </li>

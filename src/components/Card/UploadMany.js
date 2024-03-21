@@ -28,7 +28,7 @@ const UploadMany = ({ urlPath }) => {
 			return obj;
 		});
 		// array -> array of objects
-        console.log('array',array)
+        // console.log('array',array)
 		// post request to backend using axios
 
 		// const resp = axios.post(`${urlPath}?query=createmany`, array);
