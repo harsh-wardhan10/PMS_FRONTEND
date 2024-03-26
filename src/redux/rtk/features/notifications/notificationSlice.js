@@ -47,6 +47,30 @@ export const updateNotifications = createAsyncThunk(
 		}
 	}
 );
+export const updateNotificationStatus = createAsyncThunk(
+	"leavePolicy/updateNotifications",
+	async ({ id, values }) => {
+		try {
+			const { data } = await axios({
+				method: "put",
+
+				url: `notifications/updateStatus/${id}`,
+				data: {
+					...values,
+				},
+			});
+			return {
+				data,
+				message: "success",
+			};
+		} catch (error) {
+			console.log(error.message);
+			return {
+				message: "error",
+			};
+		}
+	}
+);
 const notificationSlice = createSlice({
 	name: "notifications",
 	initialState,

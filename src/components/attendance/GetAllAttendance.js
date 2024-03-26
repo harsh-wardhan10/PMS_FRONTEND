@@ -846,10 +846,10 @@ const checkCleanData=(processedData)=>{
 				  "Email ID":item.emailId,
 				  "Employee Id":item.data[0]?.employeeId,
 				  "Shift":item.data[0]?.shift?.name,
-				  "Absenties": item.totalAbsenties?item.totalAbsenties :0,
-				  "HalfDays":item.totalHalfDays? item.totalHalfDays:0,
-				  "Long Breaks":item.totalLongBreaks?item.totalLongBreaks:0,
-				  "Late Comings":item.totalLateComings?item.totalLateComings :0,
+				  "Absenties": item.totalAbsenties?item.totalAbsenties.count :0,
+				  "HalfDays":item.totalHalfDays? item.totalHalfDays.count:0,
+				  "Long Breaks":item.totalLongBreaks?item.totalLongBreaks.count:0,
+				  "Late Comings":item.totalLateComings?item.totalLateComings.count :0,
 				  "Date":`${startdate.toDateString()} - ${enddate.toDateString()}`	  
 			}
 	   }))

@@ -48,11 +48,7 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 			icon: <HomeOutlined />,
 		},
 
-		(hasPermission("create-user") ||
-			hasPermission("readAll-user") ||
-			hasPermission("readAll-role") ||
-			hasPermission("readAll-designation") ||
-			hasPermission("readAll-department")) && {
+		   (hasPermission("create-user")) && {
 			label: "Employee",
 			key: "hr",
 			icon: <UserOutlined />,
@@ -67,7 +63,7 @@ const Sidenav = ({ color, sideNavOpenKeys }) => {
 					key: "staffs",
 					icon: <UsergroupAddOutlined />,
 				},
-				hasPermission("readAll-user") && {
+				hasPermission("create-user") && {
 					label: (
 						<NavLink to='/admin/hr/staffs'>
 							<span>Employee List</span>

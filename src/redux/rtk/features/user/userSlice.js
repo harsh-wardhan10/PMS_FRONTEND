@@ -64,7 +64,7 @@ export const checkEmployeeId = createAsyncThunk("user/checkEmployeeId", async (v
 export const deleteStaff = createAsyncThunk("user/deleteStaff", async (id) => {
 	try {
 		const resp = await axios({
-			method: "patch",
+			method: "delete",
 			headers: {
 				Accept: "application/json",
 				"Content-Type": "application/json;charset=UTF-8",

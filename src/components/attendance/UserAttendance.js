@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ViewBtn from "../Buttons/ViewBtn";
 import dayjs from "dayjs";
-import { Card, Table, Tag } from "antd";
+import { Card, DatePicker, Table, Tag } from "antd";
 import { CsvLinkBtn } from "../UI/CsvLinkBtn";
 import { CSVLink } from "react-csv";
 import ColVisibilityDropdown from "../Shared/ColVisibilityDropdown";
@@ -15,108 +15,41 @@ import {
 import { useParams } from "react-router-dom";
 import Loader from "../loader/loader";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
-
+import moment from "moment";
+import _debounce from 'lodash/debounce';
 function CustomTable({ list, loading }) {
 	const [columnsToShow, setColumnsToShow] = useState([]);
 
 	const columns = [
 		{
-			id: 1,
-			title: "ID",
-			dataIndex: "id",
-			key: "id",
-		},
-		{
 			id: 2,
-			title: "Name",
-			dataIndex: "user",
-			key: "user",
-			render: ({ firstName, lastName }) => firstName + " " + lastName,
+			title: "Email Id",
+			dataIndex: "emailId",
+			key: "emailId",
+			render: (emailId) => emailId,
 		},
 
+		{
+			id: 4,
+			title: "Status",
+			dataIndex: "status",
+			key: "status",
+			render: (status) => status,
+		},
 		{
 			id: 3,
-			title: "inTime",
-			dataIndex: "inTime",
-			key: "inTime",
-			render: (inTime) => dayjs(inTime).format("DD-MM-YYYY, h:mm A"),
-		},
-
-		{
-			id: 4,
-			title: "Out Time",
-			dataIndex: "outTime",
-			key: "outTime",
-			render: (outTime) => dayjs(outTime).format("DD-MM-YYYY, h:mm A"),
-		},
-		{
-			id: 4,
-			title: "In Status",
-			dataIndex: "inTimeStatus",
-			key: "inTimeStatus",
-			render: (inTimeStatus) => {
-				// use Tag component from antd to show status in different colors like green, red, yellow etc based on the status value
-				if (inTimeStatus === "Late") {
-					return <Tag color='red'>{inTimeStatus.toUpperCase()}</Tag>;
-				} else if (inTimeStatus === "Early") {
-					return <Tag color='blue'>{inTimeStatus.toUpperCase()}</Tag>;
-				} else if (inTimeStatus === "On Time") {
-					return <Tag color='green'>{inTimeStatus.toUpperCase()}</Tag>;
-				} else {
-					return <Tag style={{ color: "orange" }}>NONE</Tag>;
-				}
-			},
-		},
-		{
-			id: 5,
-			title: "Out Status",
-			dataIndex: "outTimeStatus",
-			key: "outTimeStatus",
-			render: (outTimeStatus) => {
-				// use Tag component from antd to show status in different colors like green, red, yellow etc based on the status value
-				if (outTimeStatus === "Late") {
-					return <Tag color='red'>{outTimeStatus.toUpperCase()}</Tag>;
-				} else if (outTimeStatus === "Early") {
-					return <Tag color='blue'>{outTimeStatus.toUpperCase()}</Tag>;
-				} else if (outTimeStatus === "On Time") {
-					return <Tag color='green'>{outTimeStatus.toUpperCase()}</Tag>;
-				} else {
-					return <Tag style={{ color: "orange" }}>NONE</Tag>;
-				}
-			},
-		},
-		{
-			id: 7,
-			title: "Punch By",
-			dataIndex: "punchBy",
-			key: "punchBy",
-			render: (punchBy) => (
-				<span>
-					{punchBy[0]?.firstName + " " + punchBy[0]?.lastName || "Not Checked"}
-				</span>
-			),
+			title: "Log",
+			dataIndex: "log",
+			key: "log",
+			render: (log) =>log,
 		},
 		{
 			id: 6,
-			title: "Total Hour",
-			dataIndex: "totalHour",
-			key: "totalHour",
-			render: (totalHour) => totalHour || "Not Checked",
+			title: "Date",
+			dataIndex: "date",
+			key: "date",
+			render: (date) => {return new Date(date).toDateString()},
 		},
-
-		// {
-		// 	id: 8,
-		// 	title: "Action",
-		// 	dataIndex: "id",
-		// 	key: "id",
-		// 	render: (id) => (
-		// 		<AttendBtn
-		// 			path={`/admin/attendance/${id}`}
-		// 			text='View'
-		// 			icon={<BtnViewSvg />}
-		// 		/>
-		// 	),
-		// },
 	];
 
 	useEffect(() => {
@@ -148,8 +81,6 @@ function CustomTable({ list, loading }) {
 					</div>
 				)}
 			</div>
-
-			{list && (
 				<div style={{ marginBottom: "30px" }}>
 					<ColVisibilityDropdown
 						options={columns}
@@ -157,13 +88,12 @@ function CustomTable({ list, loading }) {
 						columnsToShowHandler={columnsToShowHandler}
 					/>
 				</div>
-			)}
-
 			<Table
 				scroll={{ x: true }}
 				loading={loading}
 				columns={columnsToShow}
 				dataSource={list ? addKeys(list) : []}
+				pagination={{ pageSize: 20 }}
 			/>
 		</Card>
 	);
@@ -171,23 +101,56 @@ function CustomTable({ list, loading }) {
 
 const UserAttendance = () => {
 	const { list, loading } = useSelector((state) => state.attendance);
+
+	const [filteredData, setfilterData] = useState()
+
 	const { id } = useParams("id");
 
 	const dispatch = useDispatch();
 
 	useEffect(() => {
 		dispatch(loadAttendanceByUserId(id));
-
+		
 		return () => {
 			dispatch(clearAttendanceList());
 		};
 	}, [id]);
+	
+	useMemo(()=>{
+		setfilterData(list)
+	},[list])
 
+	const handlemonthchange=(value)=>{
+
+		const yearchange = value.year(); 
+		const monthchange = value.month() + 1;
+
+        setfilterData(list.filter(item => {
+			// Parse the date string to extract year and month
+			const [month, day, year] = item.date.split('/');
+			const itemYear = parseInt(year);
+			const itemMonth = parseInt(month);
+			const strippedYearString = year.slice(-2);
+
+			// console.log('itemMonth',itemMonth,'itemYear',itemYear,'strippedYearString',strippedYearString,month)
+			// Check if the year and month match the current year and month
+			return parseInt(itemYear) === parseInt(strippedYearString) && parseInt(itemMonth) === parseInt(monthchange);
+		}))
+	 }
+	 const disabledDate = (current) => {
+        // Disable months beyond the previous month
+        return current && current > moment().endOf('month').subtract(1, 'months');
+      };
+	 
 	return (
 		<UserPrivateComponent permission='readSingle-attendance'>
-			<div>
+			<div className="relative">
 				<PageTitle title='Back' />
-				{!loading ? <CustomTable list={list} loading={loading} /> : <Loader />}
+				{/* {console.log('list',list,'filteredData',filteredData)} */}
+				<div className="w-[25%] absolute top-[170px] left-[223px] z-[99]"> 
+      				<DatePicker picker="month" onChange={handlemonthchange} disabledDate={disabledDate}/>
+				</div>
+				{!loading ? <CustomTable list={filteredData?.length > 0? filteredData :null} loading={loading} /> : <Loader />}
 			</div>
 		</UserPrivateComponent>
 	);

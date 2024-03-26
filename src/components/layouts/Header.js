@@ -101,7 +101,7 @@ function Header({ onPress, collapsed, handleCollapsed }) {
 		);
 	return (
 		<>
-			{console.log('notificationList',notificationList)}
+			{/* {console.log('notificationList',notificationList)} */}
 			<Row gutter={[24, 0]}>
 				<Col span={24} md={4}>
 					<div className={styles.sidebarTogglerPC}>

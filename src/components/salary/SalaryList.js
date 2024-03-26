@@ -1192,7 +1192,7 @@ const SalaryList = (props) => {
     const oneMonthAgoMonth = oneMonthAgo.month(); // Month (0-indexed)
     const oneMonthAgoYear = oneMonthAgo.year(); // Year
   
-    const [currentMonth, setcurrentMonth] =useState(oneMonthAgoMonth+1)
+    const [currentMonth, setcurrentMonth] = useState(oneMonthAgoMonth+1)
     const [currentYear, setcurrentYear] = useState(oneMonthAgoYear)
     const [userId , setuserId] =useState()
     const [filterData, setfilterData] =useState()

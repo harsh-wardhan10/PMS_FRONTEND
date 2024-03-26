@@ -3,18 +3,19 @@ import { useState } from "react";
 
 import "./user.css";
 
-import { Segmented, Table } from "antd";
+import { Button, Modal, Segmented, Table } from "antd";
 
 import { useEffect } from "react";
 import { CSVLink } from "react-csv";
 import { useDispatch, useSelector } from "react-redux";
 
-import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
+import { deleteStaff, loadAllStaff } from "../../redux/rtk/features/user/userSlice";
 import ColVisibilityDropdown from "../Shared/ColVisibilityDropdown";
 import ViewBtn from "../Buttons/ViewBtn";
 import { CsvLinkBtn } from "../UI/CsvLinkBtn";
 import AttendBtn from "../Buttons/AttendBtn";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
+import BtnDeleteSvg from "../UI/Button/btnDeleteSvg";
 
 function CustomTable({ list }) {
 	const dispatch = useDispatch();
@@ -22,6 +23,28 @@ function CustomTable({ list }) {
 	const [columnsToShow, setColumnsToShow] = useState([]);
 
 	const { loading } = useSelector((state) => state.users);
+
+	const [deletePopup, setDeletePopup] = useState(false)
+    const [seletedItemId, setSelectedId] = useState()
+	const handleDeletePopup=()=>{
+		setDeletePopup(false)
+	}
+	const deleteFooter = (
+        <div>
+             <Button key="customButton" type="default" onClick={()=> {setDeletePopup(false)}}>
+               Cancel
+          </Button>	
+           <Button key="customButton" 
+           type={"primary"} 
+           onClick={()=>{
+			setDeletePopup(false)
+			dispatch(deleteStaff(seletedItemId))
+		   }}
+           >
+            Delete
+          </Button>
+        </div>
+      );
 
 	const columns = [
 		{
@@ -97,7 +120,14 @@ function CustomTable({ list }) {
 						<ViewBtn path={`/admin/hr/staffs/${id}/`} />
 					</UserPrivateComponent>
 					<UserPrivateComponent permission={"readSingle-attendance"}>
-						<AttendBtn path={`/admin/attendance/user/${id}`} />
+
+				      	<button onClick={()=>{
+							setDeletePopup(true)
+							setSelectedId(id)
+							}}>
+							<BtnDeleteSvg size={20} />
+						</button>
+
 					</UserPrivateComponent>
 				</div>
 			),
@@ -138,7 +168,16 @@ function CustomTable({ list }) {
 								</CSVLink>
 							</CsvLinkBtn>
 						</div>
-
+ 							<Modal
+							 className="Delete_modal"
+							title='Delete Confirmation'
+							open={deletePopup}
+							onCancel={handleDeletePopup}
+							footer={deleteFooter}>
+								<div> 
+									<p className="text-[14px]"> This will permanently delete the selected option .This action is irreversible. Are you sure you want to delete ?</p>
+								</div>
+						</Modal>
 						<div>
 							<Segmented
 								className='text-center rounded text-red-500'

@@ -13,6 +13,7 @@ import ViewBtn from "../Buttons/ViewBtn";
 import { useParams } from "react-router-dom";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { loadSingleReimbursementHistory } from "../../redux/rtk/features/reimbursement/reimbursement";
+import { loadSingleDeductionsHistory } from "../../redux/rtk/features/deductions/deductionSlice";
 
 function CustomTable({ list, loading }) {
 	const [columnsToShow, setColumnsToShow] = useState([]);
@@ -20,27 +21,27 @@ function CustomTable({ list, loading }) {
 	const columns = [
 		// {
 		// 	id: 1,
-		// 	title: "ID",+
+		// 	title: "ID",
 		// 	dataIndex: "id",
 		// 	key: "id",
 		// },
 
 		{
 			id: 3,
-			title: "Reimbursement Reason",
+			title: "Deductions Reason",
 			dataIndex: "reason",
 			key: "reason",
 		},
 		{
 			id: 4,
-			title: "Reimbursement amount",
+			title: "Deductions amount",
 			dataIndex: "amount",
 			key: "amount",
 			render: (amount) => `${amount}`,
 		},
 		{
 			id: 5,
-			title: "Reimbursement Date",
+			title: "Deductions Date",
 			dataIndex: "date",
 			key: "date",
 			render: (date) => dayjs(date).format("DD-MM-YYYY"),
@@ -89,7 +90,7 @@ function CustomTable({ list, loading }) {
 		<div className='ant-card p-4 rounded mt-5'>
 			<div className='flex my-2 justify-between'>
 				<div className='w-50'>
-					<h4 className='text-2xl mb-2'> My Reimbursement Applications</h4>
+					<h4 className='text-2xl mb-2'> My Deductions</h4>
 				</div>
 				{list && (
 					<div className='flex justify-end mr-4'>
@@ -127,26 +128,25 @@ function CustomTable({ list, loading }) {
 	);
 }
 
-const UserReimbursement = (props) => {
+const UserDeductions = (props) => {
 	const { id } = useParams("id");
 	const dispatch = useDispatch();
-	const list = useSelector((state) => state.reimbursement.reimbursementHistory);
-	const loading = useSelector((state) => state.reimbursement.loading);
+	const list = useSelector((state) => state.deductions.deductionHistory);
+	const loading = useSelector((state) => state.deductions.loading);
 
 	useEffect(() => {
-		dispatch(loadSingleReimbursementHistory(id));
+		dispatch(loadSingleDeductionsHistory(id));
 	}, []);
 
 	return (
 		<UserPrivateComponent permission={"readSingle-leaveApplication"}>
 			<div className='card'>
-                {/* {console.log('list',list)} */}
 				<div className='card-body'>
-					<CustomTable list={list?.singleReimbursement} loading={loading} />
+					<CustomTable list={list?.singleDeduction} loading={loading} />
 				</div>
 			</div>
 		</UserPrivateComponent>
 	);
 };
 
-export default UserReimbursement;
+export default UserDeductions;

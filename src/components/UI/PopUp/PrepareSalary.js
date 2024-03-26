@@ -11,9 +11,10 @@ const PrepareSalary = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [CSVlist, setCSVlist] =useState([])
     const users = useSelector((state) => state.users?.list);
-
-    const [currentMonth, setcurrentMonth] =useState()
-    const [currentYear, setcurrentYear] =useState()
+    const oneMonthAgoMonth = oneMonthAgo.month()+1; 
+    const oneMonthAgoYear =  oneMonthAgo.year(); 
+    const [currentMonth, setcurrentMonth] =useState(oneMonthAgoMonth)
+    const [currentYear, setcurrentYear] =useState(oneMonthAgoYear)
 
     const handlemonthchange=(value)=>{
         const year = value.year(); 

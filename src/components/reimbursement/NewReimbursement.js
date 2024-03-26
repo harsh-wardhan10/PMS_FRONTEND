@@ -74,7 +74,7 @@ const NewReimbursement = ({ drawer }) => {
             applyDate:dayjs(values.date),
 			userId: values.userId,
 		};
-      console.log('reimbursementData',reimbursementData,'values',values)
+      	// console.log('reimbursementData',reimbursementData,'values',values)
 
             files.forEach((item)=>{
 				// console.log('item',item)
@@ -93,7 +93,6 @@ const NewReimbursement = ({ drawer }) => {
 		}
 	};
     useEffect(() => {
-		dispatch(loadAllShift());
 		dispatch(loadAllStaff({ status: true }));
 	}, []);
 	const onFinishFailed = (errorInfo) => {

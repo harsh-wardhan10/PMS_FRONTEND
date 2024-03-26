@@ -94,6 +94,7 @@ import CreateSalaryFields from "./components/salary/CreateSalaryFields.js";
 import SalarySheetHistory from "./components/salary/SalarySheetHistory.js";
 import SalarySheet from "./components/salary/SalarySheet.js";
 import AssignAward from "./components/award/AssignAward.js";
+import UserDeductions from "./components/deductions/UserDeductions.jsx";
 
 function App() {
 	return (
@@ -325,7 +326,7 @@ function App() {
 							element={
 								<UserPrivateRoute permission={"readSingle-deductions"} />
 							}>
-							<Route path='/admin/deductions/user/:id' element={<UserReimbursement />} />
+							<Route path='/admin/deductions/user/:id' element={<UserDeductions />} />
 						</Route>
 
 

@@ -20,7 +20,6 @@ import { loadAllbulkAttendance, updateBulkAttendance } from "../../redux/rtk/fea
 
 const AddLeave = ({ drawer }) => {
 	const [loader, setLoader] = useState(false);
-	const shift = useSelector((state) => state.shift.list);
 	const users = useSelector((state) => state.users?.list);
 	const leavePolicy = useSelector((state) => state.leavePolicy);
 	const [file, setFile] = useState();
@@ -79,7 +78,6 @@ const AddLeave = ({ drawer }) => {
 	// 	}
 	//   };
 	useEffect(() => {
-		dispatch(loadAllShift());
 		dispatch(loadAllStaff({ status: true }));
 		dispatch(loadAllbulkAttendance())
 	}, []);
@@ -122,7 +120,6 @@ const AddLeave = ({ drawer }) => {
 			dispatch(loadAllLeaveApplication())
 			setLoader(false);
 			form.resetFields();
-			dispatch(loadAllShift());
 
 				const leavesTo = values.leaveTo;
 				const leavesFrom = values.leaveFrom;

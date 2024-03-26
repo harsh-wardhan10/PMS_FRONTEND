@@ -13,6 +13,7 @@ import getUserFromToken from "../../../utils/getUserFromToken";
 import moment from "moment";
 import { loadAllbulkAttendance, updateBulkAttendance } from "../../../redux/rtk/features/attendance/attendanceSlice";
 import { loadAllStaff, updateUtilizeLeaveUser } from "../../../redux/rtk/features/user/userSlice";
+import { updateNotificationStatus } from "../../../redux/rtk/features/notifications/notificationSlice";
 
 const ReviewLeavePopup = ({ handleLoading }) => {
 	const { id } = useParams("id");
@@ -88,6 +89,7 @@ const ReviewLeavePopup = ({ handleLoading }) => {
 
 			if (values.status === 'ACCEPTED') {
 
+                // dispatch(updateNotificationStatus({id:id, status:'ACCEPTED'}))
 				const leavesTo = values.acceptLeaveTo;
 				const leavesFrom = values.acceptLeaveFrom;
 				
@@ -117,6 +119,8 @@ const ReviewLeavePopup = ({ handleLoading }) => {
 				dispatch(loadAllbulkAttendance())
 			}
 			else if(values.status === 'REJECTED'){
+
+				// dispatch(updateNotificationStatus({id:id, status:'REJECTED'}))
 				const leavesTo = values.acceptLeaveTo;
 				const leavesFrom = values.acceptLeaveFrom;
 				const filteredLeaves = list.filter(item => {

@@ -6,9 +6,8 @@ import React, { Fragment, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 import { useDispatch, useSelector } from "react-redux";
-import {
-	loadAllShift,
-} from "../../redux/rtk/features/shift/shiftSlice";
+
+
 import getUserFromToken from "../../utils/getUserFromToken";
 import UserPrivateComponent from "../PrivateRoutes/UserPrivateComponent";
 import { loadAllStaff } from "../../redux/rtk/features/user/userSlice";
@@ -90,7 +89,7 @@ const NewDeductions = ({ drawer }) => {
 		}
 	};
     useEffect(() => {
-		dispatch(loadAllShift());
+
 		dispatch(loadAllStaff({ status: true }));
 	}, []);
 	const onFinishFailed = (errorInfo) => {
